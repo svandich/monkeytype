@@ -33,6 +33,7 @@ export function envConfig(options: {
             "http://localhost:5029",
           ),
           clientVersion: options.clientVersion,
+          requireLogin: options.env["REQUIRE_LOGIN"] ?? "",
           quickLoginEmail: options.env["QUICK_LOGIN_EMAIL"],
           quickLoginPassword: options.env["QUICK_LOGIN_PASSWORD"],
         };
@@ -47,6 +48,7 @@ export function envConfig(options: {
             options.env["PROGCOMP_API_URL"],
             "https://progcomp.joliva.cl:8443",
           ),
+          requireLogin: options.env["REQUIRE_LOGIN"] ?? "",
           quickLoginEmail: undefined,
           quickLoginPassword: undefined,
           clientVersion: options.clientVersion,

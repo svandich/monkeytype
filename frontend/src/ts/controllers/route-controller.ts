@@ -1,3 +1,4 @@
+import { envConfig } from "virtual:env-config";
 import * as PageController from "./page-controller";
 import * as PageTransition from "../legacy-states/page-transition";
 import { isAuthAvailable } from "../progcomp-auth";
@@ -24,6 +25,30 @@ function getParams(match: {
 
   const a = keys.map((key, index) => [key, values[index]]);
   return Object.fromEntries(a) as Record<string, string>;
+}
+
+function isLoginRequired(): boolean {
+  return envConfig.requireLogin === "true";
+}
+
+/** sends the user to the login page, coming back to the current page once signed in */
+async function navigateToLogin(options: NavigateOptions): Promise<void> {
+  const current = location.pathname + location.search + location.hash;
+  const url =
+    current === "/"
+      ? "/login"
+      : `/login?redirect=${encodeURIComponent(current)}`;
+  await navigate(url, options);
+}
+
+function getLoginRedirect(): string | undefined {
+  const redirect = new URLSearchParams(location.search).get("redirect");
+  if (redirect === null || !redirect.startsWith("/")) return undefined;
+  // only allow pages on this site, "//host" or "/\host" would leave it
+  if (new URL(redirect, location.origin).origin !== location.origin) {
+    return undefined;
+  }
+  return redirect;
 }
 
 type Route = {
@@ -75,12 +100,13 @@ const routes: Route[] = [
   {
     path: "/login",
     load: async (_params, options) => {
-      if (!isAuthAvailable()) {
+      // with login required there is nowhere else to go, so stay on the login page
+      if (!isAuthAvailable() && !isLoginRequired()) {
         await navigate("/", options);
         return;
       }
       if (isAuthenticated()) {
-        await navigate("/account", options);
+        await navigate(getLoginRedirect() ?? "/account", options);
         return;
       }
       await PageController.change("login", options);
@@ -94,7 +120,7 @@ const routes: Route[] = [
         return;
       }
       if (!isAuthenticated()) {
-        await navigate("/login", options);
+        await navigateToLogin(options);
         return;
       }
       await PageController.change("account", options);
@@ -108,7 +134,7 @@ const routes: Route[] = [
         return;
       }
       if (!isAuthenticated()) {
-        await navigate("/login", options);
+        await navigateToLogin(options);
         return;
       }
       await PageController.change("accountSettings", options);
@@ -141,7 +167,7 @@ const routes: Route[] = [
         return;
       }
       if (!isAuthenticated()) {
-        await navigate("/login", options);
+        await navigateToLogin(options);
         return;
       }
 
@@ -184,6 +210,15 @@ export async function navigate(
 }
 
 async function router(options = {} as NavigateOptions): Promise<void> {
+  if (
+    isLoginRequired() &&
+    !isAuthenticated() &&
+    location.pathname !== "/login"
+  ) {
+    await navigateToLogin(options);
+    return;
+  }
+
   const matches = routes.map((r) => {
     return {
       route: r,

@@ -112,6 +112,7 @@ Stop the running docker containers using `docker compose down` before making any
   # PROGCOMP_JWT_ISSUER=ProgCompJOlivaApi
   # PROGCOMP_JWT_AUDIENCE=ProgCompJOlivaClient
   ```
+- to only let signed in users use the site, add `REQUIRE_LOGIN=true`. Signed out visitors are sent to the login page. This is only checked by the frontend, the backend API stays reachable without an account
 
 ### Update backend configuration
 

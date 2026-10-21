@@ -4,6 +4,8 @@ export type EnvConfig = {
   progcompApiUrl: string;
   isDevelopment: boolean;
   clientVersion: string;
+  /** "true" makes every page except the login page require signing in */
+  requireLogin: string;
   quickLoginEmail: string | undefined;
   quickLoginPassword: string | undefined;
 };
