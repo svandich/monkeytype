@@ -4,7 +4,6 @@ export type EnvConfig = {
   progcompApiUrl: string;
   isDevelopment: boolean;
   clientVersion: string;
-  recaptchaSiteKey: string;
   quickLoginEmail: string | undefined;
   quickLoginPassword: string | undefined;
 };

@@ -15,7 +15,6 @@ import {
 } from "../../states/notifications";
 import { removeLanguageSize } from "../../utils/strings";
 import { AnimatedModal } from "../common/AnimatedModal";
-import { Captcha } from "../ui/form/Captcha";
 import { InputField } from "../ui/form/InputField";
 import { LabeledField } from "../ui/form/LabeledField";
 import { SubmitButton } from "../ui/form/SubmitButton";
@@ -42,7 +41,6 @@ export function QuoteSubmitModal(): JSXElement {
       text: "",
       source: "",
       language,
-      captcha: "",
     },
     onSubmit: async ({ value }) => {
       showLoaderBar();
@@ -51,7 +49,6 @@ export function QuoteSubmitModal(): JSXElement {
           text: value.text,
           source: value.source,
           language: value.language as Language,
-          captcha: value.captcha,
         },
       });
       hideLoaderBar();
@@ -79,7 +76,6 @@ export function QuoteSubmitModal(): JSXElement {
         text: "",
         source: "",
         language: removeLanguageSize(Config.language),
-        captcha: "",
       },
     });
     form.reset();
@@ -165,10 +161,6 @@ export function QuoteSubmitModal(): JSXElement {
               />
             </LabeledField>
           )}
-        />
-        <form.Field
-          name="captcha"
-          children={(field) => <Captcha field={field} />}
         />
         <SubmitButton form={form} text="submit" />
       </form>

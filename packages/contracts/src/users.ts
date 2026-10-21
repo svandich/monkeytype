@@ -48,7 +48,6 @@ export const CreateUserRequestSchema = z.object({
   email: UserEmailSchema.optional(),
   name: UserNameSchema,
   uid: z.string().optional(), //ProgCompJOliva user id without hyphens, no validation should be applied
-  captcha: z.string(), //defined by google recaptcha, no validation should be applied
 });
 export type CreateUserRequest = z.infer<typeof CreateUserRequestSchema>;
 
@@ -301,12 +300,10 @@ export const ReportUserRequestSchema = z.object({
   uid: z.string(),
   reason: ReportUserReasonSchema,
   comment: ReportUserCommentSchema,
-  captcha: z.string(), //we don't generate the captcha so there should be no validation
 });
 export type ReportUserRequest = z.infer<typeof ReportUserRequestSchema>;
 
 export const ForgotPasswordEmailRequestSchema = z.object({
-  captcha: z.string(),
   email: UserEmailSchema,
 });
 export type ForgotPasswordEmailRequest = z.infer<

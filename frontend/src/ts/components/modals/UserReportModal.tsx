@@ -12,7 +12,6 @@ import {
 } from "../../states/notifications";
 import { getUserToReport, setUserToReport } from "../../states/user-report";
 import { AnimatedModal } from "../common/AnimatedModal";
-import { Captcha } from "../ui/form/Captcha";
 import { LabeledField } from "../ui/form/LabeledField";
 import { SubmitButton } from "../ui/form/SubmitButton";
 import { TextareaField } from "../ui/form/TextareaField";
@@ -25,7 +24,6 @@ export function UserReportModal() {
       uid: getUserToReport()?.uid ?? "",
       reason: "Inappropriate name",
       comment: "",
-      captcha: "",
     },
     onSubmit: async ({ value }) => {
       await apply(value);
@@ -108,10 +106,6 @@ export function UserReportModal() {
             </LabeledField>
           )}
         />
-        <form.Field
-          name="captcha"
-          children={(field) => <Captcha field={field} />}
-        />
         <SubmitButton form={form} text="report" class="w-full" />
       </form>
     </AnimatedModal>
@@ -122,9 +116,8 @@ async function apply(options: {
   uid: string;
   reason: string;
   comment: string;
-  captcha: string;
 }): Promise<void> {
-  const { uid, reason, comment, captcha } = options;
+  const { uid, reason, comment } = options;
 
   showLoaderBar();
   const response = await Ape.users.report({
@@ -132,7 +125,6 @@ async function apply(options: {
       uid,
       reason: reason as ReportUserReason,
       comment,
-      captcha,
     },
   });
   hideLoaderBar();

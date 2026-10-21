@@ -4,7 +4,6 @@ import * as ReportDAL from "../../dal/report";
 import * as NewQuotesDAL from "../../dal/new-quotes";
 import * as QuoteRatingsDAL from "../../dal/quote-ratings";
 import MonkeyError from "../../utils/error";
-import { verify } from "../../utils/captcha";
 import { MonkeyResponse } from "../../utils/monkey-response";
 import { ObjectId } from "mongodb";
 import { addLog } from "../../dal/logs";
@@ -23,12 +22,6 @@ import {
 import { replaceObjectId, replaceObjectIds } from "../../utils/misc";
 import { MonkeyRequest } from "../types";
 import { Language } from "@monkeytype/schemas/languages";
-
-async function verifyCaptcha(captcha: string): Promise<void> {
-  if (!(await verify(captcha))) {
-    throw new MonkeyError(422, "Captcha check failed");
-  }
-}
 
 export async function getQuotes(
   req: MonkeyRequest,
@@ -59,9 +52,7 @@ export async function addQuote(
   req: MonkeyRequest<undefined, AddQuoteRequest>,
 ): Promise<MonkeyResponse> {
   const { uid } = req.ctx.decodedToken;
-  const { text, source, language, captcha } = req.body;
-
-  await verifyCaptcha(captcha);
+  const { text, source, language } = req.body;
 
   await NewQuotesDAL.add(text, source, language, uid);
   return new MonkeyResponse("Quote submission added", null);
@@ -144,9 +135,7 @@ export async function reportQuote(
     reporting: { maxReports, contentReportLimit },
   } = req.ctx.configuration.quotes;
 
-  const { quoteId, quoteLanguage, reason, comment, captcha } = req.body;
-
-  await verifyCaptcha(captcha);
+  const { quoteId, quoteLanguage, reason, comment } = req.body;
 
   const newReport: ReportDAL.DBReport = {
     _id: new ObjectId(),

@@ -14,7 +14,6 @@ import { deleteAllApeKeys } from "../../dal/ape-keys";
 import { deleteAllPresets } from "../../dal/preset";
 import { deleteAll as deleteAllResults } from "../../dal/result";
 import { deleteConfig } from "../../dal/config";
-import { verify } from "../../utils/captcha";
 import * as LeaderboardsDAL from "../../dal/leaderboards";
 import { purgeUserFromDailyLeaderboards } from "../../utils/daily-leaderboards";
 import { purgeUserFromXpLeaderboards } from "../../services/weekly-xp-leaderboard";
@@ -88,26 +87,11 @@ import { tryCatch } from "@monkeytype/util/trycatch";
 import * as ConnectionsDal from "../../dal/connections";
 import { PersonalBest } from "@monkeytype/schemas/shared";
 
-async function verifyCaptcha(captcha: string): Promise<void> {
-  const { data: verified, error } = await tryCatch(verify(captcha));
-  if (error) {
-    throw new MonkeyError(
-      422,
-      "Request to the Captcha API failed, please try again later",
-    );
-  }
-  if (!verified) {
-    throw new MonkeyError(422, "Captcha challenge failed");
-  }
-}
-
 export async function createNewUser(
   req: MonkeyRequest<undefined, CreateUserRequest>,
 ): Promise<MonkeyResponse> {
-  const { name, captcha } = req.body;
+  const { name } = req.body;
   const { email, uid } = req.ctx.decodedToken;
-
-  await verifyCaptcha(captcha);
 
   if (email.endsWith("@tidal.lol") || email.endsWith("@selfbot.cc")) {
     throw new MonkeyError(400, "Invalid domain");
@@ -899,9 +883,7 @@ export async function reportUser(
     reporting: { maxReports, contentReportLimit },
   } = req.ctx.configuration.quotes;
 
-  const { uid: uidToReport, reason, comment, captcha } = req.body;
-
-  await verifyCaptcha(captcha);
+  const { uid: uidToReport, reason, comment } = req.body;
 
   const newReport: ReportDAL.DBReport = {
     _id: new ObjectId(),

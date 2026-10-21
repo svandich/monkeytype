@@ -16,7 +16,6 @@ function stubVirtualEnvConfig(): Plugin {
           isDevelopment: true,
           backendUrl: "http://localhost:5005",
           clientVersion: "storybook",
-          recaptchaSiteKey: "",
           quickLoginEmail: undefined,
           quickLoginPassword: undefined,
         })};`;

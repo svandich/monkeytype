@@ -8,7 +8,6 @@ export type ModalId =
   | "DevOptions"
   | "DevInboxPicker"
   | "EventLogViewer"
-  | "RegisterCaptcha"
   | "Alerts"
   | "SimpleModal"
   | "CustomText"

@@ -16,7 +16,6 @@ import { quoteId } from "../../states/quote-report";
 import { removeLanguageSize } from "../../utils/strings";
 import { AnimatedModal } from "../common/AnimatedModal";
 import { Separator } from "../common/Separator";
-import { Captcha } from "../ui/form/Captcha";
 import { LabeledField } from "../ui/form/LabeledField";
 import { SubmitButton } from "../ui/form/SubmitButton";
 import { TextareaField } from "../ui/form/TextareaField";
@@ -30,16 +29,10 @@ export function QuoteReportModal(): JSXElement {
     defaultValues: {
       reason: "Grammatical error" as QuoteReportReason,
       comment: "",
-      captcha: "",
     },
     onSubmit: async ({ value }) => {
       const id = quoteId().toString();
       const quoteLanguage = removeLanguageSize(Config.language);
-
-      if (value.captcha === "") {
-        showNoticeNotification("Please complete the captcha");
-        return;
-      }
 
       if (id === "" || id === "0") {
         showNoticeNotification("Please select a quote");
@@ -61,7 +54,6 @@ export function QuoteReportModal(): JSXElement {
           quoteLanguage,
           reason: value.reason,
           comment: value.comment,
-          captcha: value.captcha,
         },
       });
       hideLoaderBar();
@@ -88,7 +80,6 @@ export function QuoteReportModal(): JSXElement {
       defaultValues: {
         reason: "Grammatical error" as QuoteReportReason,
         comment: "",
-        captcha: "",
       },
     });
     form.reset();
@@ -173,10 +164,6 @@ export function QuoteReportModal(): JSXElement {
               </div>
             </LabeledField>
           )}
-        />
-        <form.Field
-          name="captcha"
-          children={(field) => <Captcha field={field} />}
         />
         <SubmitButton form={form} text="report" />
       </form>

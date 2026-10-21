@@ -59,7 +59,6 @@ services:
     environment:
       - MONKEYTYPE_BACKENDURL=${BASE_URL:-http://localhost}/api
       - PROGCOMP_API_URL=${PROGCOMP_API_URL:-https://progcomp.joliva.cl:8443}
-      - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY:-}
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "80"]
       interval: 5s
@@ -82,7 +81,6 @@ services:
       - DB_URI=mongodb://monkeytype-mongodb:27017
       - REDIS_URI=redis://monkeytype-redis:6379
       - FRONTEND_URL=${BASE_URL:-http://localhost}
-      - RECAPTCHA_SECRET=${RECAPTCHA_SECRET:-}
       # users sign in there, its public signing key is fetched from ${PROGCOMP_API_URL}/api/auth/jwks
       - PROGCOMP_API_URL=${PROGCOMP_API_URL:-https://progcomp.joliva.cl:8443}
       - PROGCOMP_JWT_ISSUER=${PROGCOMP_JWT_ISSUER:-ProgCompJOlivaApi}

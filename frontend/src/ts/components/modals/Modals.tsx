@@ -17,7 +17,6 @@ import { EditPresetModal } from "./preset/EditPresetModal";
 import { QuoteRateModal } from "./QuoteRateModal";
 import { QuoteReportModal } from "./QuoteReportModal";
 import { QuoteSearchModal } from "./QuoteSearchModal";
-import { RegisterCaptchaModal } from "./RegisterCaptchaModal";
 import { ShareTestSettings } from "./ShareTestSettings";
 import { SimpleModal } from "./SimpleModal";
 import { StreakHourOffsetModal } from "./StreakHourOffsetModal";
@@ -32,7 +31,6 @@ export function Modals(): JSXElement {
       <CommandlineModal />
       <VersionHistoryModal />
       <ContactModal />
-      <RegisterCaptchaModal />
       <SupportModal />
       <SimpleModal />
       <CustomTextModal />

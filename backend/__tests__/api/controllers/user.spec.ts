@@ -22,7 +22,6 @@ import * as DailyLeaderboards from "../../../src/utils/daily-leaderboards";
 import * as LeaderboardDal from "../../../src/dal/leaderboards";
 import GeorgeQueue from "../../../src/queues/george-queue";
 import * as DiscordUtils from "../../../src/utils/discord";
-import * as Captcha from "../../../src/utils/captcha";
 import * as ApeKeysDal from "../../../src/dal/ape-keys";
 import * as LogDal from "../../../src/dal/logs";
 import { ObjectId } from "mongodb";
@@ -43,7 +42,6 @@ describe("user controller test", () => {
   describe("user signup", () => {
     const blocklistContainsMock = vi.spyOn(BlocklistDal, "contains");
     const usernameAvailableMock = vi.spyOn(UserDal, "isNameAvailable");
-    const verifyCaptchaMock = vi.spyOn(Captcha, "verify");
     beforeEach(async () => {
       await enableSignup(true);
       usernameAvailableMock.mockResolvedValue(true);
@@ -62,7 +60,6 @@ describe("user controller test", () => {
         name: "NewUser",
         uid: uid,
         email: "newuser@mail.com",
-        captcha: "captcha",
       };
 
       //WHEN
@@ -78,7 +75,6 @@ describe("user controller test", () => {
         name: "NewUser",
         email: "newuser@mail.com",
       });
-      expect(verifyCaptchaMock).toHaveBeenCalledWith("captcha");
     });
 
     it("should fail if domain is blacklisted", async () => {
@@ -92,7 +88,6 @@ describe("user controller test", () => {
           name: "NewUser",
           uid: uid,
           email: `newuser@${domain}`,
-          captcha: "captcha",
         };
 
         //WHEN
@@ -118,7 +113,6 @@ describe("user controller test", () => {
         name: "NewUser",
         uid: uid,
         email: "newuser@mail.com",
-        captcha: "captcha",
       };
 
       //WHEN
@@ -132,33 +126,11 @@ describe("user controller test", () => {
       expect(result.body.message).toEqual("Username unavailable");
       expect(usernameAvailableMock).toHaveBeenCalledWith("NewUser", uid);
     });
-    it("should fail if capture is invalid", async () => {
-      //GIVEN
-      verifyCaptchaMock.mockResolvedValue(false);
-
-      const newUser = {
-        name: "NewUser",
-        uid: uid,
-        email: "newuser@mail.com",
-        captcha: "captcha",
-      };
-
-      //WHEN
-      const { body } = await mockApp
-        .post("/users/signup")
-        .set("Authorization", `Bearer ${uid}`)
-        .send(newUser)
-        .expect(422);
-
-      //THEN
-      expect(body.message).toEqual("Captcha challenge failed");
-    });
     it("should fail if username too long", async () => {
       //GIVEN
       const newUser = {
         uid: uid,
         email: "newuser@mail.com",
-        captcha: "captcha",
       };
 
       //WHEN
@@ -181,7 +153,6 @@ describe("user controller test", () => {
       const newUser = {
         uid: uid,
         email: "newuser@mail.com",
-        captcha: "captcha",
       };
 
       //WHEN
@@ -385,17 +356,11 @@ describe("user controller test", () => {
     });
   });
   describe("sendForgotPasswordEmail", () => {
-    const verifyCaptchaMock = vi.spyOn(Captcha, "verify");
-
-    beforeEach(() => {
-      verifyCaptchaMock.mockClear().mockResolvedValue(true);
-    });
-
     it("should fail, passwords are managed by ProgCompJOliva", async () => {
       //WHEN
       const { body } = await mockApp
         .post("/users/forgotPasswordEmail")
-        .send({ email: "bob@example.com", captcha: "" })
+        .send({ email: "bob@example.com" })
         .expect(400);
 
       //THEN
@@ -410,7 +375,7 @@ describe("user controller test", () => {
       //THEN
       expect(body).toEqual({
         message: "Invalid request data schema",
-        validationErrors: ['"captcha" Required', '"email" Required'],
+        validationErrors: ['"email" Required'],
       });
     });
   });
@@ -3111,13 +3076,11 @@ describe("user controller test", () => {
   });
   describe("report user", () => {
     const createReportMock = vi.spyOn(ReportDal, "createReport");
-    const verifyCaptchaMock = vi.spyOn(Captcha, "verify");
     const getPartialUserMock = vi.spyOn(UserDal, "getPartialUser"); //todo replace with getPartialUser
     beforeEach(async () => {
       vi.useFakeTimers();
       vi.setSystemTime(125000);
       createReportMock.mockClear().mockResolvedValue();
-      verifyCaptchaMock.mockClear().mockResolvedValue(true);
       getPartialUserMock.mockClear().mockResolvedValue({} as any);
 
       await enableReporting(true);
@@ -3137,7 +3100,6 @@ describe("user controller test", () => {
           uid: uidToReport,
           reason: "Suspected cheating",
           comment: "comment",
-          captcha: "captcha",
         })
         .expect(200);
 
@@ -3160,7 +3122,6 @@ describe("user controller test", () => {
         (await Configuration.getLiveConfiguration()).quotes.reporting
           .contentReportLimit,
       );
-      expect(verifyCaptchaMock).toHaveBeenCalledWith("captcha");
     });
     it("should fail without mandatory properties", async () => {
       //WHEN
@@ -3172,11 +3133,7 @@ describe("user controller test", () => {
       //THEN
       expect(body).toEqual({
         message: "Invalid request data schema",
-        validationErrors: [
-          '"uid" Required',
-          '"reason" Required',
-          '"captcha" Required',
-        ],
+        validationErrors: ['"uid" Required', '"reason" Required'],
       });
     });
     it("should fail with unknown properties", async () => {
@@ -3188,7 +3145,6 @@ describe("user controller test", () => {
           uid: new ObjectId().toHexString(),
           reason: "Suspected cheating",
           comment: "comment",
-          captcha: "captcha",
           extra: "value",
         })
         .expect(422);
@@ -3199,28 +3155,6 @@ describe("user controller test", () => {
         validationErrors: ["Unrecognized key(s) in object: 'extra'"],
       });
     });
-    it("should fail with invalid captcha", async () => {
-      //GIVEN
-      verifyCaptchaMock.mockResolvedValue(false);
-
-      //WHEN
-      const { body } = await mockApp
-        .post("/users/report")
-        .set("Authorization", `Bearer ${uid}`)
-        .send({
-          uid: new ObjectId().toHexString(),
-          reason: "Suspected cheating",
-          comment: "comment",
-          captcha: "captcha",
-        })
-        .expect(422);
-
-      //THEN
-      expect(body.message).toEqual("Captcha challenge failed");
-      /* TODO
-      expect(body).toEqual({});
-      */
-    });
     it("should fail with invalid properties", async () => {
       //WHEN
       const { body } = await mockApp
@@ -3230,7 +3164,6 @@ describe("user controller test", () => {
           uid: new Array(51).fill("x").join(""),
           reason: "unfriendly",
           comment: new Array(251).fill("x").join(""),
-          captcha: "captcha",
         })
         .expect(422);
 
@@ -3255,7 +3188,6 @@ describe("user controller test", () => {
           uid: new ObjectId().toHexString(),
           reason: "Suspected cheating",
           comment: "comment",
-          captcha: "captcha",
         })
         .expect(403);
 
@@ -3274,7 +3206,6 @@ describe("user controller test", () => {
           uid: new ObjectId().toHexString(),
           reason: "Suspected cheating",
           comment: "comment",
-          captcha: "captcha",
         })
         .expect(503);
 

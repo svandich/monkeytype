@@ -2,7 +2,7 @@ FROM node:24.11.0-alpine3.22 AS builder
 WORKDIR /app
 
 #ENV
-ENV BACKEND_URL=###MONKEYTYPE_BACKENDURL### RECAPTCHA_SITE_KEY=###RECAPTCHA_SITE_KEY### PROGCOMP_API_URL=###PROGCOMP_API_URL###
+ENV BACKEND_URL=###MONKEYTYPE_BACKENDURL### PROGCOMP_API_URL=###PROGCOMP_API_URL###
 
 #COPY
 COPY ["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", "turbo.json", "./"]

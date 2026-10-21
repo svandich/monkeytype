@@ -7,7 +7,6 @@ import type { DBNewQuote } from "../../../src/dal/new-quotes";
 import * as QuoteRatingsDal from "../../../src/dal/quote-ratings";
 import * as ReportDal from "../../../src/dal/report";
 import * as LogsDal from "../../../src/dal/logs";
-import * as Captcha from "../../../src/utils/captcha";
 import { ObjectId } from "mongodb";
 import { ApproveQuote } from "@monkeytype/schemas/quotes";
 
@@ -156,14 +155,10 @@ describe("QuotesController", () => {
   });
   describe("addQuote", () => {
     const addQuoteMock = vi.spyOn(NewQuotesDal, "add");
-    const verifyCaptchaMock = vi.spyOn(Captcha, "verify");
 
     beforeEach(() => {
       addQuoteMock.mockClear();
       addQuoteMock.mockResolvedValue({});
-
-      verifyCaptchaMock.mockClear();
-      verifyCaptchaMock.mockResolvedValue(true);
     });
 
     it("should add quote", async () => {
@@ -172,7 +167,6 @@ describe("QuotesController", () => {
         text: new Array(60).fill("a").join(""),
         source: "Bob",
         language: "english",
-        captcha: "captcha",
       };
 
       //WHEN
@@ -194,8 +188,6 @@ describe("QuotesController", () => {
         newQuote.language,
         uid,
       );
-
-      expect(verifyCaptchaMock).toHaveBeenCalledWith(newQuote.captcha);
     });
     it("should fail without authentication", async () => {
       await mockApp.post("/quotes").expect(401);
@@ -228,7 +220,6 @@ describe("QuotesController", () => {
           '"text" Required',
           '"source" Required',
           '"language" Required',
-          '"captcha" Required',
         ],
       });
     });
@@ -240,7 +231,6 @@ describe("QuotesController", () => {
           text: new Array(60).fill("a").join(""),
           source: "Bob",
           language: "english",
-          captcha: "captcha",
           extra: "value",
         })
         .set("Authorization", `Bearer ${uid}`)
@@ -251,25 +241,6 @@ describe("QuotesController", () => {
         message: "Invalid request data schema",
         validationErrors: ["Unrecognized key(s) in object: 'extra'"],
       });
-    });
-    it("should fail with invalid capture", async () => {
-      //GIVEN
-      verifyCaptchaMock.mockResolvedValue(false);
-
-      //WHEN
-      const { body } = await mockApp
-        .post("/quotes")
-        .send({
-          text: new Array(60).fill("a").join(""),
-          source: "Bob",
-          language: "english",
-          captcha: "captcha",
-        })
-        .set("Authorization", `Bearer ${uid}`)
-        .expect(422);
-
-      //THEN
-      expect(body.message).toEqual("Captcha check failed");
     });
   });
   describe("approveQuote", () => {
@@ -752,13 +723,11 @@ describe("QuotesController", () => {
     });
   });
   describe("reportQuote", () => {
-    const verifyCaptchaMock = vi.spyOn(Captcha, "verify");
     const createReportMock = vi.spyOn(ReportDal, "createReport");
 
     beforeEach(async () => {
       await enableQuoteReporting(true);
 
-      verifyCaptchaMock.mockClear().mockResolvedValue(true);
       createReportMock.mockClear().mockResolvedValue();
     });
 
@@ -773,7 +742,6 @@ describe("QuotesController", () => {
           quoteLanguage: "english",
           reason: "Inappropriate content",
           comment: "I don't like this.",
-          captcha: "captcha",
         });
       //.expect(200);
 
@@ -782,8 +750,6 @@ describe("QuotesController", () => {
         message: "Quote reported",
         data: null,
       });
-
-      expect(verifyCaptchaMock).toHaveBeenCalledWith("captcha");
 
       expect(createReportMock).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -806,7 +772,6 @@ describe("QuotesController", () => {
           quoteId: "23", //quoteId is string on this endpoint
           quoteLanguage: "english",
           reason: "Inappropriate content",
-          captcha: "captcha",
         })
         .expect(200);
     });
@@ -819,7 +784,6 @@ describe("QuotesController", () => {
           quoteLanguage: "english",
           reason: "Inappropriate content",
           comment: "",
-          captcha: "captcha",
         })
         .expect(200);
     });
@@ -837,7 +801,6 @@ describe("QuotesController", () => {
           '"quoteId" Invalid input',
           '"quoteLanguage" Required',
           '"reason" Required',
-          '"captcha" Required',
         ],
       });
     });

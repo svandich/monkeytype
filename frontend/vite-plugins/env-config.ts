@@ -33,7 +33,6 @@ export function envConfig(options: {
             "http://localhost:5029",
           ),
           clientVersion: options.clientVersion,
-          recaptchaSiteKey: "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI",
           quickLoginEmail: options.env["QUICK_LOGIN_EMAIL"],
           quickLoginPassword: options.env["QUICK_LOGIN_PASSWORD"],
         };
@@ -48,7 +47,6 @@ export function envConfig(options: {
             options.env["PROGCOMP_API_URL"],
             "https://progcomp.joliva.cl:8443",
           ),
-          recaptchaSiteKey: options.env["RECAPTCHA_SITE_KEY"] ?? "",
           quickLoginEmail: undefined,
           quickLoginPassword: undefined,
           clientVersion: options.clientVersion,

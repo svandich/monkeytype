@@ -35,7 +35,6 @@ export const AddQuoteRequestSchema = z.object({
   text: QuoteTextSchema,
   source: z.string(),
   language: LanguageSchema,
-  captcha: z.string(), //we don't generate the captcha so there should be no validation
 });
 export type AddQuoteRequest = z.infer<typeof AddQuoteRequestSchema>;
 
@@ -83,7 +82,6 @@ export const ReportQuoteRequestSchema = z.object({
     .max(250)
     .optional()
     .or(z.string().length(0)),
-  captcha: z.string(), //we don't generate the captcha so there should be no validation
 });
 export type ReportQuoteRequest = z.infer<typeof ReportQuoteRequestSchema>;
 
