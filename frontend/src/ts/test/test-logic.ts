@@ -1044,9 +1044,6 @@ async function showResult(
   qs(".pageTest .loading")?.hide();
   setShowResult(true);
 
-  const resultPrefocusTarget = qs("#resultButtonsPrefocusTarget");
-  resultPrefocusTarget?.focus({ preventScroll: true });
-
   const resultEl = qs("#result");
 
   void resultEl?.promiseAnimate?.({
