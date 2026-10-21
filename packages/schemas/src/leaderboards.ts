@@ -1,4 +1,20 @@
 import { z } from "zod";
+import { Language } from "./languages";
+
+/**
+ * Languages with an all-time leaderboard (time 15 and 60). The first one is the
+ * default selection on the leaderboard page.
+ */
+export const ALL_TIME_LEADERBOARD_LANGUAGES = [
+  "ariasctl",
+  "english",
+] as const satisfies Language[];
+
+export function isAllTimeLeaderboardLanguage(language: string): boolean {
+  return (ALL_TIME_LEADERBOARD_LANGUAGES as readonly string[]).includes(
+    language,
+  );
+}
 
 const FriendsRankSchema = z
   .number()

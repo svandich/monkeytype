@@ -10,7 +10,10 @@ import {
 
 import { addLog } from "./logs";
 import { Collection, Document, ObjectId } from "mongodb";
-import { LeaderboardEntry } from "@monkeytype/schemas/leaderboards";
+import {
+  ALL_TIME_LEADERBOARD_LANGUAGES,
+  LeaderboardEntry,
+} from "@monkeytype/schemas/leaderboards";
 import { DBUser, getUsersCollection } from "./user";
 import MonkeyError from "../utils/error";
 import { aggregateWithAcceptedConnections } from "./connections";
@@ -411,12 +414,16 @@ async function createIndex(
 export async function createIndicies(): Promise<void> {
   const minTimeTyping = (await getLiveConfiguration()).leaderboards
     .minTimeTyping;
-  await createIndex("lbPersonalBests.time.15.english", minTimeTyping);
-  await createIndex("lbPersonalBests.time.60.english", minTimeTyping);
+  for (const language of ALL_TIME_LEADERBOARD_LANGUAGES) {
+    await createIndex(`lbPersonalBests.time.15.${language}`, minTimeTyping);
+    await createIndex(`lbPersonalBests.time.60.${language}`, minTimeTyping);
+  }
 
   if (isDevEnvironment()) {
     Logger.info("Updating leaderboards in dev mode...");
-    await update("time", "15", "english");
-    await update("time", "60", "english");
+    for (const language of ALL_TIME_LEADERBOARD_LANGUAGES) {
+      await update("time", "15", language);
+      await update("time", "60", language);
+    }
   }
 }

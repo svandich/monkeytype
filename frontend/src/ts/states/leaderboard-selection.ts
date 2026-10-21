@@ -1,4 +1,5 @@
 import { LanguageSchema } from "@monkeytype/schemas/languages";
+import { ALL_TIME_LEADERBOARD_LANGUAGES } from "@monkeytype/schemas/leaderboards";
 import { ModeSchema } from "@monkeytype/schemas/shared";
 import { Accessor, createEffect, createSignal, Setter } from "solid-js";
 import { z } from "zod";
@@ -82,7 +83,8 @@ export function readLeaderboardGetParameters(
   } else {
     newSelection.mode = params.mode ?? "time";
     newSelection.mode2 = params.mode2 ?? "15";
-    newSelection.language = params.language ?? "english";
+    newSelection.language =
+      params.language ?? ALL_TIME_LEADERBOARD_LANGUAGES[0];
     newSelection.previous =
       params.type === "daily" && (params.yesterday ?? false);
   }
@@ -134,7 +136,7 @@ function lsSelection(): [Accessor<Selection>, Setter<Selection>] {
       type: "allTime",
       mode: "time",
       mode2: "15",
-      language: "english",
+      language: ALL_TIME_LEADERBOARD_LANGUAGES[0],
       friendsOnly: false,
       previous: false,
     },

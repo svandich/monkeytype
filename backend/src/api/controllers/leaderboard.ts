@@ -20,6 +20,7 @@ import {
   GetWeeklyXpLeaderboardResponse,
 } from "@monkeytype/contracts/leaderboards";
 import { Configuration } from "@monkeytype/schemas/configuration";
+import { isAllTimeLeaderboardLanguage } from "@monkeytype/schemas/leaderboards";
 import {
   getCurrentDayTimestamp,
   getCurrentWeekTimestamp,
@@ -35,13 +36,7 @@ export async function getLeaderboard(
   const { uid } = req.ctx.decodedToken;
   const connectionsConfig = req.ctx.configuration.connections;
 
-  if (
-    mode !== "time" ||
-    (mode2 !== "15" && mode2 !== "60") ||
-    language !== "english"
-  ) {
-    throw new MonkeyError(404, "There is no leaderboard for this mode");
-  }
+  assertAllTimeLeaderboardExists(mode, mode2, language);
 
   const friendsOnlyUid = getFriendsOnlyUid(uid, friendsOnly, connectionsConfig);
 
@@ -103,6 +98,20 @@ export async function getRankFromLeaderboard(
   }
 
   return new MonkeyResponse("Rank retrieved", omit(data, ["_id"]));
+}
+
+function assertAllTimeLeaderboardExists(
+  mode: string,
+  mode2: string,
+  language: string,
+): void {
+  if (
+    mode !== "time" ||
+    (mode2 !== "15" && mode2 !== "60") ||
+    !isAllTimeLeaderboardLanguage(language)
+  ) {
+    throw new MonkeyError(404, "There is no leaderboard for this mode");
+  }
 }
 
 function getDailyLeaderboardWithError(

@@ -128,19 +128,19 @@ export function LeaderboardPage(): JSXElement {
   };
 
   const syncLbMemory = () => {
+    const selection = getSelection();
     if (
       rankQuery.data !== undefined &&
       rankQuery.data !== null &&
-      getSelection() !== undefined &&
-      getSelection().type === "allTime"
+      selection?.type === "allTime"
     ) {
-      const diff = getLbMemoryDifference(getSelection(), rankQuery.data.rank);
+      const diff = getLbMemoryDifference(selection, rankQuery.data.rank);
 
       if (diff !== 0) {
         void updateLbMemory(
           "time",
-          getSelection().mode2,
-          "english",
+          selection.mode2,
+          selection.language,
           rankQuery.data.rank,
           true,
         );
@@ -155,14 +155,14 @@ export function LeaderboardPage(): JSXElement {
     if (
       selection.type !== "allTime" ||
       selection.mode !== "time" ||
-      selection.language !== "english" ||
       selection.friendsOnly ||
       currentRank === undefined
     ) {
       return undefined;
     }
     const oldRank =
-      getSnapshot()?.lbMemory?.time?.[selection.mode2]?.english ?? 0;
+      getSnapshot()?.lbMemory?.time?.[selection.mode2]?.[selection.language] ??
+      0;
     const diff = oldRank - currentRank;
 
     return diff;

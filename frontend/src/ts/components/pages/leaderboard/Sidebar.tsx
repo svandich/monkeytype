@@ -1,5 +1,6 @@
 import { ValidModeRule } from "@monkeytype/schemas/configuration";
 import { Language } from "@monkeytype/schemas/languages";
+import { ALL_TIME_LEADERBOARD_LANGUAGES } from "@monkeytype/schemas/leaderboards";
 import { Mode } from "@monkeytype/schemas/shared";
 import { Accessor, For, JSXElement, Show } from "solid-js";
 
@@ -58,7 +59,7 @@ export function Sidebar(props: {
         items={[
           {
             id: "allTime",
-            text: "all-time english",
+            text: "all-time",
             icon: "fa-globe-americas",
           },
           { id: "weekly", text: "weekly xp", icon: "fa-calendar-day" },
@@ -231,8 +232,8 @@ function getValidLeaderboards(
   return {
     allTime: {
       time: {
-        "15": ["english"],
-        "60": ["english"],
+        "15": [...ALL_TIME_LEADERBOARD_LANGUAGES],
+        "60": [...ALL_TIME_LEADERBOARD_LANGUAGES],
       },
     },
     weekly: {},

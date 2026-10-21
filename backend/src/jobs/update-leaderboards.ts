@@ -2,6 +2,8 @@ import { CronJob } from "cron";
 import GeorgeQueue from "../queues/george-queue";
 import * as LeaderboardsDAL from "../dal/leaderboards";
 import { getCachedConfiguration } from "../init/configuration";
+import { ALL_TIME_LEADERBOARD_LANGUAGES } from "@monkeytype/schemas/leaderboards";
+import { Language } from "@monkeytype/schemas/languages";
 
 const CRON_SCHEDULE = "30 14/15 * * * *";
 const RECENT_AGE_MINUTES = 10;
@@ -9,11 +11,12 @@ const RECENT_AGE_MILLISECONDS = RECENT_AGE_MINUTES * 60 * 1000;
 
 async function getTop10(
   leaderboardTime: string,
+  language: Language,
 ): Promise<LeaderboardsDAL.DBLeaderboardEntry[]> {
   return (await LeaderboardsDAL.get(
     "time",
     leaderboardTime,
-    "english",
+    language,
     0,
     10,
   )) as LeaderboardsDAL.DBLeaderboardEntry[]; //can do that because gettop10 will not be called during an update
@@ -21,8 +24,9 @@ async function getTop10(
 
 async function updateLeaderboardAndNotifyChanges(
   leaderboardTime: string,
+  language: Language,
 ): Promise<void> {
-  const top10BeforeUpdate = await getTop10(leaderboardTime);
+  const top10BeforeUpdate = await getTop10(leaderboardTime, language);
 
   const previousRecordsMap = Object.fromEntries(
     top10BeforeUpdate.map((record) => {
@@ -30,9 +34,9 @@ async function updateLeaderboardAndNotifyChanges(
     }),
   );
 
-  await LeaderboardsDAL.update("time", leaderboardTime, "english");
+  await LeaderboardsDAL.update("time", leaderboardTime, language);
 
-  const top10AfterUpdate = await getTop10(leaderboardTime);
+  const top10AfterUpdate = await getTop10(leaderboardTime, language);
 
   const newRecords = top10AfterUpdate.filter((record) => {
     const userId = record.uid;
@@ -50,7 +54,7 @@ async function updateLeaderboardAndNotifyChanges(
   });
 
   if (newRecords.length > 0) {
-    const leaderboardId = `time ${leaderboardTime} english`;
+    const leaderboardId = `time ${leaderboardTime} ${language}`;
 
     await GeorgeQueue.announceLeaderboardUpdate(newRecords, leaderboardId);
   }
@@ -62,8 +66,10 @@ async function updateLeaderboards(): Promise<void> {
     return;
   }
 
-  await updateLeaderboardAndNotifyChanges("60");
-  await updateLeaderboardAndNotifyChanges("15");
+  for (const language of ALL_TIME_LEADERBOARD_LANGUAGES) {
+    await updateLeaderboardAndNotifyChanges("60", language);
+    await updateLeaderboardAndNotifyChanges("15", language);
+  }
 }
 
 export default new CronJob(CRON_SCHEDULE, updateLeaderboards);

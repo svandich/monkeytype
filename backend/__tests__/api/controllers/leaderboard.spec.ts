@@ -194,6 +194,8 @@ describe("Loaderboard Controller", () => {
       const testCases = [
         { mode: "time", mode2: "15", language: "english", expectStatus: 200 },
         { mode: "time", mode2: "60", language: "english", expectStatus: 200 },
+        { mode: "time", mode2: "15", language: "ariasctl", expectStatus: 200 },
+        { mode: "time", mode2: "60", language: "ariasctl", expectStatus: 200 },
         { mode: "time", mode2: "30", language: "english", expectStatus: 404 },
         { mode: "words", mode2: "15", language: "english", expectStatus: 404 },
         { mode: "time", mode2: "15", language: "spanish", expectStatus: 404 },
