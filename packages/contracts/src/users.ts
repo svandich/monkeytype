@@ -47,7 +47,7 @@ export type GetUserResponse = z.infer<typeof GetUserResponseSchema>;
 export const CreateUserRequestSchema = z.object({
   email: UserEmailSchema.optional(),
   name: UserNameSchema,
-  uid: z.string().optional(), //defined by firebase, no validation should be applied
+  uid: z.string().optional(), //ProgCompJOliva user id without hyphens, no validation should be applied
   captcha: z.string(), //defined by google recaptcha, no validation should be applied
 });
 export type CreateUserRequest = z.infer<typeof CreateUserRequestSchema>;

@@ -1,6 +1,5 @@
 /**
- * Analytics were provided by Firebase, which is no longer used.
- * Kept as a no-op so callers don't need to change.
+ * Analytics are disabled. Kept as a no-op so callers don't need to change.
  */
 export async function log(
   _eventName: string,

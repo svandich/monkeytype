@@ -41,7 +41,6 @@ const route404: Route = {
   },
 };
 
-// NOTE: whenever adding a route add the pathname to the `firebase.json` rewrite rule
 const routes: Route[] = [
   {
     path: "/",

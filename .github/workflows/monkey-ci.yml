@@ -254,10 +254,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Create stub firebase config
-        working-directory: ./frontend/src/ts/constants
-        run: mv ./firebase-config-example.ts ./firebase-config.ts && cp ./firebase-config.ts ./firebase-config-live.ts
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
         with:

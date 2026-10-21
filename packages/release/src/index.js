@@ -18,7 +18,6 @@ const isBackend = args.has("--be");
 const isDryRun = args.has("--dry");
 const noSyncCheck = args.has("--no-sync-check");
 const hotfix = args.has("--hotfix");
-const previewFe = args.has("--preview-fe");
 
 const PROJECT_ROOT = path.resolve(DIRNAME, "../../../");
 
@@ -193,10 +192,8 @@ const deployBackend = () => {
 };
 
 const deployFrontend = () => {
-  console.log("Deploying frontend...");
-  runProjectRootCommand(
-    "cd frontend && npx firebase deploy -P live --only hosting",
-  );
+  // the frontend ships as the docker image (docker/frontend), there is no hosting to deploy to
+  console.log("Frontend is deployed with its docker image, skipping.");
 };
 
 const purgeCache = () => {
@@ -272,42 +269,6 @@ const createGithubRelease = async (version, changelogContent) => {
 };
 
 const main = async () => {
-  if (previewFe) {
-    console.log(`Starting frontend preview deployment process...`);
-    installDependencies();
-    runProjectRootCommand(
-      "NODE_ENV=production npx turbo lint test check-assets build --filter @monkeytype/frontend --force",
-    );
-
-    const name = readlineSync.question(
-      "Enter preview channel name (default: preview): ",
-    );
-    let channelName = name.trim();
-
-    if (channelName === "") {
-      channelName = "preview";
-    }
-
-    const expirationTime = readlineSync.question(
-      "Enter expiration time (e.g., 2h, default: 1d): ",
-    );
-    let expires = expirationTime.trim();
-
-    if (expires === "") {
-      expires = "1d";
-    }
-
-    console.log(
-      `Deploying frontend preview to channel "${channelName}" with expiration "${expires}"...`,
-    );
-    const result = runProjectRootCommand(
-      `cd frontend && npx firebase hosting:channel:deploy ${channelName} -P live --expires ${expires}`,
-    );
-    console.log(result);
-    console.log("Frontend preview deployed successfully.");
-    process.exit(0);
-  }
-
   console.log(`Starting ${hotfix ? "hotfix" : "release"} process...`);
 
   if (!hotfix) checkBranchSync();

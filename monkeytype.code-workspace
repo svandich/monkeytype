@@ -35,7 +35,6 @@
       "**/public/**": true,
       "**/coverage/**": true,
       "**/logs/**": true,
-      "**/.firebase/**": true,
       "**/.turbo/**": true,
     },
     "editor.defaultFormatter": "oxc.oxc-vscode",

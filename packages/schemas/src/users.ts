@@ -251,7 +251,7 @@ export const UserNameSchema = doesNotContainDisallowedWords(
 export const UserSchema = z.object({
   name: UserNameSchema,
   email: UserEmailSchema,
-  uid: z.string(), //defined by firebase, no validation should be applied
+  uid: z.string(), //ProgCompJOliva user id without hyphens, no validation should be applied
   addedAt: z.number().int().nonnegative(),
   personalBests: PersonalBestsSchema,
   lastReultHashes: z.array(z.string()).optional(), //TODO: fix typo (it's in the db too)
