@@ -136,31 +136,6 @@ export function showResetPersonalBestsModal(): void {
   });
 }
 
-export function showRevokeAllTokensModal() {
-  showReauthConfirmModal({
-    title: "Revoke all tokens",
-    confirmText: `I understand that all my tokens will get revoked and that I will be logged out of all devices.`,
-    buttonText: "revoke all",
-    action: async () => {
-      const response = await Ape.users.revokeAllTokens();
-      if (response.status !== 200) {
-        return {
-          status: "error",
-          message: "Failed to revoke tokens",
-          notificationOptions: { response },
-        };
-      }
-
-      reloadAfter(3);
-
-      return {
-        status: "success",
-        message: "Tokens revoked",
-      };
-    },
-  });
-}
-
 function showReauthConfirmModal(options: {
   title: string;
   buttonText: string;

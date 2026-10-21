@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import * as AuthUtils from "../../src/utils/auth";
 import * as Auth from "../../src/middlewares/auth";
-import { DecodedIdToken } from "firebase-admin/auth";
+import { DecodedIdToken } from "../../src/utils/auth";
 import { NextFunction, Request, Response } from "express";
 import { getCachedConfiguration } from "../../src/init/configuration";
 import * as ApeKeys from "../../src/dal/ape-keys";

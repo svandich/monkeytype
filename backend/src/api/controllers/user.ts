@@ -1,13 +1,9 @@
 import * as UserDAL from "../../dal/user";
-import MonkeyError, {
-  getErrorMessage,
-  isFirebaseError,
-} from "../../utils/error";
+import MonkeyError from "../../utils/error";
 import { MonkeyResponse } from "../../utils/monkey-response";
 import * as DiscordUtils from "../../utils/discord";
 import {
   buildAgentLog,
-  getFrontendUrl,
   omit,
   replaceObjectId,
   replaceObjectIds,
@@ -26,8 +22,6 @@ import { deleteUserAccount } from "../../services/user-deletion";
 import { v4 as uuidv4 } from "uuid";
 import { ObjectId } from "mongodb";
 import * as ReportDAL from "../../dal/report";
-import emailQueue from "../../queues/email-queue";
-import FirebaseAdmin from "../../init/firebase-admin";
 import * as AuthUtil from "../../utils/auth";
 import * as Dates from "date-fns";
 import { UTCDateMini } from "@date-fns/utc";
@@ -42,7 +36,6 @@ import {
   UserProfileDetails,
 } from "@monkeytype/schemas/users";
 import { addImportantLog, addLog } from "../../dal/logs";
-import { sendForgotPasswordEmail as authSendForgotPasswordEmail } from "../../utils/auth";
 import {
   AddCustomThemeRequest,
   AddCustomThemeResponse,
@@ -114,148 +107,77 @@ export async function createNewUser(
   const { name, captcha } = req.body;
   const { email, uid } = req.ctx.decodedToken;
 
-  try {
-    await verifyCaptcha(captcha);
+  await verifyCaptcha(captcha);
 
-    if (email.endsWith("@tidal.lol") || email.endsWith("@selfbot.cc")) {
-      throw new MonkeyError(400, "Invalid domain");
-    }
-
-    const available = await UserDAL.isNameAvailable(name, uid);
-    if (!available) {
-      throw new MonkeyError(409, "Username unavailable");
-    }
-
-    const blocklisted = await BlocklistDal.contains({ name, email });
-    if (blocklisted) {
-      throw new MonkeyError(409, "Username or email blocked");
-    }
-
-    await UserDAL.addUser(name, email, uid);
-    void addImportantLog("user_created", `${name} ${email}`, uid);
-
-    return new MonkeyResponse("User created", null);
-  } catch (e) {
-    //user was created in firebase from the frontend, remove it
-    await firebaseDeleteUserIgnoreError(uid);
-    throw e;
+  if (email.endsWith("@tidal.lol") || email.endsWith("@selfbot.cc")) {
+    throw new MonkeyError(400, "Invalid domain");
   }
+
+  const available = await UserDAL.isNameAvailable(name, uid);
+  if (!available) {
+    throw new MonkeyError(409, "Username unavailable");
+  }
+
+  const blocklisted = await BlocklistDal.contains({ name, email });
+  if (blocklisted) {
+    throw new MonkeyError(409, "Username or email blocked");
+  }
+
+  await UserDAL.addUser(name, email, uid);
+  void addImportantLog("user_created", `${name} ${email}`, uid);
+
+  return new MonkeyResponse("User created", null);
+}
+
+/**
+ * Turns a ProgCompJOliva nickname into a valid, unused monkeytype name
+ * (slug, max 16 chars). Falls back to a numeric suffix on collisions.
+ */
+async function getAvailableNameFromNickname(
+  nickname: string,
+  uid: string,
+): Promise<string> {
+  const base = nickname.replace(/[^\da-zA-Z_.-]/g, "_").slice(0, 16) || "user";
+
+  for (let i = 0; i < 100; i++) {
+    const suffix = i === 0 ? "" : `${i}`;
+    const candidate = base.slice(0, 16 - suffix.length) + suffix;
+    if (await UserDAL.isNameAvailable(candidate, uid)) return candidate;
+  }
+  return `user_${uid.slice(0, 11)}`;
+}
+
+/**
+ * Users live in ProgCompJOlivaApi, so the monkeytype profile is created on the
+ * first authenticated request instead of through the signup form.
+ */
+async function provisionUserFromToken(
+  decodedToken: MonkeyRequest["ctx"]["decodedToken"],
+): Promise<void> {
+  const { uid, email, nickname } = decodedToken;
+  if (decodedToken.type !== "Bearer" || nickname === undefined) {
+    throw new MonkeyError(404, "User not found", "get user", uid);
+  }
+
+  const name = await getAvailableNameFromNickname(nickname, uid);
+  await UserDAL.addUser(name, email, uid);
+  void addImportantLog(
+    "user_created",
+    `${name} ${email} (ProgCompJOliva ${nickname})`,
+    uid,
+  );
 }
 
 export async function sendVerificationEmail(
-  req: MonkeyRequest,
+  _req: MonkeyRequest,
 ): Promise<MonkeyResponse> {
-  const { email, uid } = req.ctx.decodedToken;
-  const isVerified = (
-    await FirebaseAdmin()
-      .auth()
-      .getUser(uid)
-      .catch((e: unknown) => {
-        throw new MonkeyError(
-          500, // this should never happen, but it does. it mightve been caused by auth token cache, will see if disabling cache fixes it
-          "Auth user not found, even though the token got decoded",
-          JSON.stringify({
-            uid,
-            email,
-            stack: e instanceof Error ? e.stack : JSON.stringify(e),
-          }),
-          uid,
-        );
-      })
-  ).emailVerified;
-  if (isVerified) {
-    throw new MonkeyError(400, "Email already verified");
-  }
-
-  const userInfo = await UserDAL.getPartialUser(
-    uid,
-    "request verification email",
-    ["uid", "name", "email"],
-  );
-
-  if (userInfo.email !== email) {
-    throw new MonkeyError(
-      400,
-      "Authenticated email does not match the email found in the database. This might happen if you recently changed your email. Please refresh and try again.",
-    );
-  }
-
-  const { data: link, error } = await tryCatch(
-    FirebaseAdmin()
-      .auth()
-      .generateEmailVerificationLink(email, { url: getFrontendUrl() }),
-  );
-
-  if (error) {
-    if (isFirebaseError(error)) {
-      if (error.errorInfo.code === "auth/user-not-found") {
-        throw new MonkeyError(
-          500,
-          "Auth user not found when the user was found in the database. Contact support with this error message and your email",
-          JSON.stringify({
-            decodedTokenEmail: email,
-            userInfoEmail: userInfo.email,
-          }),
-          userInfo.uid,
-        );
-      } else if (error.errorInfo.code === "auth/too-many-requests") {
-        throw new MonkeyError(429, "Too many requests. Please try again later");
-      } else if (
-        error.errorInfo.code === "auth/internal-error" &&
-        error.errorInfo.message.toLowerCase().includes("too_many_attempts")
-      ) {
-        throw new MonkeyError(
-          429,
-          "Too many Firebase requests. Please try again later",
-        );
-      } else {
-        throw new MonkeyError(
-          500,
-          `Firebase failed to generate an email verification link: ${
-            error.errorInfo.message
-          }`,
-          JSON.stringify(error),
-        );
-      }
-    } else {
-      const message = getErrorMessage(error);
-      if (message === undefined) {
-        throw new MonkeyError(
-          500,
-          "Failed to generate an email verification link. Unknown error occured",
-        );
-      } else {
-        if (message.toLowerCase().includes("too_many_attempts")) {
-          throw new MonkeyError(
-            429,
-            "Too many requests. Please try again later",
-          );
-        } else {
-          throw new MonkeyError(
-            500,
-            `Failed to generate an email verification link: ${message}`,
-            error.stack,
-          );
-        }
-      }
-    }
-  }
-
-  await emailQueue.sendVerificationEmail(email, userInfo.name, link);
-
-  return new MonkeyResponse("Email sent", null);
+  AuthUtil.throwManagedByProgComp("Email verification");
 }
 
 export async function sendForgotPasswordEmail(
-  req: MonkeyRequest<undefined, ForgotPasswordEmailRequest>,
+  _req: MonkeyRequest<undefined, ForgotPasswordEmailRequest>,
 ): Promise<MonkeyResponse> {
-  const { email, captcha } = req.body;
-  await verifyCaptcha(captcha);
-  await authSendForgotPasswordEmail(email);
-  return new MonkeyResponse(
-    "Password reset request received. If the email is valid, you will receive an email shortly.",
-    null,
-  );
+  AuthUtil.throwManagedByProgComp("Password reset");
 }
 
 export async function deleteUser(req: MonkeyRequest): Promise<MonkeyResponse> {
@@ -397,61 +319,15 @@ export async function checkName(
 }
 
 export async function updateEmail(
-  req: MonkeyRequest<undefined, UpdateEmailRequest>,
+  _req: MonkeyRequest<undefined, UpdateEmailRequest>,
 ): Promise<MonkeyResponse> {
-  const { uid } = req.ctx.decodedToken;
-  let { newEmail, previousEmail } = req.body;
-
-  newEmail = newEmail.toLowerCase();
-  previousEmail = previousEmail.toLowerCase();
-
-  try {
-    await AuthUtil.updateUserEmail(uid, newEmail);
-    await UserDAL.updateEmail(uid, newEmail);
-  } catch (e) {
-    if (isFirebaseError(e)) {
-      if (e.code === "auth/email-already-exists") {
-        throw new MonkeyError(
-          409,
-          "The email address is already in use by another account",
-        );
-      } else if (e.code === "auth/invalid-email") {
-        throw new MonkeyError(400, "Invalid email address");
-      } else if (e.code === "auth/too-many-requests") {
-        throw new MonkeyError(429, "Too many requests. Please try again later");
-      } else if (e.code === "auth/user-not-found") {
-        throw new MonkeyError(
-          404,
-          "User not found in the auth system",
-          "update email",
-          uid,
-        );
-      } else if (e.code === "auth/invalid-user-token") {
-        throw new MonkeyError(401, "Invalid user token", "update email", uid);
-      }
-    } else {
-      throw e;
-    }
-  }
-
-  void addImportantLog(
-    "user_email_updated",
-    `changed email from ${previousEmail} to ${newEmail}`,
-    uid,
-  );
-
-  return new MonkeyResponse("Email updated", null);
+  AuthUtil.throwManagedByProgComp("Email");
 }
 
 export async function updatePassword(
-  req: MonkeyRequest<undefined, UpdatePasswordRequest>,
+  _req: MonkeyRequest<undefined, UpdatePasswordRequest>,
 ): Promise<MonkeyResponse> {
-  const { uid } = req.ctx.decodedToken;
-  const { newPassword } = req.body;
-
-  await AuthUtil.updateUserPassword(uid, newPassword);
-
-  return new MonkeyResponse("Password updated", null);
+  AuthUtil.throwManagedByProgComp("Password");
 }
 
 type RelevantUserInfo = Omit<
@@ -485,43 +361,23 @@ function getRelevantUserInfo(user: UserDAL.DBUser): RelevantUserInfo {
   ]);
 }
 
+async function getOrProvisionUser(
+  decodedToken: MonkeyRequest["ctx"]["decodedToken"],
+): Promise<UserDAL.DBUser> {
+  const { data: userInfo, error } = await tryCatch(
+    UserDAL.getUser(decodedToken.uid, "get user"),
+  );
+  if (error === null) return userInfo;
+  if (!(error instanceof MonkeyError) || error.status !== 404) throw error;
+
+  await provisionUserFromToken(decodedToken);
+  return UserDAL.getUser(decodedToken.uid, "get user");
+}
+
 export async function getUser(req: MonkeyRequest): Promise<GetUserResponse> {
   const { uid } = req.ctx.decodedToken;
 
-  const { data: userInfo, error } = await tryCatch(
-    UserDAL.getUser(uid, "get user"),
-  );
-
-  if (error) {
-    if (error instanceof MonkeyError && error.status === 404) {
-      //if the user is in the auth system but not in the db, its possible that the user was created by bypassing captcha
-      //since there is no data in the database anyway, we can just delete the user from the auth system
-      //and ask them to sign up again
-      try {
-        await AuthUtil.deleteUser(uid);
-        throw new MonkeyError(
-          404,
-          "User not found in the database, but found in the auth system. We have deleted the ghost user from the auth system. Please sign up again.",
-          "get user",
-          uid,
-        );
-      } catch (e) {
-        // oxlint-disable-next-line no-unsafe-member-access
-        if (e.code === "auth/user-not-found") {
-          throw new MonkeyError(
-            404,
-            "User not found in the database or the auth system. Please sign up again.",
-            "get user",
-            uid,
-          );
-        } else {
-          throw e;
-        }
-      }
-    } else {
-      throw error;
-    }
-  }
+  const userInfo = await getOrProvisionUser(req.ctx.decodedToken);
 
   userInfo.personalBests ??= {
     time: {},
@@ -1211,14 +1067,6 @@ export async function getTestActivity(
     "Test activity data retrieved",
     user.testActivity ?? null,
   );
-}
-
-async function firebaseDeleteUserIgnoreError(uid: string): Promise<void> {
-  try {
-    await AuthUtil.deleteUser(uid);
-  } catch (e) {
-    //ignore
-  }
 }
 
 export async function getCurrentTestActivity(

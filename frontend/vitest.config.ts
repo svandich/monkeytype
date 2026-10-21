@@ -27,7 +27,7 @@ export const projects: UserWorkspaceConfig[] = [
       globalSetup: "__tests__/global-setup.ts",
       setupFiles: [
         "__tests__/__harness__/mock-dom.ts",
-        "__tests__/__harness__/mock-firebase.ts",
+        "__tests__/__harness__/mock-progcomp-auth.ts",
         "__tests__/__harness__/mock-env-config.ts",
         "__tests__/__harness__/mock-static.ts",
       ],
@@ -69,13 +69,6 @@ export default defineConfig({
     projects: projects,
     coverage: {
       include: ["**/*.ts", "**/*.tsx"],
-    },
-    deps: {
-      optimizer: {
-        web: {
-          include: ["@monkeytype/funbox"],
-        },
-      },
     },
   },
   plugins,

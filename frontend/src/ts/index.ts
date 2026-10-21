@@ -6,7 +6,7 @@ import "solid-devtools";
 
 import "./event-handlers/global";
 
-import { init } from "./firebase";
+import { init } from "./progcomp-auth";
 import * as Logger from "./utils/logger";
 import * as DB from "./db";
 import "./ui";
@@ -19,7 +19,6 @@ import "./controllers/route-controller";
 import "./elements/no-css";
 import { egVideoListener } from "./popups/video-ad-popup";
 import "./legacy-states/connection";
-import "./test/tts";
 import { addToGlobal } from "./utils/misc";
 import * as Focus from "./test/focus";
 import { fetchLatestVersion } from "./utils/version";

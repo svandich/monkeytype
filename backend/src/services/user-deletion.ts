@@ -11,7 +11,7 @@ import * as UserDAL from "../dal/user";
 import GeorgeQueue from "../queues/george-queue";
 import * as AuthUtil from "../utils/auth";
 import { purgeUserFromDailyLeaderboards } from "../utils/daily-leaderboards";
-import MonkeyError, { isFirebaseError } from "../utils/error";
+import MonkeyError from "../utils/error";
 import { purgeUserFromXpLeaderboards } from "./weekly-xp-leaderboard";
 
 type DeletedUserInfo = Pick<
@@ -68,16 +68,9 @@ export async function deleteUserAccount(
 
   await Promise.all(tasks);
 
-  try {
-    //delete user from firebase
-    await AuthUtil.deleteUser(uid);
-  } catch (e) {
-    if (isFirebaseError(e) && e.errorInfo.code === "auth/user-not-found") {
-      //user was already deleted, ok to ignore
-    } else {
-      throw e;
-    }
-  }
+  //the ProgCompJOliva account is untouched, only the typing data is deleted.
+  //signing in again starts a fresh profile.
+  await AuthUtil.revokeTokensByUid(uid);
 
   return userInfo ?? undefined;
 }

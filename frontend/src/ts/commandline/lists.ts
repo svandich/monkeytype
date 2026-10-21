@@ -10,9 +10,7 @@ import AddOrRemoveThemeToFavorite from "./lists/add-or-remove-theme-to-favorites
 import TagsCommands from "./lists/tags";
 import CustomThemesListCommands from "./lists/custom-themes-list";
 import PresetsCommands from "./lists/presets";
-import FunboxCommands from "./lists/funbox";
 import ThemesCommands from "./lists/themes";
-import LoadChallengeCommands from "./lists/load-challenge";
 
 import { Config } from "../config/store";
 import { setConfig } from "../config/setters";
@@ -27,7 +25,7 @@ import * as VideoAdPopup from "../popups/video-ad-popup";
 import { Command, CommandlineListKey, CommandsSubgroup } from "./types";
 import { buildCommandForConfigKey } from "./util";
 import { CommandlineConfigMetadataObject } from "./commandline-metadata";
-import { isAuthAvailable, signOut } from "../firebase";
+import { isAuthAvailable, signOut } from "../progcomp-auth";
 import { isAuthenticated } from "../states/core";
 import { ConfigKey } from "@monkeytype/schemas/configs";
 import {
@@ -100,10 +98,6 @@ export const commands: CommandsSubgroup = {
       "minWpm",
       "minAcc",
       ...MinBurstCommands,
-      "britishEnglish",
-      ...FunboxCommands,
-      "customLayoutfluid",
-      "customPolyglot",
     ),
 
     //input
@@ -210,7 +204,6 @@ export const commands: CommandsSubgroup = {
     ...adsCommands,
 
     //other
-    ...LoadChallengeCommands,
     ...NavigationCommands,
     {
       id: "watchVideoAd",
@@ -365,9 +358,7 @@ export const commands: CommandsSubgroup = {
 
 const lists: Record<CommandlineListKey, CommandsSubgroup | undefined> = {
   themes: ThemesCommands[0]?.subgroup,
-  loadChallenge: LoadChallengeCommands[0]?.subgroup,
   minBurst: MinBurstCommands[0]?.subgroup,
-  funbox: FunboxCommands[0]?.subgroup,
   tags: TagsCommands[0]?.subgroup,
   ads: adsCommands[0]?.subgroup,
 };

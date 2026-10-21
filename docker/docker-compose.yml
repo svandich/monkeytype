@@ -57,13 +57,8 @@ services:
       - path: ./.env
         required: true
     environment:
-      - FIREBASE_APIKEY=${FIREBASE_APIKEY:-}
-      - FIREBASE_AUTHDOMAIN=${FIREBASE_AUTHDOMAIN:-}
-      - FIREBASE_PROJECTID=${FIREBASE_PROJECTID:-}
-      - FIREBASE_STORAGEBUCKET=${FIREBASE_STORAGEBUCKET:-}
-      - FIREBASE_MESSAGINGSENDERID=${FIREBASE_MESSAGINGSENDERID:-}
-      - FIREBASE_APPID=${FIREBASE_APPID:-}
       - MONKEYTYPE_BACKENDURL=${BASE_URL:-http://localhost}/api
+      - PROGCOMP_API_URL=${PROGCOMP_API_URL:-https://progcomp.joliva.cl:8443}
       - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY:-}
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "80"]
@@ -79,7 +74,7 @@ services:
     #ports:
     #  - "${BACKEND_PORT:-5005}:5005"
     networks:
-      - public # access to the internet, e.g. google firebase
+      - public # access to the internet
       - isolated # access to the databases
     restart: on-failure
     environment:
@@ -88,17 +83,11 @@ services:
       - REDIS_URI=redis://monkeytype-redis:6379
       - FRONTEND_URL=${BASE_URL:-http://localhost}
       - RECAPTCHA_SECRET=${RECAPTCHA_SECRET:-}
-      - EMAIL_HOST=${EMAIL_HOST:-}
-      - EMAIL_PORT=${EMAIL_PORT:-}
-      - EMAIL_USER=${EMAIL_USER:-}
-      - EMAIL_PASS=${EMAIL_PASS:-}
-      - EMAIL_FROM=${EMAIL_FROM:-}
+      # users sign in there, its public signing key is fetched from ${PROGCOMP_API_URL}/api/auth/jwks
+      - PROGCOMP_API_URL=${PROGCOMP_API_URL:-https://progcomp.joliva.cl:8443}
+      - PROGCOMP_JWT_ISSUER=${PROGCOMP_JWT_ISSUER:-ProgCompJOlivaApi}
+      - PROGCOMP_JWT_AUDIENCE=${PROGCOMP_JWT_AUDIENCE:-ProgCompJOlivaClient}
     volumes:
-      #uncomment to enable the account system, check the SELF_HOSTING.md file
-      #- type: bind
-      #  source: ./serviceAccountKey.json
-      #  target: /app/backend/src/credentials/serviceAccountKey.json
-      #  read_only: true
       - type: bind
         source: ./backend-configuration.json
         target: /app/backend/dist/backend-configuration.json

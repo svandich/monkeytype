@@ -13,7 +13,7 @@ RUN npm i -g pnpm@11.21.0 && \
     npm run build
 
 #deploy (install all non-dev dependencies in a single node_module folder)
-RUN pnpm deploy --legacy --filter backend --prod /prod/backend
+RUN pnpm deploy --config.inject-workspace-packages=true --filter backend --prod /prod/backend
 
 #---------------------------------
 
@@ -26,7 +26,6 @@ ARG server_version=UNKNOWN
 # COPY to target
 COPY --from=builder /prod/backend/node_modules /app/backend/node_modules
 COPY --from=builder /prod/backend/dist /app/backend/dist
-COPY --from=builder /prod/backend/email-templates /app/backend/email-templates
 COPY --from=builder /prod/backend/redis-scripts /app/backend/redis-scripts
 COPY --from=builder /prod/backend/private /app/backend/private
 
@@ -40,11 +39,9 @@ COPY ["docker/backend/entry-point.sh", "./"]
 
 RUN echo "${server_version}" > /app/backend/dist/server.version
 
-#run in prod mode, but don't require anti-cheat, email client or firebase
+#run in prod mode, but don't require anti-cheat
 ENV MODE=prod
 ENV BYPASS_ANTICHEAT=true
-ENV BYPASS_EMAILCLIENT=true
-ENV BYPASS_FIREBASE=true
 
 EXPOSE 5005
 USER node

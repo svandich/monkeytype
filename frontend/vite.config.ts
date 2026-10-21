@@ -354,16 +354,6 @@ export default defineConfig(({ mode }): UserConfig => {
         ignored: [/.*\/packages\/contracts\/dist\/(?!configs).*/],
       },
     },
-    resolve: {
-      alias: isDevelopment
-        ? []
-        : [
-            {
-              find: /\/constants\/firebase-config$/,
-              replacement: "/constants/firebase-config-live",
-            },
-          ],
-    },
     clearScreen: false,
     root: "src",
     publicDir: "../static",

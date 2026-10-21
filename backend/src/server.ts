@@ -13,8 +13,7 @@ import * as RedisClient from "./init/redis";
 import queues from "./queues";
 import workers from "./workers";
 import Logger from "./utils/logger";
-import * as EmailClient from "./init/email-client";
-import { init as initFirebaseAdmin } from "./init/firebase-admin";
+import { isAuthConfigured } from "./utils/auth";
 import { createIndicies as leaderboardDbSetup } from "./dal/leaderboards";
 import { createIndicies as blocklistDbSetup } from "./dal/blocklist";
 import { createIndicies as connectionsDbSetup } from "./dal/connections";
@@ -28,16 +27,16 @@ async function bootServer(port: number): Promise<Server> {
     await db.connect();
     Logger.success("Connected to database");
 
-    Logger.info("Initializing Firebase app instance...");
-    initFirebaseAdmin();
+    if (!isAuthConfigured()) {
+      Logger.warning(
+        "PROGCOMP_API_URL is not set! Authenticated endpoints will fail.",
+      );
+    }
 
     Logger.info("Fetching live configuration...");
     await getLiveConfiguration();
     Logger.success("Live configuration fetched");
     await updateFromConfigurationFile();
-
-    Logger.info("Initializing email client...");
-    await EmailClient.init();
 
     Logger.info("Connecting to redis...");
     await RedisClient.connect();

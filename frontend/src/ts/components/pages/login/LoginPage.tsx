@@ -5,7 +5,6 @@ import { getServerConfigurationQueryOptions } from "../../../queries/server-conf
 import { getLoginPageInputsEnabled } from "../../../states/login";
 import { Page } from "../../common/Page";
 import { Login } from "./Login";
-import { Register } from "./Register";
 
 export function LoginPage(): JSXElement {
   const serverConfig = useQuery(() => getServerConfigurationQueryOptions());
@@ -23,7 +22,6 @@ export function LoginPage(): JSXElement {
         when={isSignUpDisabled()}
         fallback={
           <div class="flex h-full flex-col items-center justify-around gap-4 md:flex-row">
-            <Register />
             <Login />
           </div>
         }

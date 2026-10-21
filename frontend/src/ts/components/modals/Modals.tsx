@@ -8,8 +8,6 @@ import { CustomTestDurationModal } from "./CustomTestDurationModal";
 import { CustomTextModal } from "./CustomTextModal";
 import { CustomWordAmountModal } from "./CustomWordAmountModal";
 import { EditResultTagsModal } from "./EditResultTagsModal";
-import { ForgotPasswordModal } from "./ForgotPasswordModal";
-import { GoogleSignupModal } from "./GoogleSignUpModal";
 import { LastSignedOutResultModal } from "./LastSignedOutResultModal";
 import { MobileTestConfigModal } from "./MobileTestConfigModal";
 import { PbTablesModal } from "./PbTablesModal";
@@ -53,8 +51,6 @@ export function Modals(): JSXElement {
       <ViewApeKeyModal />
       <LastSignedOutResultModal />
       <StreakHourOffsetModal />
-      <GoogleSignupModal />
-      <ForgotPasswordModal />
       <UserReportModal />
       <EditResultTagsModal />
       <TheRestModal />

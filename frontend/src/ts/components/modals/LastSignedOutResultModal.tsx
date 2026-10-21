@@ -8,7 +8,7 @@ import { getConfig } from "../../config/store";
 import { SnapshotResult } from "../../constants/default-snapshot";
 import { saveLocalResult, SaveLocalResultData } from "../../db";
 import { authEvent } from "../../events/auth";
-import { getAuthenticatedUser } from "../../firebase";
+import { getAuthenticatedUser } from "../../progcomp-auth";
 import { hideModal, showModal } from "../../states/modals";
 import {
   showErrorNotification,
@@ -128,10 +128,6 @@ function formatTestType(r: CompletedEvent | null): (string | JSX.Element)[] {
   if (r.punctuation) tt.push(<br />, "punctuation");
   if (r.blindMode) tt.push(<br />, "blind");
   if (r.lazyMode) tt.push(<br />, "lazy");
-  if (r.funbox.length > 0) {
-    const funboxLabel = r.funbox.map((it) => it.replace(/_/g, " ")).join(",");
-    tt.push(<br />, funboxLabel);
-  }
   if (r.difficulty !== "normal") tt.push(<br />, `${r.difficulty}`);
   if (r.tags.length > 0) tt.push(<br />, `${r.tags.length} tags`);
   return tt;

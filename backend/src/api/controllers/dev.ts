@@ -1,6 +1,6 @@
 import { MonkeyResponse } from "../../utils/monkey-response";
 import * as UserDal from "../../dal/user";
-import FirebaseAdmin from "../../init/firebase-admin";
+import { randomUUID } from "crypto";
 import Logger from "../../utils/logger";
 import * as DateUtils from "date-fns";
 import { UTCDate } from "@date-fns/utc";
@@ -33,7 +33,7 @@ export async function createTestData(
   req: MonkeyRequest<undefined, GenerateDataRequest>,
 ): Promise<GenerateDataResponse> {
   const { username, createUser } = req.body;
-  const user = await getOrCreateUser(username, "password", createUser);
+  const user = await getOrCreateUser(username, createUser);
 
   const { uid, email } = user;
 
@@ -77,7 +77,6 @@ export async function addDebugInboxItem(
 
 async function getOrCreateUser(
   username: string,
-  password: string,
   createUser = false,
 ): Promise<UserDal.DBUser> {
   const existingUser = await UserDal.findByName(username);
@@ -90,12 +89,8 @@ async function getOrCreateUser(
 
   const email = `${username}@example.com`;
   Logger.success(`create user ${username}`);
-  const { uid } = await FirebaseAdmin().auth().createUser({
-    displayName: username,
-    password: password,
-    email,
-    emailVerified: true,
-  });
+  //dev-only user without a ProgCompJOliva account, use the "Uid" auth scheme to act as it
+  const uid = randomUUID();
 
   await UserDal.addUser(username, email, uid);
   return UserDal.getUser(uid, "getOrCreateUser");

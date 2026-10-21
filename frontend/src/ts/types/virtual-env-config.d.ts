@@ -1,5 +1,7 @@
 export type EnvConfig = {
   backendUrl: string;
+  /** ProgCompJOlivaApi base url, users sign in there */
+  progcompApiUrl: string;
   isDevelopment: boolean;
   clientVersion: string;
   recaptchaSiteKey: string;

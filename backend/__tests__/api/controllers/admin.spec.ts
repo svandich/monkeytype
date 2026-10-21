@@ -7,7 +7,6 @@ import * as UserDal from "../../../src/dal/user";
 import * as ReportDal from "../../../src/dal/report";
 import * as LogsDal from "../../../src/dal/logs";
 import GeorgeQueue from "../../../src/queues/george-queue";
-import * as AuthUtil from "../../../src/utils/auth";
 import * as DailyLeaderboards from "../../../src/utils/daily-leaderboards";
 import * as WeeklyXpLeaderboard from "../../../src/services/weekly-xp-leaderboard";
 import * as UserDeletion from "../../../src/services/user-deletion";
@@ -639,43 +638,16 @@ describe("AdminController", () => {
   });
 
   describe("send forgot password email", () => {
-    const sendForgotPasswordEmailMock = vi.spyOn(
-      AuthUtil,
-      "sendForgotPasswordEmail",
-    );
-
-    beforeEach(() => {
-      sendForgotPasswordEmailMock.mockClear();
-    });
-
-    it("should send forgot password link", async () => {
-      //GIVEN
-
+    it("should fail, passwords are managed by ProgCompJOliva", async () => {
       //WHEN
       const { body } = await mockApp
         .post("/admin/sendForgotPasswordEmail")
         .send({ email: "meowdec@example.com" })
         .set("Authorization", `Bearer ${uid}`)
-        .expect(200);
+        .expect(400);
 
       //THEN
-      expect(body).toEqual({
-        message: "Password reset request email sent.",
-        data: null,
-      });
-
-      expect(sendForgotPasswordEmailMock).toHaveBeenCalledWith(
-        "meowdec@example.com",
-      );
-    });
-    it("should be rate limited", async () => {
-      //WHEN
-      await expect(
-        mockApp
-          .post("/admin/sendForgotPasswordEmail")
-          .send({ email: "meowdec@example.com" })
-          .set("Authorization", `Bearer ${uid}`),
-      ).toBeRateLimited({ max: 1, windowMs: 5000 });
+      expect(body.message).toContain("ProgCompJOliva");
     });
   });
 

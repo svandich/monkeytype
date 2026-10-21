@@ -35,8 +35,6 @@ export type ModalId =
   | "ViewApeKey"
   | "LastSignedOutResult"
   | "StreakHourOffset"
-  | "GoogleSignup"
-  | "ForgotPassword"
   | "UserReport"
   | "EditResultTags"
   | "TheRest";

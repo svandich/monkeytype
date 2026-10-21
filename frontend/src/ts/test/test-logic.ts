@@ -12,14 +12,12 @@ import {
 } from "../states/notifications";
 import * as CustomText from "./custom-text";
 import * as PractiseWords from "./practise-words";
-import * as Funbox from "./funbox/funbox";
 import * as PaceCaret from "./pace-caret";
 import * as TestTimer from "./test-timer";
 import * as DB from "../db";
 import * as Replay from "../components/pages/test/result/replay";
 import { __nonReactive } from "../collections/tags";
 import * as TodayTracker from "./today-tracker";
-import * as ChallengeContoller from "../controllers/challenge-controller";
 import { clearQuoteStats } from "../states/quote-rate";
 import {
   getPbEligibility,
@@ -41,7 +39,6 @@ import {
   isAuthenticated,
 } from "../states/core";
 import {
-  setIsDirectionReversed,
   setIsLanguageRightToLeft,
   setKoreanStatus,
   setLastEventLog,
@@ -84,7 +81,7 @@ import { configEvent } from "../events/config";
 import { timerEvent } from "../events/timer";
 import objectHash from "object-hash";
 import * as AnalyticsController from "../controllers/analytics-controller";
-import { getAuthenticatedUser } from "../firebase";
+import { getAuthenticatedUser } from "../progcomp-auth";
 import { highlight } from "../events/keymap";
 import * as LazyModeState from "../legacy-states/remember-lazy-mode";
 import { Mode } from "@monkeytype/schemas/shared";
@@ -92,15 +89,6 @@ import {
   CompletedEvent,
   CompletedEventCustomText,
 } from "@monkeytype/schemas/results";
-import {
-  findSingleActiveFunboxWithFunction,
-  getActiveFunboxes,
-  getActiveFunboxesWithFunction,
-  getActiveFunboxNames,
-  isFunboxActive,
-  isFunboxActiveWithProperty,
-} from "./funbox/list";
-import { getFunbox } from "@monkeytype/funbox";
 import * as CompositionState from "../legacy-states/composition";
 import { SnapshotResult } from "../constants/default-snapshot";
 import { WordGenError } from "../utils/word-gen-error";
@@ -117,11 +105,10 @@ import {
   setCrownType,
 } from "../states/result";
 import { blurInputElement, setInputElementValue } from "../input/input-element";
-import { debounce } from "throttle-debounce";
 import { qs } from "../utils/dom";
 import { setAccountButtonSpinner } from "../states/header";
 import { Config } from "../config/store";
-import { setQuoteLengthAll, toggleFunbox, setConfig } from "../config/setters";
+import { setQuoteLengthAll, setConfig } from "../config/setters";
 import {
   resetTestEvents,
   cleanupData,
@@ -170,10 +157,6 @@ export function startTest(now: number): boolean {
   setTestActive(true);
   TestTimer.clear();
 
-  for (const fb of getActiveFunboxesWithFunction("start")) {
-    fb.functions.start();
-  }
-
   try {
     if (Config.paceCaret !== "off" || (Config.repeatedPace && isPaceRepeat())) {
       PaceCaret.start();
@@ -207,25 +190,13 @@ export async function restart(options = {} as RestartOptions): Promise<void> {
 
   // guards
 
-  const noQuit = isFunboxActive("no_quit");
-  if (isTestActive() && noQuit) {
-    showNoticeNotification(
-      "No quit funbox is active. Please finish the test.",
-      {
-        important: true,
-      },
-    );
-    options.event?.preventDefault();
-    return;
-  }
-
   if (isTestRestarting() || isResultCalculating()) {
     options.event?.preventDefault();
     return;
   }
   if (isTestActive()) {
     if (options.isQuickRestart) {
-      if (Config.mode !== "zen") options.event?.preventDefault();
+      options.event?.preventDefault();
       if (
         !canQuickRestart(
           Config.mode,
@@ -347,8 +318,6 @@ export async function restart(options = {} as RestartOptions): Promise<void> {
   setResultVisible(false);
   setInputElementValue("");
 
-  await Funbox.rememberSettings();
-
   const initResult = await init();
 
   if (!initResult) {
@@ -357,10 +326,6 @@ export async function restart(options = {} as RestartOptions): Promise<void> {
   }
 
   await PaceCaret.init();
-
-  for (const fb of getActiveFunboxesWithFunction("restart")) {
-    fb.functions.restart();
-  }
 
   TestUI.onTestRestart(source);
 
@@ -404,10 +369,6 @@ async function init(): Promise<boolean> {
     return await init();
   }
 
-  if (getActivePage() === "test") {
-    await Funbox.activate();
-  }
-
   if (Config.mode === "quote") {
     if (Config.quoteLength.includes(-3) && !isAuthenticated()) {
       setQuoteLengthAll();
@@ -416,58 +377,20 @@ async function init(): Promise<boolean> {
 
   const allowLazyMode = !language.noLazyMode || Config.mode === "custom";
 
-  // polyglot mode, check to enable lazy mode if any support it
-  if (getActiveFunboxNames().includes("polyglot")) {
-    const polyglotLanguages = Config.customPolyglot;
-    const languagePromises = polyglotLanguages.map(async (langName) => {
-      const { data: lang, error } = await tryCatch(
-        JSONData.getLanguage(langName),
-      );
-      if (error) {
-        showErrorNotification(`Failed to load language: ${langName}`, {
-          error,
-        });
-      }
-      return lang;
-    });
-
-    const anySupportsLazyMode = (await Promise.all(languagePromises))
-      .filter((lang) => lang !== null)
-      .some((lang) => !lang.noLazyMode);
-
-    if (Config.lazyMode && !anySupportsLazyMode) {
-      LazyModeState.setRemember(true);
-      if (!showedLazyModeNotification) {
-        showNoticeNotification(
-          "None of the selected polyglot languages support lazy mode.",
-          {
-            important: true,
-          },
-        );
-        showedLazyModeNotification = true;
-      }
-      setConfig("lazyMode", false);
-    } else if (LazyModeState.getRemember() && anySupportsLazyMode) {
-      setConfig("lazyMode", true);
-      LazyModeState.setRemember(false);
-      showedLazyModeNotification = false;
+  // normal mode
+  if (Config.lazyMode && !allowLazyMode) {
+    LazyModeState.setRemember(true);
+    if (!showedLazyModeNotification) {
+      showNoticeNotification("This language does not support lazy mode.", {
+        important: true,
+      });
+      showedLazyModeNotification = true;
     }
-  } else {
-    // normal mode
-    if (Config.lazyMode && !allowLazyMode) {
-      LazyModeState.setRemember(true);
-      if (!showedLazyModeNotification) {
-        showNoticeNotification("This language does not support lazy mode.", {
-          important: true,
-        });
-        showedLazyModeNotification = true;
-      }
-      setConfig("lazyMode", false);
-    } else if (LazyModeState.getRemember() && allowLazyMode) {
-      setConfig("lazyMode", true);
-      LazyModeState.setRemember(false);
-      showedLazyModeNotification = false;
-    }
+    setConfig("lazyMode", false);
+  } else if (LazyModeState.getRemember() && allowLazyMode) {
+    setConfig("lazyMode", true);
+    LazyModeState.setRemember(false);
+    showedLazyModeNotification = false;
   }
 
   if (!Config.lazyMode && !language.noLazyMode) {
@@ -489,7 +412,6 @@ async function init(): Promise<boolean> {
     },
     mode: Config.mode,
     mode2: Misc.getMode2(Config, null),
-    funbox: Config.funbox,
     currentQuote: getCurrentQuote(),
   });
 
@@ -562,7 +484,7 @@ async function init(): Promise<boolean> {
     TestWords.words.removeCommitCharacterFromLastWord();
   }
 
-  if (Config.keymapMode === "next" && Config.mode !== "zen") {
+  if (Config.keymapMode === "next") {
     highlight(
       nthElementFromArray(
         // ignoring for now but this might need a different approach
@@ -573,12 +495,10 @@ async function init(): Promise<boolean> {
     );
   }
 
-  Funbox.toggleScript(TestWords.words.getCurrent()?.text ?? "");
   TestUI.setJoiningClass(allJoiningScript ?? language.joiningScript ?? false);
 
   const isLanguageRTL = allRightToLeft ?? language.rightToLeft ?? false;
   setIsLanguageRightToLeft(isLanguageRTL);
-  setIsDirectionReversed(isFunboxActiveWithProperty("reverseDirection"));
 
   console.debug("Test initialized with words", TestWords.words.get());
   console.debug(
@@ -590,20 +510,7 @@ async function init(): Promise<boolean> {
 
 //add word during the test
 export async function addWord(): Promise<void> {
-  if (Config.mode === "zen") {
-    TestUI.appendEmptyWordElement(getActiveWordIndex() + 1);
-    return;
-  }
-
-  let bound = 100; // how many extra words to aim for AFTER the current word
-
-  const funboxToPush =
-    getActiveFunboxes()
-      .flatMap((fb) => fb.properties ?? [])
-      .find((prop) => prop.startsWith("toPush:")) ?? "";
-
-  const toPushCount = funboxToPush?.split(":")[1];
-  if (toPushCount !== undefined) bound = +toPushCount - 1;
+  const bound = 100; // how many extra words to aim for AFTER the current word
 
   if (TestWords.words.length - (getActiveWordIndex() + 1) > bound) {
     console.debug("Not adding word, enough words already");
@@ -613,40 +520,6 @@ export async function addWord(): Promise<void> {
     console.debug("Not adding word, all words generated");
     return;
   }
-  const sectionFunbox = findSingleActiveFunboxWithFunction("pullSection");
-  if (sectionFunbox) {
-    if (TestWords.words.length - getActiveWordIndex() < 20) {
-      const section = await sectionFunbox.functions.pullSection(
-        Config.language,
-      );
-
-      if (section === false) {
-        showErrorNotification(
-          "Error while getting section. Please try again later",
-        );
-        toggleFunbox(sectionFunbox.name);
-        void restart();
-        return;
-      }
-
-      if (section === undefined) return;
-
-      let wordCount = 0;
-      for (let i = 0; i < section.words.length; i++) {
-        const word = section.words[i] as string;
-        if (wordCount >= Config.words && Config.mode === "words") {
-          break;
-        }
-        wordCount++;
-        const newWord = TestWords.words.push(
-          WordsGenerator.appendCommitCharacter(word),
-          i,
-        );
-        TestUI.addWord(newWord.display);
-      }
-    }
-  }
-
   try {
     const randomWord = await WordsGenerator.getNextWord(
       TestWords.words.length,
@@ -793,7 +666,6 @@ function buildCompletedEvent(eventLog: EventLog): CompletedResult {
     mode: Config.mode,
     mode2: Misc.getMode2(Config, currentQuote),
     bailedOut: getBailedOut(),
-    funbox: Config.funbox,
     difficulty: Config.difficulty,
     blindMode: Config.blindMode,
     stopOnLetter: Config.stopOnError === "letter",
@@ -934,8 +806,7 @@ export async function finish(difficultyFailed = false): Promise<void> {
       CustomText.getLimitValue() < 10) ||
     (Config.mode === "custom" &&
       CustomText.getLimitMode() === "time" &&
-      CustomText.getLimitValue() < 15) ||
-    (Config.mode === "zen" && completedEvent.testDuration < 15)
+      CustomText.getLimitValue() < 15)
   ) {
     showNoticeNotification("Test invalid - too short");
     setIsTestInvalid(true);
@@ -1060,11 +931,6 @@ export async function finish(difficultyFailed = false): Promise<void> {
     } else {
       resetIncompleteTests();
 
-      if (!completedEvent.bailedOut) {
-        const challenge = ChallengeContoller.verify(completedEvent);
-        if (challenge !== null) completedEvent.challenge = challenge;
-      }
-
       completedEvent.uid = user.uid;
 
       savingResultPromise = saveResult(completedEvent, false);
@@ -1176,7 +1042,6 @@ async function showResult(
     toggleResultWords(true);
   }
   AdController.updateFooterAndVerticalAds(true);
-  void Funbox.clear();
 
   qs(".pageTest .loading")?.hide();
   setShowResult(true);
@@ -1290,7 +1155,6 @@ async function saveResult(
       result.language,
       result.difficulty,
       result.lazyMode,
-      getFunbox(result.funbox),
     );
 
     if (localPb !== undefined) {
@@ -1319,30 +1183,6 @@ export function fail(reason: string): void {
   void finish(true);
 }
 
-const debouncedZipfCheck = debounce(250, async () => {
-  const supports = await JSONData.checkIfLanguageSupportsZipf(Config.language);
-  if (supports === "no") {
-    showNoticeNotification(
-      `${Strings.capitalizeFirstLetter(
-        Strings.getLanguageDisplayString(Config.language),
-      )} does not support Zipf funbox, because the list is not ordered by frequency. Please try another word list.`,
-      {
-        durationMs: 7000,
-      },
-    );
-  }
-  if (supports === "unknown") {
-    showNoticeNotification(
-      `${Strings.capitalizeFirstLetter(
-        Strings.getLanguageDisplayString(Config.language),
-      )} may not support Zipf funbox, because we don't know if it's ordered by frequency or not. If you would like to add this label, please contact us.`,
-      {
-        durationMs: 7000,
-      },
-    );
-  }
-});
-
 qs(".pageTest")?.onChild("click", "#testInitFailed button.restart", () => {
   void restart();
 });
@@ -1363,10 +1203,6 @@ qs(".pageTest")?.onChild("click", "#restartTestButton", () => {
 });
 
 export function repeatTest(): void {
-  if (Config.mode === "zen") {
-    showNoticeNotification("Repeat test disabled in zen mode");
-    return;
-  }
   void restart({
     withSameWordset: true,
   });
@@ -1418,11 +1254,8 @@ configEvent.subscribe(({ key, newValue, nosave }) => {
       void restart();
     }
     if (key === "difficulty" && !nosave) void restart();
-    if (key === "customLayoutfluid" && Config.funbox.includes("layoutfluid")) {
-      void restart();
-    }
 
-    if (key === "keymapMode" && newValue === "next" && Config.mode !== "zen") {
+    if (key === "keymapMode" && newValue === "next") {
       setTimeout(() => {
         highlight(
           nthElementFromArray(
@@ -1433,12 +1266,6 @@ configEvent.subscribe(({ key, newValue, nosave }) => {
           ) as string,
         );
       }, 0);
-    }
-    if (
-      (key === "language" || key === "funbox") &&
-      Config.funbox.includes("zipf")
-    ) {
-      debouncedZipfCheck();
     }
   }
   if (key === "lazyMode" && !nosave) {

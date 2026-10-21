@@ -5,8 +5,8 @@ import { hash } from "bcrypt";
 import { ObjectId } from "mongodb";
 import { base64UrlEncode } from "../../src/utils/misc";
 import * as ApeKeyDal from "../../src/dal/ape-keys";
-import { DecodedIdToken } from "firebase-admin/auth";
 import * as AuthUtils from "../../src/utils/auth";
+import { DecodedIdToken } from "../../src/utils/auth";
 
 export async function mockAuthenticateWithApeKey(
   uid: string,
@@ -62,11 +62,13 @@ export type BearerAuthenticationMock = {
 export function mockBearerAuthentication(
   uid: string,
 ): BearerAuthenticationMock {
-  const mockDecodedToken = {
+  const mockDecodedToken: DecodedIdToken = {
     uid,
     email: "newuser@mail.com",
+    nickname: "NewUser",
     iat: Date.now(),
-  } as DecodedIdToken;
+    exp: Date.now() + 3600,
+  };
   const verifyIdTokenMock = vi.spyOn(AuthUtils, "verifyIdToken");
 
   return {

@@ -25,6 +25,8 @@ export type DecodedToken = {
   type: "Bearer" | "ApeKey" | "None" | "GithubWebhook";
   uid: string;
   email: string;
+  /** ProgCompJOliva nickname, only set for Bearer tokens */
+  nickname?: string;
 };
 
 const DEFAULT_OPTIONS: RequestAuthenticationOptions = {
@@ -165,73 +167,30 @@ async function authenticateWithBearerToken(
   token: string,
   options: RequestAuthenticationOptions,
 ): Promise<DecodedToken> {
-  try {
-    const decodedToken = await verifyIdToken(
-      token,
-      (options.requireFreshToken ?? false) || (options.noCache ?? false),
-    );
+  const decodedToken = await verifyIdToken(
+    token,
+    (options.requireFreshToken ?? false) || (options.noCache ?? false),
+  );
 
-    if (options.requireFreshToken) {
-      const now = Date.now();
-      const tokenIssuedAt = new Date(decodedToken.iat * 1000).getTime();
+  if (options.requireFreshToken) {
+    const now = Date.now();
+    const tokenIssuedAt = new Date(decodedToken.iat * 1000).getTime();
 
-      if (now - tokenIssuedAt > 60 * 1000) {
-        throw new MonkeyError(
-          401,
-          "Unauthorized",
-          `This endpoint requires a fresh token`,
-        );
-      }
-    }
-
-    return {
-      type: "Bearer",
-      uid: decodedToken.uid,
-      email: decodedToken.email ?? "",
-    };
-  } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message.includes("An internal error has occurred")
-    ) {
-      throw new MonkeyError(
-        503,
-        "Firebase returned an internal error when trying to verify the token.",
-        "authenticateWithBearerToken",
-      );
-    }
-
-    // oxlint-disable-next-line no-unsafe-member-access
-    const errorCode = error?.errorInfo?.code as string | undefined;
-
-    if (errorCode?.includes("auth/id-token-expired")) {
+    if (now - tokenIssuedAt > 60 * 1000) {
       throw new MonkeyError(
         401,
-        "Token expired - please login again",
-        "authenticateWithBearerToken",
+        "Unauthorized",
+        `This endpoint requires a fresh token`,
       );
-    } else if (errorCode?.includes("auth/id-token-revoked")) {
-      throw new MonkeyError(
-        401,
-        "Token revoked - please login again",
-        "authenticateWithBearerToken",
-      );
-    } else if (errorCode?.includes("auth/user-not-found")) {
-      throw new MonkeyError(
-        404,
-        "User not found",
-        "authenticateWithBearerToken",
-      );
-    } else if (errorCode?.includes("auth/argument-error")) {
-      throw new MonkeyError(
-        400,
-        "Incorrect Bearer token format",
-        "authenticateWithBearerToken",
-      );
-    } else {
-      throw error;
     }
   }
+
+  return {
+    type: "Bearer",
+    uid: decodedToken.uid,
+    email: decodedToken.email,
+    nickname: decodedToken.nickname,
+  };
 }
 
 async function authenticateWithApeKey(
