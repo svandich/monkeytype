@@ -10,11 +10,9 @@ import { getLanguageDisplayString } from "../../../utils/strings";
 export function Premid() {
   const testMode = () => {
     const mode2 = getMode2(getConfig, getCurrentQuote());
-    const funbox =
-      getConfig.funbox.length > 0 ? ` ${getConfig.funbox.join(" ")}` : "";
     return `${getConfig.mode} ${mode2} ${getLanguageDisplayString(
       getConfig.language,
-    )}${funbox}`;
+    )}`;
   };
 
   const secondsLeft = () => getConfig.time - (currentLiveStats.seconds ?? 0);

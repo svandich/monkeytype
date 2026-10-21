@@ -17,7 +17,6 @@ import {
   showNoticeNotification,
   showErrorNotification,
 } from "../../states/notifications";
-import { getLoadedChallenge, setLoadedChallenge } from "../../states/test";
 import * as CustomText from "../../test/custom-text";
 import * as PractiseWords from "../../test/practise-words";
 import { cn } from "../../utils/cn";
@@ -56,7 +55,6 @@ const delimiterOptions = [
 
 export function CustomTextModal(): JSXElement {
   const [longTextWarning, setLongTextWarning] = createSignal(false);
-  const [challengeWarning, setChallengeWarning] = createSignal(false);
 
   const [incomingChainedData, setIncomingChainedData] =
     createSignal<CustomTextIncomingData>(null);
@@ -150,10 +148,6 @@ export function CustomTextModal(): JSXElement {
         CustomText.setLimitValue(parseInt(value.limitSection));
       }
 
-      if (getLoadedChallenge() !== null) {
-        showNoticeNotification("Challenge cleared");
-        setLoadedChallenge(null);
-      }
       if (Config.mode !== "custom") {
         setConfig("mode", "custom");
       }
@@ -165,7 +159,7 @@ export function CustomTextModal(): JSXElement {
 
   const formValues = form.useStore((s) => s.values);
 
-  const isDisabled = () => longTextWarning() || challengeWarning();
+  const isDisabled = () => longTextWarning();
   const isLimitDisabled = () => formValues().mode === "simple" || isDisabled();
 
   const showWordLimit = () => !formValues().pipeDelimiter;
@@ -280,7 +274,6 @@ export function CustomTextModal(): JSXElement {
     });
 
     setLongTextWarning(getCustomTextIndicator()?.isLong ?? false);
-    setChallengeWarning(getLoadedChallenge() !== null);
   };
 
   const handleIncomingData = () => {
@@ -457,23 +450,6 @@ export function CustomTextModal(): JSXElement {
                     </p>
                     <p class="mt-4 text-em-xs text-sub">
                       Click anywhere to start editing the text.
-                    </p>
-                  </div>
-                </div>
-              </Show>
-              <Show when={challengeWarning()}>
-                <div
-                  class="absolute inset-0 z-10 grid cursor-pointer place-items-center rounded bg-sub-alt text-center"
-                  onClick={() => setChallengeWarning(false)}
-                >
-                  <div>
-                    <p class="text-em-xl">
-                      A challenge is currently loaded.
-                      <br />
-                      Editing the settings will clear the challenge.
-                    </p>
-                    <p class="mt-4 text-em-xs text-sub">
-                      Click anywhere to edit.
                     </p>
                   </div>
                 </div>

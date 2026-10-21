@@ -7,7 +7,6 @@ import {
 import { Mode } from "@monkeytype/schemas/shared";
 import { ObjectId } from "mongodb";
 import { WithObjectId } from "./misc";
-import { FunboxName } from "@monkeytype/schemas/configs";
 
 export type DBResult = WithObjectId<Result<Mode>> & {
   //legacy values
@@ -44,7 +43,6 @@ export function buildDbResult(
     language: ce.language,
     lazyMode: ce.lazyMode,
     difficulty: ce.difficulty,
-    funbox: ce.funbox,
     numbers: ce.numbers,
     punctuation: ce.punctuation,
     isPb: isPb,
@@ -59,7 +57,6 @@ export function buildDbResult(
   if (!ce.blindMode) delete res.blindMode;
   if (!ce.lazyMode) delete res.lazyMode;
   if (ce.difficulty === "normal") delete res.difficulty;
-  if (ce.funbox.length === 0) delete res.funbox;
   if (ce.language === "english") delete res.language;
   if (!ce.numbers) delete res.numbers;
   if (!ce.punctuation) delete res.punctuation;
@@ -98,14 +95,6 @@ export function replaceLegacyValues(result: DBResult): DBResult {
       result.charStats = [result.correctChars, result.incorrectChars, 0, 0];
       delete result.correctChars;
       delete result.incorrectChars;
-    }
-  }
-
-  if (typeof result.funbox === "string") {
-    if (result.funbox === "none") {
-      result.funbox = [];
-    } else {
-      result.funbox = (result.funbox as string).split("#") as FunboxName[];
     }
   }
 

@@ -7,14 +7,12 @@ import { getCustomTextIndicator, getFormatting } from "../../../../states/core";
 import { hotkeys } from "../../../../states/hotkeys";
 import {
   getFocus,
-  getLoadedChallenge,
   getPaceCaretWpm,
   isPaceRepeat,
   isRepeated,
   wordsHaveNewline,
   wordsHaveTab,
 } from "../../../../states/test";
-import { getActiveFunboxNames } from "../../../../test/funbox/list";
 import { cn } from "../../../../utils/cn";
 import {
   getLanguageDisplayString,
@@ -39,8 +37,6 @@ export function TestModesNotice() {
       <ResultSaving />
       <QuickRestart />
       <LongText />
-      <LoadedChallenge />
-      <ZenMode />
       <Language />
       <Difficulty />
       <BlindMode />
@@ -51,7 +47,6 @@ export function TestModesNotice() {
       <MinSpeed />
       <MinAcc />
       <MinBurst />
-      <Funbox />
       <ConfidenceMode />
       <StopOnError />
       <DeleteOnError />
@@ -100,12 +95,7 @@ function QuickRestart() {
         <Kbd hotkey={hotkeys.quickRestart} /> to restart
       </Notice>
 
-      <Notice
-        when={
-          getConfig.quickRestart === "enter" &&
-          (wordsHaveNewline() || getConfig.funbox.includes("58008"))
-        }
-      >
+      <Notice when={getConfig.quickRestart === "enter" && wordsHaveNewline()}>
         <Kbd hotkey={hotkeys.quickRestart} /> to restart
       </Notice>
     </>
@@ -124,54 +114,17 @@ function LongText() {
   );
 }
 
-function LoadedChallenge() {
+function Language() {
   return (
     <Notice
-      when={getLoadedChallenge() !== null}
-      icon="fa-award"
-      openCommandline="loadChallenge"
-      text={getLoadedChallenge()?.display}
+      when={true}
+      icon="fa-globe-americas"
+      openCommandline="language"
+      text={getLanguageDisplayString(
+        getConfig.language,
+        getConfig.mode === "quote",
+      )}
     />
-  );
-}
-
-function ZenMode() {
-  return (
-    <Notice when={getConfig.mode === "zen"}>
-      <Kbd hotkey="Shift+Enter" /> to finish zen
-    </Notice>
-  );
-}
-
-function Language() {
-  const isUsingPolyglot = createMemo(() => {
-    //react on config.funbox
-    const _ = getConfig.funbox;
-    return getActiveFunboxNames().includes("polyglot");
-  });
-
-  return (
-    <>
-      <Notice
-        when={getConfig.mode !== "zen" && !isUsingPolyglot()}
-        icon="fa-globe-americas"
-        openCommandline="language"
-        text={getLanguageDisplayString(
-          getConfig.language,
-          getConfig.mode === "quote",
-        )}
-      />
-      <Notice
-        when={getConfig.funbox.includes("polyglot")}
-        icon="fa-globe-americas"
-        onClick={() =>
-          showCommandline({ commandOverride: "setCustomPolyglotCustom" })
-        }
-        text={getConfig.customPolyglot
-          .map((lang) => getLanguageDisplayString(lang, true))
-          .join(", ")}
-      />
-    </>
   );
 }
 
@@ -297,23 +250,6 @@ function MinBurst() {
       icon="fa-bomb"
       openCommandline="minBurst"
       text={displaySpeed()}
-    />
-  );
-}
-
-function Funbox() {
-  const funboxes = createMemo(() => {
-    //getConfig.funbox doesn't work reactive, wrapping in a memo
-    if (getConfig.funbox.length === 0) return undefined;
-    return [...getConfig.funbox].map(replaceUnderscoresWithSpaces).join(", ");
-  });
-
-  return (
-    <Notice
-      when={funboxes() !== undefined}
-      icon="fa-gamepad"
-      openCommandline="funbox"
-      text={funboxes()}
     />
   );
 }

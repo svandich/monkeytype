@@ -13077,7 +13077,6 @@
     },
     {
       "text": "Even the most motivated and intelligent student will advance more quickly under the tutelage of someone who knows the best order in which to learn things, who understands and can demonstrate the proper way to perform various skills, who can provide useful feedback, and who can devise practice activities designed to overcome particular weaknesses.",
-      "britishText": "Even the most motivated and intelligent student will advance more quickly under the tutelage of someone who knows the best order in which to learn things, who understands and can demonstrate the proper way to perform various skills, who can provide useful feedback, and who can devise practice activities designed to overcome particular weaknesses.",
       "source": "Peak: Secrets from the New Science of Expertise",
       "id": 2309,
       "length": 348
@@ -18994,7 +18993,6 @@
     },
     {
       "text": "All programs have to manage the way they use a computer's memory while running. Some languages have garbage collection that constantly looks for no longer used memory as the program runs; in other languages, the programmer must explicitly allocate and free the memory. Rust uses a third approach: memory is managed through a system of ownership with a set of rules that the compiler checks at compile time. None of the ownership features slow down your program while it's running.",
-      "britishText": "All programs have to manage the way they use a computer's memory while running. Some languages have garbage collection that constantly looks for no longer used memory as the program runs; in other languages, the programmer must explicitly allocate and free the memory. Rust uses a third approach: memory is managed through a system of ownership with a set of rules that the compiler checks at compile time. None of the ownership features slow down your program while it's running.",
       "source": "The Rust Programming Language",
       "id": 3396,
       "length": 480
@@ -26465,7 +26463,6 @@
     },
     {
       "text": "We often believe the more we practice a skill or technique - over and over again, many times - the better we'll get. This is not necessarily true. In fact, every time you practice a technique incorrectly, you're increasing your chances of doing it wrong again. It's easy to become very experienced at repeating the same mistakes. Practice doesn't make perfect; only perfect practice makes perfect.",
-      "britishText": "We often believe the more we practise a skill or technique - over and over again, many times - the better we'll get. This is not necessarily true. In fact, every time you practise a technique incorrectly, you're increasing your chances of doing it wrong again. It's easy to become very experienced at repeating the same mistakes. Practice doesn't make perfect; only perfect practice makes perfect.",
       "source": "Speed Secrets: Professional Race Driving Techniques",
       "id": 4763,
       "length": 397
@@ -30144,7 +30141,6 @@
     },
     {
       "text": "My friend Kira always said that life is like an extremely difficult, horribly unbalanced video game. When you're born, you're given a randomly generated character, with a randomly determined name, race, face, and social class. Your body is your avatar, and you spawn in a random geographic location, at a random moment in human history, surrounded by a random group of people, and then you have to try to survive for as long as you can. Sometimes the game might seem easy. Even fun. Other times it might be so difficult you want to give up and quit. But unfortunately, in this game you only get one life. When your body grows too hungry or thirsty or ill or injured or old, your health meter runs out and then it's Game Over. Some people play the game for a hundred years without ever figuring out that it's a game, or that there is a way to win it. To win the videogame of life you just have to try to make the experience of being forced to play it as pleasant as possible, for yourself, and for all of the other players you encounter in your travels. Kira says that if everyone played the game to win, it'd be a lot more fun for everyone.",
-      "britishText": "My friend Kira always said that life is like an extremely difficult, horribly unbalanced video game. When you're born, you're given a randomly generated character, with a randomly determined name, race, face, and social class. Your body is your avatar, and you spawn in a random geographic location, at a random moment in human history, surrounded by a random group of people, and then you have to try to survive for as long as you can. Sometimes the game might seem easy. Even fun. Other times it might be so difficult you want to give up and quit. But unfortunately, in this game you only get one life. When your body grows too hungry or thirsty or ill or injured or old, your health meter runs out and then it's Game Over. Some people play the game for a hundred years without ever figuring out that it's a game, or that there is a way to win it. To win the videogame of life you just have to try to make the experience of being forced to play it as pleasant as possible, for yourself, and for all of the other players you encounter in your travels. Kira says that if everyone played the game to win, it'd be a lot more fun for everyone.",
       "source": "Anorak's Almanac, Ready Player Two",
       "length": 1140,
       "id": 5465
@@ -36463,7 +36459,6 @@
     },
     {
       "text": "I live in the American Gardens building on West 81st Street, on the 11th floor. My name is Patrick Bateman. I'm 27 years old. I believe in taking care of myself, in a balanced diet, in a rigorous exercise routine. In the morning if my face is a little puffy, I'll put on an ice pack while doing my stomach crunches. I can do a 1,000 now. After I remove the ice pack, I use a deep pore cleanser lotion. In the shower, I use a water-activated gel cleanser... then a honey-almond body scrub, and on the face, an exfoliating gel scrub. Then I apply a herb mint facial mask, which I leave on for ten minutes while I prepare the rest of my routine. I always use an aftershave lotion with little or no alcohol, because alcohol dries your face out and makes you look older. Then moisturizer, then an anti-aging eye balm, followed by a final moisturizing protective lotion. There is an idea of a Patrick Bateman. Some kind of abstraction. But there is no real me, only an entity, something illusory, and though I can hide my cold gaze and you can shake my hand and feel flesh gripping yours, and maybe you can even sense our lifestyles are probably comparable, I simply am not there.",
-      "britishText": "I live in the American Gardens building on West 81st Street, on the 11th floor. My name is Patrick Bateman. I'm 27 years old. I believe in taking care of myself, in a balanced diet, in a rigorous exercise routine. In the morning if my face is a little puffy, I'll put on an ice pack while doing my stomach crunches. I can do a 1,000 now. After I remove the ice pack, I use a deep pore cleanser lotion. In the shower, I use a water-activated gel cleanser... then a honey-almond body scrub, and on the face, an exfoliating gel scrub. Then I apply an herb mint facial mask, which I leave on for ten minutes while I prepare the rest of my routine. I always use an aftershave lotion with little or no alcohol, because alcohol dries your face out and makes you look older. Then moisturizer, then an anti-aging eye balm, followed by a final moisturizing protective lotion. There is an idea of a Patrick Bateman. Some kind of abstraction. But there is no real me, only an entity, something illusory, and though I can hide my cold gaze and you can shake my hand and feel flesh gripping yours, and maybe you can even sense our lifestyles are probably comparable, I simply am not there.",
       "source": "American Psycho",
       "length": 1174,
       "approvedBy": "Smithster",

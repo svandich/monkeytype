@@ -302,20 +302,13 @@ export class Caret {
       // we also clamp the letterIndex to be within the range of actual letters
       // anything beyond just goes to the edge of the word
       let side: "beforeLetter" | "afterLetter" = "beforeLetter";
-      if (Config.mode === "zen") {
-        if (options.letterIndex > 0) {
-          side = "afterLetter";
-          options.letterIndex -= 1;
-        }
-      } else {
-        if (options.letterIndex >= wordLength) {
-          side = "afterLetter";
+      if (options.letterIndex >= wordLength) {
+        side = "afterLetter";
 
-          if (Config.blindMode || Config.hideExtraLetters) {
-            options.letterIndex = wordLength - 1;
-          } else {
-            options.letterIndex -= 1;
-          }
+        if (Config.blindMode || Config.hideExtraLetters) {
+          options.letterIndex = wordLength - 1;
+        } else {
+          options.letterIndex -= 1;
         }
       }
 
@@ -429,11 +422,8 @@ export class Caret {
       this.element.removeClass("debug");
     }
 
-    // in zen, custom or polyglot mode we need to check per-letter
-    const checkRtlByLetter =
-      Config.mode === "zen" ||
-      Config.mode === "custom" ||
-      Config.funbox.includes("polyglot");
+    // in custom mode we need to check per-letter
+    const checkRtlByLetter = Config.mode === "custom";
     const [isWordRTL, isFullMatch] = isWordRightToLeft(
       checkRtlByLetter ? (letter.native.textContent ?? "") : options.wordText,
       options.isLanguageRightToLeft,

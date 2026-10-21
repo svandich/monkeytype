@@ -23,7 +23,7 @@ export function onDelete(inputType: DeleteInputType, now: number): void {
 
   //special check for code languages
   if (
-    Config.language.startsWith("code") &&
+    (Config.language.startsWith("code") || Config.language === "ariasctl") &&
     Config.codeUnindentOnBackspace &&
     inputBeforeDelete.length > 0 &&
     beforeDeleteOnlyTabs &&

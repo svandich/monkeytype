@@ -1,6 +1,5 @@
 import { Mode, PersonalBest, PersonalBests } from "@monkeytype/schemas/shared";
 import { Result as ResultType } from "@monkeytype/schemas/results";
-import { getFunbox } from "@monkeytype/funbox";
 
 export type LbPersonalBests = {
   time: Record<number, Record<string, PersonalBest>>;
@@ -13,12 +12,6 @@ type CheckAndUpdatePbResult = {
 };
 
 type Result = Omit<ResultType<Mode>, "_id" | "name">;
-
-export function canFunboxGetPb(result: Result): boolean {
-  if (result.funbox === undefined || result.funbox.length === 0) return true;
-
-  return getFunbox(result.funbox).every((f) => f.canGetPb);
-}
 
 export function checkAndUpdatePb(
   userPersonalBests: PersonalBests,

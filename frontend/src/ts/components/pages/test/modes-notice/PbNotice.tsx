@@ -5,7 +5,6 @@ import { getLocalPB } from "../../../../db";
 import { getFormatting, isAuthenticated } from "../../../../states/core";
 import { getSnapshot } from "../../../../states/snapshot";
 import { getCurrentQuote } from "../../../../states/test";
-import { getActiveFunboxes } from "../../../../test/funbox/list";
 import { getMode2 } from "../../../../utils/misc";
 import { Notice } from "./Notice";
 
@@ -14,8 +13,6 @@ export function PbNotice() {
     if (!isAuthenticated()) return "";
     const format = getFormatting();
 
-    //react on config.funbox
-    const _funbox = getConfig.funbox;
     //react on new localPB
     const _snapshot = getSnapshot();
 
@@ -28,7 +25,6 @@ export function PbNotice() {
       getConfig.language,
       getConfig.difficulty,
       getConfig.lazyMode,
-      getActiveFunboxes(),
     );
 
     if (pb === undefined) return "no pb";

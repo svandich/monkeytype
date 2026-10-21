@@ -90,39 +90,6 @@ describe("Result Utils", () => {
       );
     });
 
-    describe("legacy funbox conversion", () => {
-      it.each([
-        {
-          description: "should convert string funbox to array",
-          input: "memory#mirror",
-          expected: ["memory", "mirror"],
-        },
-        {
-          description: "should convert single funbox string to array",
-          input: "memory",
-          expected: ["memory"],
-        },
-        {
-          description: "should convert 'none' funbox to empty array",
-          input: "none",
-          expected: [],
-        },
-        {
-          description: "should handle complex funbox combinations",
-          input: "memory#mirror#arrows#58008",
-          expected: ["memory", "mirror", "arrows", "58008"],
-        },
-      ])("$description", ({ input, expected }) => {
-        const resultWithStringFunbox: DBResult = {
-          funbox: input as any,
-        } as any;
-
-        const result = replaceLegacyValues(resultWithStringFunbox);
-
-        expect(result.funbox).toEqual(expected);
-      });
-    });
-
     describe("legacy chartData conversion", () => {
       it("should convert chartData with 'raw' property to 'burst'", () => {
         const resultWithLegacyChartData: DBResult = {
@@ -183,7 +150,6 @@ describe("Result Utils", () => {
       const resultWithAllLegacy: DBResult = {
         correctChars: 100,
         incorrectChars: 8,
-        funbox: "memory#mirror" as any,
         chartData: {
           wpm: [50, 55, 60],
           raw: [52, 57, 62],
@@ -196,7 +162,6 @@ describe("Result Utils", () => {
       expect(result.charStats).toEqual([100, 8, 0, 0]);
       expect(result.correctChars).toBeUndefined();
       expect(result.incorrectChars).toBeUndefined();
-      expect(result.funbox).toEqual(["memory", "mirror"]);
       expect(result.chartData).toEqual({
         wpm: [50, 55, 60],
         burst: [52, 57, 62],
@@ -208,7 +173,6 @@ describe("Result Utils", () => {
       it("should return result unchanged when no legacy values present", () => {
         const modernResult: DBResult = {
           charStats: [95, 5, 2, 1],
-          funbox: ["memory"],
         } as any;
 
         const result = replaceLegacyValues(modernResult);

@@ -13,7 +13,7 @@ const mockPersonalBest: PersonalBest = {
   consistency: 1,
   difficulty: "normal" as const,
   lazyMode: true,
-  language: "polish",
+  language: "code_python",
   punctuation: false,
   raw: 230,
   wpm: 215,
@@ -79,9 +79,6 @@ const mockResultFilter: ResultFilters = {
   },
   language: {
     english: true,
-  },
-  funbox: {
-    none: true,
   },
 };
 
@@ -1979,14 +1976,14 @@ describe("UserDal", () => {
       const { uid } = await UserTestData.createUser({
         favoriteQuotes: {
           english: ["1", "2"],
-          german: ["3", "4"],
-          polish: ["5"],
+          spanish: ["3", "4"],
+          code_python: ["5"],
         },
       });
 
       // when, then
       await expect(
-        UserDAL.addFavoriteQuote(uid, "polish", "6", 5),
+        UserDAL.addFavoriteQuote(uid, "code_python", "6", 5),
       ).rejects.toThrow(
         "Maximum number of favorite quotes reached\nStack: add favorite quote",
       );
@@ -1997,8 +1994,8 @@ describe("UserDal", () => {
       const { uid } = await UserTestData.createUser({
         favoriteQuotes: {
           english: ["1"],
-          german: ["2"],
-          polish: ["3"],
+          spanish: ["2"],
+          code_python: ["3"],
         },
       });
 
@@ -2009,8 +2006,8 @@ describe("UserDal", () => {
       const read = await UserDAL.getUser(uid, "read");
       expect(read.favoriteQuotes).toStrictEqual({
         english: ["1", "4"],
-        german: ["2"],
-        polish: ["3"],
+        spanish: ["2"],
+        code_python: ["3"],
       });
     });
 
@@ -2019,7 +2016,7 @@ describe("UserDal", () => {
       const { uid } = await UserTestData.createUser({
         favoriteQuotes: {
           english: ["1", "3", "4"],
-          german: ["2"],
+          spanish: ["2"],
         },
       });
       // when
@@ -2030,7 +2027,7 @@ describe("UserDal", () => {
 
       expect(read.favoriteQuotes).toStrictEqual({
         english: ["1", "3", "4"],
-        german: ["2"],
+        spanish: ["2"],
       });
     });
   });
@@ -2053,7 +2050,7 @@ describe("UserDal", () => {
 
       // when
       await UserDAL.removeFavoriteQuote(uid, "english", "3");
-      await UserDAL.removeFavoriteQuote(uid, "german", "1");
+      await UserDAL.removeFavoriteQuote(uid, "spanish", "1");
 
       //then
       const read = await UserDAL.getUser(uid, "read");

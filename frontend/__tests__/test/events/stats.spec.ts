@@ -7,7 +7,7 @@ vi.mock("../../../src/ts/test/test-stats", () => ({
 const mockState = vi.hoisted(() => ({ activeWordIndex: 0 }));
 
 vi.mock("../../../src/ts/config/store", () => ({
-  Config: { mode: "words", funbox: [] as string[], words: 25, time: 0 },
+  Config: { mode: "words", words: 25, time: 0 },
   getConfig: {},
 }));
 
@@ -95,17 +95,14 @@ import type {
 import { Config } from "../../../src/ts/config/store";
 import { Keycode } from "../../../src/ts/constants/keys";
 import { words as TestWords } from "../../../src/ts/test/test-words";
-import { isFunboxActiveWithProperty } from "../../../src/ts/test/funbox/list";
 
 // mirror the generator: each word carries a trailing space separator unless it
-// already ends with a newline, the nospace funbox is active, or it's the last
-// word (the final separator is stripped once all words are generated)
+// already ends with a newline, or it's the last word (the final separator is
+// stripped once all words are generated)
 function pushWords(...words: string[]): void {
-  const nospace = isFunboxActiveWithProperty("nospace");
   words.forEach((word, i) => {
     const isLast = i === words.length - 1;
-    const withSeparator =
-      isLast || nospace || word.endsWith("\n") ? word : `${word} `;
+    const withSeparator = isLast || word.endsWith("\n") ? word : `${word} `;
     TestWords.push(withSeparator, i);
   });
 }
@@ -197,7 +194,6 @@ describe("stats.ts", () => {
     resetTestEvents();
     __testing.resetPressedKeys();
     (Config as { mode: string }).mode = "words";
-    (Config as { funbox: string[] }).funbox = [];
     (Config as { words: number }).words = 25;
     (Config as { time: number }).time = 0;
     mockState.activeWordIndex = 0;
@@ -316,22 +312,6 @@ describe("stats.ts", () => {
 
       const eventLog = buildEventLog();
       expect(statsTesting.getLaggedTimerBoundaries(eventLog)).toEqual([]);
-    });
-
-    it("adjusts end in zen mode by removing trailing afk", () => {
-      (Config as { mode: string }).mode = "zen";
-      logTestEvent("timer", 1000, timer("start", 0));
-      logTestEvent("keydown", 1500, keyDown());
-      logTestEvent("keyup", 1600, keyUp());
-      logTestEvent("timer", 2000, timer("step", 1));
-      logTestEvent("timer", 3000, timer("step", 2));
-      // last keypress at testMs 500, end at testMs 4000 → lkte = 3500
-      logTestEvent("timer", 5000, timer("end", 4));
-
-      const eventLog = buildEventLog();
-      const boundaries = statsTesting.getLaggedTimerBoundaries(eventLog);
-      // adjusted end = 4000 - 3500 = 500, steps at 1000 and 2000 are past it
-      expect(boundaries).toEqual([500]);
     });
 
     it("skips end boundary when endMs rounds up to whole second", () => {
@@ -498,19 +478,6 @@ describe("stats.ts", () => {
       // 15 boundaries, no tail
       expect(statsTesting.getTimerBoundaries(eventLog)).toHaveLength(15);
     });
-
-    it("trims zen-mode trailing afk and caps tick count", () => {
-      (Config as { mode: string }).mode = "zen";
-      logTestEvent("timer", 1000, timer("start", 0));
-      logTestEvent("keydown", 1500, keyDown());
-      logTestEvent("keyup", 1600, keyUp());
-      // last keypress at testMs 500, end at testMs 4000 → afk = 3500
-      // adjusted endMs = 500 → 0 full ticks, plus tail (500ms >= .5s)
-      logTestEvent("timer", 5000, timer("end", 4));
-
-      const eventLog = buildEventLog();
-      expect(statsTesting.getTimerBoundaries(eventLog)).toEqual([500]);
-    });
   });
 
   describe("getTimerBoundaryLabels", () => {
@@ -603,14 +570,6 @@ describe("stats.ts", () => {
       expect(getStartToFirstKeypressMs(buildEventLog())).toBe(0);
     });
 
-    it("returns 0 in zen mode", () => {
-      (Config as { mode: string }).mode = "zen";
-      logTestEvent("timer", 1000, timer("start", 0));
-      logTestEvent("keydown", 1150, keyDown());
-
-      expect(getStartToFirstKeypressMs(buildEventLog())).toBe(0);
-    });
-
     it("returns 0 if no events", () => {
       expect(getStartToFirstKeypressMs(buildEventLog())).toBe(0);
     });
@@ -625,15 +584,6 @@ describe("stats.ts", () => {
       logTestEvent("timer", 2000, timer("end", 1));
 
       expect(getLastKeypressToEndMs(buildEventLog())).toBe(200);
-    });
-
-    it("returns 0 in zen mode", () => {
-      (Config as { mode: string }).mode = "zen";
-      logTestEvent("timer", 1000, timer("start", 0));
-      logTestEvent("keydown", 1500, keyDown());
-      logTestEvent("timer", 2000, timer("end", 1));
-
-      expect(getLastKeypressToEndMs(buildEventLog())).toBe(0);
     });
   });
 
@@ -1369,41 +1319,6 @@ describe("stats.ts", () => {
       expect(wpm[0]).toBe(36);
       // at 2s: 3 + 2 ("cd") = 5 correctWord chars → (5/5)*60/2 = 30
       expect(wpm[1]).toBe(30);
-    });
-
-    it("counts non-last word as correct without trailing space when nospace funbox is active", () => {
-      (Config as { funbox: string[] }).funbox = ["nospace"];
-      pushWords("ab", "cd");
-      mockState.activeWordIndex = 1;
-
-      logTestEvent("timer", 1000, timer("start", 0));
-      // type "ab" then "cd" with no space between (nospace mode)
-      logTestEvent(
-        "input",
-        1100,
-        input({ charIndex: 0, wordIndex: 0, data: "a" }),
-      );
-      logTestEvent(
-        "input",
-        1200,
-        input({ charIndex: 1, wordIndex: 0, data: "b" }),
-      );
-      logTestEvent(
-        "input",
-        1300,
-        input({ charIndex: 0, wordIndex: 1, data: "c" }),
-      );
-      logTestEvent(
-        "input",
-        1400,
-        input({ charIndex: 1, wordIndex: 1, data: "d" }),
-      );
-      logTestEvent("timer", 2000, timer("step", 1));
-      logTestEvent("timer", 2000, timer("end", 1));
-
-      const wpm = getWpmHistory(buildEventLog());
-      // both words fully correct → 4 correctWord chars in 1s = (4/5)*60 = 48
-      expect(wpm).toEqual([48]);
     });
 
     it("counts multiline word as correct when target ends in newline", () => {

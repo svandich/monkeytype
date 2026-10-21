@@ -4,7 +4,6 @@ import { getConfig } from "../config/store";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { EventLog } from "../test/events/types";
 
-import { Challenge } from "@monkeytype/challenges";
 import { LayoutObject } from "@monkeytype/schemas/layouts";
 import { CompletedEvent, IncompleteTest } from "@monkeytype/schemas/results";
 import { createStore } from "solid-js/store";
@@ -13,7 +12,6 @@ import { createSignalWithSetters } from "../hooks/createSignalWithSetters";
 import * as CustomText from "../test/custom-text";
 import { QuoteWithTextSplit } from "../types/quotes";
 import { getLayout } from "../utils/json-data";
-import { mirrorLayoutKeys } from "../utils/key-converter";
 import { canQuickRestart } from "../utils/quick-restart";
 import { replaceUnderscoresWithSpaces } from "../utils/strings";
 import { getActivePage, getCustomTextIndicator } from "./core";
@@ -24,8 +22,6 @@ export const [wordsHaveNewline, setWordsHaveNewline] = createSignal(false);
 export const [wordsHaveTab, setWordsHaveTab] = createSignal(false);
 export const [wordsHaveNumbers, setWordsHaveNumbers] = createSignal(false);
 
-export const [getLoadedChallenge, setLoadedChallenge] =
-  createSignal<Challenge | null>(null);
 export const [getResultVisible, setResultVisible] = createSignal(false);
 // True from the first line of TestLogic.finish() until the result is built, so
 // it covers the words fade-out that getResultVisible() is still false during.
@@ -148,16 +144,13 @@ createEffect(() => {
 export const getKeymapLayout = createMemo<{
   layout: string;
   layoutNameDisplayString: string;
-  isMirrored: boolean;
 }>(() => {
   const isOverride = getConfig.keymapLayout === "overrideSync";
   const raw = isOverride ? getConfig.layout : getConfig.keymapLayout;
 
   const layout = raw === "default" ? "qwerty" : raw;
   const layoutNameDisplayString = replaceUnderscoresWithSpaces(raw);
-  const isMirrored = getConfig.funbox.includes("layout_mirror");
-
-  return { layout: layout, layoutNameDisplayString, isMirrored };
+  return { layout: layout, layoutNameDisplayString };
 });
 
 const [getKeymapHighlightKey, setKeymapHighlightKey] = createSignal<
@@ -189,34 +182,20 @@ keymapEvent.useListener(({ mode, key, correct }) => {
 
 const getInputLayout = createMemo<{
   layout: string;
-  isMirrored: boolean;
 }>(() => {
   return {
     layout: getConfig.layout === "default" ? "qwerty" : getConfig.layout,
-    isMirrored: getConfig.funbox.includes("layout_mirror"),
   };
 });
 
 const [inputLayoutObject, inputLayoutPromise] = useResourceWithPromise(
   getInputLayout,
-  async (layout) => {
-    const result = await getLayout(layout.layout);
-    if (layout.isMirrored) {
-      return mirrorLayoutKeys(result);
-    }
-    return result;
-  },
+  async (layout) => getLayout(layout.layout),
 );
 
 const [keymapLayoutObject, keymapLayoutPromise] = useResourceWithPromise(
   getKeymapLayout,
-  async (layout) => {
-    const result = await getLayout(layout.layout);
-    if (layout.isMirrored) {
-      return mirrorLayoutKeys(result);
-    }
-    return result;
-  },
+  async (layout) => getLayout(layout.layout),
 );
 export { keymapLayoutObject };
 

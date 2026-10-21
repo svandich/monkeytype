@@ -52,7 +52,6 @@ export const QuoteDataQuoteSchema = z
   .object({
     id: z.number(),
     text: z.string(),
-    britishText: z.string().optional(),
     source: z.string(),
     length: z.number(),
     approvedBy: z.string().optional(),

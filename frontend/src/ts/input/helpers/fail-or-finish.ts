@@ -5,23 +5,16 @@ import { type CommitCharacterType } from "./util";
 /**
  * Check if the test should fail due to minimum burst settings
  * @param options - Options object
- * @param options.testInputWithData - Current test input result (after adding data)
  * @param options.currentWord - Current target word
  * @param options.lastBurst - Burst speed in WPM
  */
 export function checkIfFailedDueToMinBurst(options: {
-  testInputWithData: string;
   currentWord: string;
   lastBurst: number | null;
 }): boolean {
-  const { testInputWithData, currentWord, lastBurst } = options;
+  const { currentWord, lastBurst } = options;
   if (Config.minBurst !== "off" && lastBurst !== null) {
-    let wordLength: number;
-    if (Config.mode === "zen") {
-      wordLength = testInputWithData.length;
-    } else {
-      wordLength = currentWord.length;
-    }
+    const wordLength = currentWord.length;
 
     const flex: number = whorf(Config.minBurstCustomSpeed, wordLength);
     if (
@@ -54,14 +47,11 @@ export function checkIfFailedDueToDifficulty(options: {
   // Using space or newline instead of shouldInsertSpace or increasedWordIndex
   // because we want expert mode to fail no matter if confidence or stop on error is on
 
-  if (Config.mode === "zen") return false;
-
   const shouldFailDueToExpert =
     Config.difficulty === "expert" &&
     commitCharacterType !== false &&
-    // a leading separator (empty input) commits nothing and must not fail;
-    // a nospace commit (e.g. a 1-letter word) does commit on empty input
-    !(commitCharacterType === "separator" && testInput.length === 0) &&
+    // a leading separator (empty input) commits nothing and must not fail
+    testInput.length !== 0 &&
     testInput + data !== targetWord;
 
   const shouldFailDueToMaster = Config.difficulty === "master" && !correct;

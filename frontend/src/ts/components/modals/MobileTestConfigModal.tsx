@@ -1,8 +1,8 @@
 import type {
+  ConfigMode,
   QuoteLength,
   QuoteLengthConfig,
 } from "@monkeytype/schemas/configs";
-import type { Mode } from "@monkeytype/schemas/shared";
 
 import { For, JSXElement, Show } from "solid-js";
 
@@ -16,7 +16,7 @@ import { AnimatedModal } from "../common/AnimatedModal";
 import { Button } from "../common/Button";
 import { Separator } from "../common/Separator";
 
-const modes: Mode[] = ["time", "words", "quote", "zen", "custom"];
+const modes: ConfigMode[] = ["time", "words", "quote", "custom"];
 const times = [15, 30, 60, 120];
 const wordCounts = [10, 25, 50, 100];
 
@@ -51,11 +51,10 @@ function MCButton(props: {
   );
 }
 
-const isPunctuationDisabled = () =>
-  getConfig.mode === "quote" || getConfig.mode === "zen";
+const isPunctuationDisabled = () => getConfig.mode === "quote";
 
 export function MobileTestConfigModal(): JSXElement {
-  const handleModeClick = (mode: Mode) => {
+  const handleModeClick = (mode: ConfigMode) => {
     if (mode === getConfig.mode) return;
     setConfig("mode", mode);
     restartTestEvent.dispatch();
@@ -154,57 +153,52 @@ export function MobileTestConfigModal(): JSXElement {
 
       <Separator />
 
-      <Show when={getConfig.mode !== "zen"}>
-        <div class="grid gap-2">
-          <Show when={getConfig.mode === "time"}>
-            <For each={times}>
-              {(time) => (
+      <div class="grid gap-2">
+        <Show when={getConfig.mode === "time"}>
+          <For each={times}>
+            {(time) => (
+              <MCButton
+                text={String(time)}
+                active={getConfig.time === time}
+                onClick={() => handleTimeClick(time)}
+              />
+            )}
+          </For>
+          <MCButton text="custom" onClick={() => handleTimeClick("custom")} />
+        </Show>
+
+        <Show when={getConfig.mode === "words"}>
+          <For each={wordCounts}>
+            {(words) => (
+              <MCButton
+                text={String(words)}
+                active={getConfig.words === words}
+                onClick={() => handleWordsClick(words)}
+              />
+            )}
+          </For>
+          <MCButton text="custom" onClick={() => handleWordsClick("custom")} />
+        </Show>
+
+        <Show when={getConfig.mode === "quote"}>
+          <For each={quoteLengths}>
+            {(ql) => (
+              <Show when={!("loginRequired" in ql) || isAuthenticated()}>
                 <MCButton
-                  text={String(time)}
-                  active={getConfig.time === time}
-                  onClick={() => handleTimeClick(time)}
+                  text={ql.label}
+                  active={isQuoteLengthActive(ql.value)}
+                  onClick={(e) => handleQuoteLengthClick(ql.value, e)}
                 />
-              )}
-            </For>
-            <MCButton text="custom" onClick={() => handleTimeClick("custom")} />
-          </Show>
+              </Show>
+            )}
+          </For>
+        </Show>
 
-          <Show when={getConfig.mode === "words"}>
-            <For each={wordCounts}>
-              {(words) => (
-                <MCButton
-                  text={String(words)}
-                  active={getConfig.words === words}
-                  onClick={() => handleWordsClick(words)}
-                />
-              )}
-            </For>
-            <MCButton
-              text="custom"
-              onClick={() => handleWordsClick("custom")}
-            />
-          </Show>
-
-          <Show when={getConfig.mode === "quote"}>
-            <For each={quoteLengths}>
-              {(ql) => (
-                <Show when={!("loginRequired" in ql) || isAuthenticated()}>
-                  <MCButton
-                    text={ql.label}
-                    active={isQuoteLengthActive(ql.value)}
-                    onClick={(e) => handleQuoteLengthClick(ql.value, e)}
-                  />
-                </Show>
-              )}
-            </For>
-          </Show>
-
-          <Show when={getConfig.mode === "custom"}>
-            <MCButton text="change" onClick={() => showModal("CustomText")} />
-          </Show>
-        </div>
-        <Separator />
-      </Show>
+        <Show when={getConfig.mode === "custom"}>
+          <MCButton text="change" onClick={() => showModal("CustomText")} />
+        </Show>
+      </div>
+      <Separator />
 
       <div class="grid gap-2">
         <MCButton text="share" onClick={() => showModal("ShareTestSettings")} />

@@ -58,7 +58,6 @@ async function createDummyData(
         language: "english",
         isPb: false,
         name: "Test",
-        funbox: ["58008", "read_ahead"],
       },
       ...modify,
     });

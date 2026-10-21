@@ -4,7 +4,6 @@ import * as DB from "../db";
 import { getActiveTagsPB } from "../collections/tags";
 import * as Misc from "../utils/misc";
 import { configEvent } from "../events/config";
-import { getActiveFunboxes } from "./funbox/list";
 import { Caret } from "../elements/caret";
 import { ElementWithUtils } from "../utils/dom";
 import {
@@ -58,7 +57,6 @@ export function setLastTestWpm(wpm: number): void {
 
 export function resetCaretPosition(): void {
   if (Config.paceCaret === "off" && !isPaceRepeat()) return;
-  if (Config.mode === "zen") return;
 
   caret.hide();
   caret.stopAllAnimations();
@@ -87,7 +85,6 @@ export async function init(): Promise<void> {
         Config.language,
         Config.difficulty,
         Config.lazyMode,
-        getActiveFunboxes(),
       )?.wpm ?? 0;
   } else if (Config.paceCaret === "tagPb") {
     wpm = getActiveTagsPB(

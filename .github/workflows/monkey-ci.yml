@@ -317,7 +317,6 @@ jobs:
               - 'frontend/static/layouts/**'
               - 'frontend/static/themes/**'
               - 'frontend/static/webfonts/**'
-              - 'frontend/static/challenges/**'
               - 'frontend/static/sounds/**'
 
       - name: Set up Node.js

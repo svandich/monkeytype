@@ -113,7 +113,7 @@ export const getTimerText = createMemo(() => {
   // read the signal first so the memo subscribes to it on every branch below
   const wordCount = getCurrentWordCount();
   const wordsTotal = getWordsTotal();
-  if (getConfig.mode === "zen" || wordsTotal === 0) {
+  if (wordsTotal === 0) {
     return `${getActiveWordIndex()}`;
   }
   return `${wordCount}/${wordsTotal}`;

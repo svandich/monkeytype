@@ -5,7 +5,6 @@ import {
   showSuccessNotification,
 } from "../../states/notifications";
 import * as TestWords from "../../test/test-words";
-import { Config } from "../../config/store";
 import * as PractiseWords from "../../test/practise-words";
 import { Command, CommandsSubgroup } from "../types";
 import { getInputHistory } from "../../test/events/stats";
@@ -146,14 +145,11 @@ const commands: Command[] = [
       }
 
       const inputHistory = getInputHistory(eventLog);
-      const words =
-        Config.mode === "zen"
-          ? inputHistory.join("")
-          : TestWords.words
-              .get()
-              .slice(0, inputHistory.length)
-              .map((word) => word.textWithCommit)
-              .join("");
+      const words = TestWords.words
+        .get()
+        .slice(0, inputHistory.length)
+        .map((word) => word.textWithCommit)
+        .join("");
 
       navigator.clipboard.writeText(words).then(
         () => {

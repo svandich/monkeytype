@@ -24,5 +24,4 @@ Frontend is partially migrated - new components use SolidJS (`.tsx`), legacy cod
 - `turbo.json`: Task deps and caching
 - `frontend/src/ts/config-metadata.ts`: Config validation rules
 - `packages/contracts/src/index.ts`: API contract structure
-- `packages/funbox/src/list.ts`: All funbox definitions
 - `backend/src/api/routes/index.ts`: ts-rest setup

@@ -65,7 +65,6 @@ const lastConfigsToApply: Set<keyof ConfigSchemas.Config> = new Set([
   "mode", // mode sets punctuation and numbers
   "numbers",
   "punctuation",
-  "funbox",
 ]);
 
 export async function applyConfig(

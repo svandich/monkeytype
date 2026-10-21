@@ -10,7 +10,6 @@ import {
   Config as ConfigType,
   CaretStyleSchema,
 } from "@monkeytype/schemas/configs";
-import * as FunboxValidation from "../../src/ts/config/funbox-validation";
 import * as ConfigValidation from "../../src/ts/config/validation";
 import { configEvent } from "../../src/ts/events/config";
 import * as ApeConfig from "../../src/ts/ape/config";
@@ -27,10 +26,6 @@ describe("Config", () => {
   });
 
   describe("test with mocks", () => {
-    const canSetConfigWithCurrentFunboxesMock = vi.spyOn(
-      FunboxValidation,
-      "canSetConfigWithCurrentFunboxes",
-    );
     const isConfigValueValidMock = vi.spyOn(
       ConfigValidation,
       "isConfigValueValid",
@@ -46,7 +41,6 @@ describe("Config", () => {
     const stateIsTestActiveMock = vi.spyOn(TestState, "isTestActive");
 
     const mocks = [
-      canSetConfigWithCurrentFunboxesMock,
       isConfigValueValidMock,
       dispatchConfigEventMock,
       dbSaveConfigMock,
@@ -61,7 +55,6 @@ describe("Config", () => {
       mocks.forEach((it) => it.mockClear());
 
       isConfigValueValidMock.mockReturnValue(true);
-      canSetConfigWithCurrentFunboxesMock.mockReturnValue(true);
       dbSaveConfigMock.mockResolvedValue();
       stateIsTestActiveMock.mockReturnValue(true);
 
@@ -79,26 +72,6 @@ describe("Config", () => {
       expect(() => {
         Config.setConfig("nonExistentKey" as ConfigKey, true);
       }).toThrow(`Config metadata for key "nonExistentKey" is not defined.`);
-    });
-
-    it("fails if test is active and funbox no_quit", () => {
-      //GIVEN
-      replaceConfig({ funbox: ["no_quit"], numbers: false });
-
-      //WHEN
-      expect(
-        Config.setConfig("numbers", true, {
-          nosave: true,
-        }),
-      ).toBe(false);
-
-      //THEN
-      expect(notificationAddMock).toHaveBeenCalledWith(
-        "No quit funbox is active. Please finish the test.",
-        {
-          important: true,
-        },
-      );
     });
 
     //TODO isBlocked
@@ -156,10 +129,10 @@ describe("Config", () => {
 
     it("should use overrideValue", () => {
       //WHEN
-      Config.setConfig("customLayoutfluid", ["3l", "ABNT2", "3l"]);
+      Config.setConfig("keymapSize", 1.234);
 
       //THEN
-      expect(getConfig().customLayoutfluid).toEqual(["3l", "ABNT2"]);
+      expect(getConfig().keymapSize).toEqual(1.2);
     });
 
     it("fails if config is invalid", () => {
@@ -173,14 +146,6 @@ describe("Config", () => {
         "banana",
         CaretStyleSchema,
       );
-    });
-
-    it("cannot set if funbox disallows", () => {
-      //GIVEN
-      canSetConfigWithCurrentFunboxesMock.mockReturnValue(false);
-
-      //WHEN / THEN
-      expect(Config.setConfig("numbers", true)).toBe(false);
     });
 
     it("sets overrideConfigs", () => {
@@ -346,30 +311,18 @@ describe("Config", () => {
         expected: Partial<ConfigType>;
       }[] = [
         {
-          // invalid funbox
-          display: "invalid funbox",
-          value: { funbox: ["invalid_funbox"] as any },
-          expected: { funbox: [] },
-        },
-        {
-          display: "mode incompatible with funbox",
-          value: { mode: "quote", funbox: ["58008"] },
-          expected: { funbox: [] },
-        },
-        {
-          display: "invalid combination of funboxes",
-          value: { funbox: ["58008", "gibberish"] },
-          expected: { funbox: [] },
-        },
-        {
           display: "sanitizes config, remove extra keys",
-          value: { mode: "zen", unknownKey: true, unknownArray: [1, 2] } as any,
-          expected: { mode: "zen" },
+          value: {
+            mode: "quote",
+            unknownKey: true,
+            unknownArray: [1, 2],
+          } as any,
+          expected: { mode: "quote" },
         },
         {
           display: "applies config migration",
-          value: { mode: "zen", swapEscAndTab: true } as any,
-          expected: { mode: "zen", quickRestart: "esc" },
+          value: { mode: "quote", swapEscAndTab: true } as any,
+          expected: { mode: "quote", quickRestart: "esc" },
         },
       ];
 

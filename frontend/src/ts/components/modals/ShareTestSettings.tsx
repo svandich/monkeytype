@@ -1,4 +1,4 @@
-import type { Difficulty, FunboxName } from "@monkeytype/schemas/configs";
+import type { Difficulty } from "@monkeytype/schemas/configs";
 import type { CustomTextSettings } from "@monkeytype/schemas/results";
 import type { Mode, Mode2 } from "@monkeytype/schemas/shared";
 
@@ -26,7 +26,6 @@ type SharedTestSettings = [
   boolean | null,
   string | null,
   Difficulty | null,
-  FunboxName[] | null,
 ];
 
 export function ShareTestSettings(): JSXElement {
@@ -39,7 +38,6 @@ export function ShareTestSettings(): JSXElement {
       numbers: false,
       language: false,
       difficulty: false,
-      funbox: false,
     },
   }));
 
@@ -47,7 +45,7 @@ export function ShareTestSettings(): JSXElement {
 
   const url = () => {
     const baseUrl = `${location.origin}?testSettings=`;
-    const settings: SharedTestSettings = new Array(8).fill(
+    const settings: SharedTestSettings = new Array(7).fill(
       null,
     ) as SharedTestSettings;
     const values = formValues();
@@ -63,7 +61,6 @@ export function ShareTestSettings(): JSXElement {
       { enabled: values.numbers, getValue: () => getConfig.numbers },
       { enabled: values.language, getValue: () => getConfig.language },
       { enabled: values.difficulty, getValue: () => getConfig.difficulty },
-      { enabled: values.funbox, getValue: () => getConfig.funbox },
     ];
 
     for (const [index, { enabled, getValue }] of settingsMap.entries()) {
@@ -139,7 +136,7 @@ export function ShareTestSettings(): JSXElement {
           )}
         </form.Field>
       </Show>
-      <Show when={getConfig.mode !== "custom" && getConfig.mode !== "zen"}>
+      <Show when={getConfig.mode !== "custom"}>
         <form.Field name="mode2">
           {(field) => (
             <Checkbox
@@ -159,86 +156,67 @@ export function ShareTestSettings(): JSXElement {
         </form.Field>
       </Show>
 
-      <Show when={getConfig.mode !== "zen"}>
-        <form.Field name="punctuation">
-          {(field) => (
-            <Checkbox
-              field={() => field()}
-              class="items-start"
-              label={
-                <div>
-                  <div>Punctuation</div>
-                  <div class="text-em-xs text-sub">
-                    {getConfig.punctuation ? "enabled" : "disabled"}
-                  </div>
-                </div>
-              }
-            />
-          )}
-        </form.Field>
-        <form.Field name="numbers">
-          {(field) => (
-            <Checkbox
-              field={() => field()}
-              class="items-start"
-              label={
-                <div>
-                  <div>Numbers</div>
-                  <div class="text-em-xs text-sub">
-                    {getConfig.numbers ? "enabled" : "disabled"}
-                  </div>
-                </div>
-              }
-            />
-          )}
-        </form.Field>
-        <form.Field name="language">
-          {(field) => (
-            <Checkbox
-              field={() => field()}
-              class="items-start"
-              label={
-                <div>
-                  <div>Language</div>
-                  <div class="text-em-xs text-sub">{getConfig.language}</div>
-                </div>
-              }
-            />
-          )}
-        </form.Field>
-        <form.Field name="difficulty">
-          {(field) => (
-            <Checkbox
-              field={() => field()}
-              class="items-start"
-              label={
-                <div>
-                  <div>Difficulty</div>
-                  <div class="text-em-xs text-sub">{getConfig.difficulty}</div>
-                </div>
-              }
-            />
-          )}
-        </form.Field>
-      </Show>
-      <form.Field name="funbox">
+      <form.Field name="punctuation">
         {(field) => (
           <Checkbox
             field={() => field()}
             class="items-start"
             label={
               <div>
-                <div>Funbox</div>
+                <div>Punctuation</div>
                 <div class="text-em-xs text-sub">
-                  {getConfig.funbox.length > 0
-                    ? getConfig.funbox.join(", ")
-                    : `none`}
+                  {getConfig.punctuation ? "enabled" : "disabled"}
                 </div>
               </div>
             }
           />
         )}
       </form.Field>
+      <form.Field name="numbers">
+        {(field) => (
+          <Checkbox
+            field={() => field()}
+            class="items-start"
+            label={
+              <div>
+                <div>Numbers</div>
+                <div class="text-em-xs text-sub">
+                  {getConfig.numbers ? "enabled" : "disabled"}
+                </div>
+              </div>
+            }
+          />
+        )}
+      </form.Field>
+      <form.Field name="language">
+        {(field) => (
+          <Checkbox
+            field={() => field()}
+            class="items-start"
+            label={
+              <div>
+                <div>Language</div>
+                <div class="text-em-xs text-sub">{getConfig.language}</div>
+              </div>
+            }
+          />
+        )}
+      </form.Field>
+      <form.Field name="difficulty">
+        {(field) => (
+          <Checkbox
+            field={() => field()}
+            class="items-start"
+            label={
+              <div>
+                <div>Difficulty</div>
+                <div class="text-em-xs text-sub">{getConfig.difficulty}</div>
+              </div>
+            }
+          />
+        )}
+      </form.Field>
+
       <textarea
         placeholder="url"
         value={url()}

@@ -93,9 +93,7 @@ export function QuoteReportModal(): JSXElement {
     });
     form.reset();
 
-    const language =
-      Config.language === "swiss_german" ? "german" : Config.language;
-    const { quotes } = await QuotesController.getQuotes(language);
+    const { quotes } = await QuotesController.getQuotes(Config.language);
     const quote = quotes.find((q) => q.id === quoteId());
     setQuoteText(quote?.text ?? "");
   };

@@ -8,7 +8,7 @@ import {
   getEventsForWord,
   getInputFromDom,
 } from "../../../../test/events/helpers";
-import { getInputHistory, getWpmHistory } from "../../../../test/events/stats";
+import { getWpmHistory } from "../../../../test/events/stats";
 import { EventLog } from "../../../../test/events/types";
 
 type ReplayLetter = {
@@ -70,7 +70,6 @@ let timeoutList: NodeJS.Timeout[] = [];
 let stopwatchList: NodeJS.Timeout[] = [];
 
 function getWordsList(eventLog: EventLog): string[] {
-  if (eventLog.context.mode === "zen") return getInputHistory(eventLog);
   return eventLog.context.targetWords;
 }
 
@@ -86,8 +85,7 @@ function deriveReplayActions(eventLog: EventLog): Replay[] {
     if (prevWordIndex !== undefined && wi !== prevWordIndex) {
       if (wi > prevWordIndex) {
         const typed = getInputFromDom(getEventsForWord(events, prevWordIndex));
-        const target =
-          context.mode === "zen" ? typed : context.targetWords[prevWordIndex];
+        const target = context.targetWords[prevWordIndex];
         const correct = typed === target;
         actions.push({
           action: correct ? "submitCorrectWord" : "submitErrorWord",

@@ -9,7 +9,7 @@ import {
 import { areUnsortedArraysEqual } from "../utils/arrays";
 import { Config } from "../config/store";
 import { get as getTypingSpeedUnit } from "../utils/typing-speed-units";
-import { getActivePage, isAuthenticated } from "../states/core";
+import { isAuthenticated } from "../states/core";
 import { Fonts } from "../constants/fonts";
 import { KnownFontName } from "@monkeytype/schemas/fonts";
 import * as UI from "../ui";
@@ -35,8 +35,7 @@ type ConfigKeysWithoutCommands =
 type SkippedConfigKeys =
   | "minBurst" //this is skipped for now because it has 2 nested inputs;
   | "customBackgroundFilter" //this is skipped for now because it has 4 nested inputs;
-  | "theme" //themes are sorted by color and also affected by config.favThemes
-  | "funbox"; //is using a special non schema command at the top to clear funboxes
+  | "theme"; //themes are sorted by color and also affected by config.favThemes
 
 export type CommandlineConfigMetadataObject = {
   [K in keyof Omit<
@@ -258,38 +257,6 @@ export const commandlineConfigMetadata: CommandlineConfigMetadataObject = {
     },
   },
   // minBurst: null,
-  britishEnglish: {
-    subgroup: {
-      options: "fromSchema",
-      afterExec: () => {
-        void TestLogic.restart();
-      },
-    },
-  },
-  // funbox: null,
-  customLayoutfluid: {
-    input: {
-      defaultValue: () => {
-        return Config.customLayoutfluid.join(" ");
-      },
-      inputValueConvert: (val) =>
-        val.trim().split(" ") as ConfigSchemas.CustomLayoutFluid,
-    },
-  },
-  customPolyglot: {
-    input: {
-      defaultValue: () => {
-        return Config.customPolyglot.join(" ");
-      },
-      inputValueConvert: (val) =>
-        val.trim().split(" ") as ConfigSchemas.CustomPolyglot,
-      afterExec: () => {
-        if (getActivePage() === "test") {
-          void TestLogic.restart();
-        }
-      },
-    },
-  },
   //input
   freedomMode: {
     subgroup: {

@@ -40,14 +40,14 @@ describe("misc.ts", () => {
           expected: "english medical",
         },
         {
-          input: "arabic_egypt_1k",
+          input: "code_python_1k",
           noSizeString: false,
-          expected: "arabic egypt 1k",
+          expected: "code python 1k",
         },
         {
-          input: "arabic_egypt_1k",
+          input: "code_python_1k",
           noSizeString: true,
-          expected: "arabic egypt",
+          expected: "code python",
         },
       ];
 
@@ -69,12 +69,12 @@ describe("misc.ts", () => {
           expected: "english",
         },
         {
-          input: "arabic_egypt",
-          expected: "arabic_egypt",
+          input: "code_python",
+          expected: "code_python",
         },
         {
-          input: "arabic_egypt_1k",
-          expected: "arabic_egypt",
+          input: "code_python_1k",
+          expected: "code_python",
         },
       ];
 

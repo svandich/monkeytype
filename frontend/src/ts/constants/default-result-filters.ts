@@ -1,6 +1,5 @@
 import { ResultFilters } from "@monkeytype/schemas/users";
 import { LanguageList } from "./languages";
-import { getFunboxNames } from "@monkeytype/funbox";
 
 const object: ResultFilters = {
   _id: "default",
@@ -60,10 +59,6 @@ const object: ResultFilters = {
     none: true,
   },
   language: Object.fromEntries(LanguageList.map((lang) => [lang, true])),
-  funbox: {
-    none: true,
-    ...Object.fromEntries(getFunboxNames().map((funbox) => [funbox, true])),
-  },
 };
 
 export default structuredClone(object);

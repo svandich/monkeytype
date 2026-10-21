@@ -12,7 +12,6 @@ import { showModal } from "../../../states/modals";
 import { showNoticeNotification } from "../../../states/notifications";
 import { cn } from "../../../utils/cn";
 import { Formatting } from "../../../utils/format";
-import { replaceUnderscoresWithSpaces } from "../../../utils/strings";
 import { Button } from "../../common/Button";
 import { Fa, FaProps } from "../../common/Fa";
 import { DataTable, DataTableColumnDef } from "../../ui/table/DataTable";
@@ -190,16 +189,6 @@ function getColumns<M extends Mode>({
             <Show when={info.row.original.lazyMode}>
               <span aria-label="lazy mode" data-balloon-pos="up">
                 <Fa icon="fa-couch" fixedWidth={true} />
-              </span>
-            </Show>
-            <Show when={(info.row.original.funbox ?? []).length > 0}>
-              <span
-                aria-label={info.row.original.funbox
-                  .map(replaceUnderscoresWithSpaces)
-                  .join(", ")}
-                data-balloon-pos="up"
-              >
-                <Fa icon="fa-gamepad" fixedWidth={true} />
               </span>
             </Show>
             <span

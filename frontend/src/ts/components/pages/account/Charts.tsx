@@ -121,11 +121,6 @@ function FilterSummary(props: {
       <Item group="numbers" icon="fa-hashtag" />
       <Item group="language" icon="fa-globe-americas" />
       <Item
-        group="funbox"
-        icon="fa-gamepad"
-        format={replaceUnderscoresWithSpaces}
-      />
-      <Item
         group="tags"
         icon="fa-tags"
         format={(tag) => props.tags.find((it) => it._id === tag)?.name ?? tag}

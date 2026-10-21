@@ -181,14 +181,6 @@ export function AccountXpBar(): JSXElement {
       }
     }
 
-    if (isSafeNumber(breakdown.funbox)) {
-      await sleep(delay);
-      if (isStale() || skipped) return;
-      total += breakdown.funbox;
-      setTotal(total);
-      addItem("funbox", breakdown.funbox);
-    }
-
     if (isSafeNumber(breakdown.streak)) {
       await sleep(delay);
       if (isStale() || skipped) return;

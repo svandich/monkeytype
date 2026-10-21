@@ -1,4 +1,3 @@
-import { getFunbox } from "@monkeytype/funbox";
 import { isSafeNumber, roundTo2 } from "@monkeytype/util/numbers";
 import {
   createMemo,
@@ -373,19 +372,13 @@ function getTestType(
   }
   const lines = [first];
 
-  const ignoresLanguage = getFunbox(result.funbox).some((fb) =>
-    fb.properties?.includes("ignoresLanguage"),
-  );
-  if (result.mode !== "custom" && !ignoresLanguage) {
+  if (result.mode !== "custom") {
     lines.push(getLanguageDisplayString(result.language));
   }
   if (result.punctuation) lines.push("punctuation");
   if (result.numbers) lines.push("numbers");
   if (result.blindMode) lines.push("blind");
   if (result.lazyMode) lines.push("lazy");
-  if (result.funbox.length > 0) {
-    lines.push(result.funbox.map((it) => it.replace(/_/g, " ")).join(", "));
-  }
   if (result.difficulty === "expert" || result.difficulty === "master") {
     lines.push(result.difficulty);
   }

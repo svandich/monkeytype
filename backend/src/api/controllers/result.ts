@@ -31,7 +31,6 @@ import * as UserDAL from "../../dal/user";
 import { buildMonkeyMail } from "../../utils/monkey-mail";
 import * as WeeklyXpLeaderboard from "../../services/weekly-xp-leaderboard";
 import { UAParser } from "ua-parser-js";
-import { canFunboxGetPb } from "../../utils/pb";
 import { buildDbResult } from "../../utils/result";
 import { Configuration } from "@monkeytype/schemas/configuration";
 import { addImportantLog, addLog } from "../../dal/logs";
@@ -63,10 +62,8 @@ import {
   getStartOfDayTimestamp,
 } from "@monkeytype/util/date-and-time";
 import { MonkeyRequest } from "../types";
-import { getFunbox, checkCompatibility } from "@monkeytype/funbox";
 import { tryCatch } from "@monkeytype/util/trycatch";
 import { getCachedConfiguration } from "../../init/configuration";
-import { getChallenges } from "@monkeytype/challenges";
 
 try {
   if (!anticheatImplemented()) throw new Error("undefined");
@@ -83,12 +80,6 @@ try {
     process.exit(1);
   }
 }
-
-const autoRoleChallengeNames = new Set(
-  getChallenges()
-    .filter((it) => it.settings?.autoRole)
-    .map((it) => it.name),
-);
 
 export async function getResults(
   req: MonkeyRequest<GetResultsQuery>,
@@ -173,7 +164,6 @@ export async function updateTags(
 
   result.difficulty ??= "normal";
   result.language ??= "english";
-  result.funbox ??= [];
   result.lazyMode ??= false;
   result.punctuation ??= false;
   result.numbers ??= false;
@@ -230,14 +220,6 @@ export async function addResult(
     }
   } else {
     Logger.warning("Object hash check is disabled, skipping hash check");
-  }
-
-  if (completedEvent.funbox.length !== new Set(completedEvent.funbox).size) {
-    throw new MonkeyError(400, "Duplicate funboxes");
-  }
-
-  if (!checkCompatibility(completedEvent.funbox)) {
-    throw new MonkeyError(400, "Impossible funbox combination");
   }
 
   let keySpacingStats: KeyStats | undefined = undefined;
@@ -477,18 +459,6 @@ export async function addResult(
     }
   }
 
-  if (
-    completedEvent.challenge !== null &&
-    completedEvent.challenge !== undefined &&
-    autoRoleChallengeNames.has(completedEvent.challenge) &&
-    user.discordId !== undefined &&
-    user.discordId !== ""
-  ) {
-    void GeorgeQueue.awardChallenge(user.discordId, completedEvent.challenge);
-  } else {
-    delete completedEvent.challenge;
-  }
-
   const afk = completedEvent.afkDuration ?? 0;
   const totalDurationTypedSeconds =
     completedEvent.testDuration + completedEvent.incompleteTestSeconds - afk;
@@ -524,7 +494,6 @@ export async function addResult(
     (isDevEnvironment() || (user.timeTyping ?? 0) > minTimeTyping);
 
   const validResultCriteria =
-    canFunboxGetPb(completedEvent) &&
     !completedEvent.bailedOut &&
     userEligibleForLeaderboard &&
     !stopOnLetterTriggered;
@@ -725,16 +694,10 @@ async function calculateXp(
     charStats,
     punctuation,
     numbers,
-    funbox: resultFunboxes,
   } = result;
 
-  const {
-    enabled,
-    gainMultiplier,
-    maxDailyBonus,
-    minDailyBonus,
-    funboxBonus: funboxBonusConfiguration,
-  } = xpConfiguration;
+  const { enabled, gainMultiplier, maxDailyBonus, minDailyBonus } =
+    xpConfiguration;
 
   if (mode === "zen" || !enabled) {
     return {
@@ -775,19 +738,6 @@ async function calculateXp(
     if (numbers) {
       modifier += 0.1;
       breakdown.numbers = Math.round(baseXp * 0.1);
-    }
-  }
-
-  if (funboxBonusConfiguration > 0 && resultFunboxes.length !== 0) {
-    const funboxModifier = resultFunboxes.reduce((sum, funboxName) => {
-      const funbox = getFunbox(funboxName);
-      const difficultyLevel = funbox?.difficultyLevel ?? 0;
-      return sum + Math.max(difficultyLevel * funboxBonusConfiguration, 0);
-    }, 0);
-
-    if (funboxModifier > 0) {
-      modifier += funboxModifier;
-      breakdown.funbox = Math.round(baseXp * funboxModifier);
     }
   }
 

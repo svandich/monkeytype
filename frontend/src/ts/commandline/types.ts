@@ -56,13 +56,7 @@ export type CommandsSubgroup = {
 };
 
 export type CommandlineSubgroupKey = ConfigKey | CommandlineListKey;
-export type CommandlineListKey =
-  | "themes"
-  | "loadChallenge"
-  | "minBurst"
-  | "funbox"
-  | "tags"
-  | "ads";
+export type CommandlineListKey = "themes" | "minBurst" | "tags" | "ads";
 
 export function withValidation<T>(command: CommandWithValidation<T>): Command {
   return command as unknown as Command;

@@ -24,10 +24,7 @@ import { CommandlineHotkey } from "../../hotkeys/CommandlineHotkey";
 import { AutoSwitchTheme } from "./custom-setting/AutoSwitchTheme";
 import { CustomBackground } from "./custom-setting/CustomBackground";
 import { CustomBackgroundFilters } from "./custom-setting/CustomBackgroundFilters";
-import { CustomLayoutfluid } from "./custom-setting/CustomLayoutfluid";
-import { CustomPolyglot } from "./custom-setting/CustomPolyglot";
 import { FontFamily } from "./custom-setting/FontFamily";
-import { Funbox } from "./custom-setting/Funbox";
 import { ImportExport } from "./custom-setting/ImportExport";
 import { KeymapLayout } from "./custom-setting/KeymapLayout";
 import { KeymapSize } from "./custom-setting/KeymapSize";
@@ -90,11 +87,7 @@ export function SettingsPage(): JSXElement {
             <MinSpeed />
             <MinAcc />
             <MinBurst />
-            <SearchableAutoSetting key="britishEnglish" />
             <Language />
-            <Funbox />
-            <CustomLayoutfluid />
-            <CustomPolyglot />
           </Section>
           <Section title="input">
             <SearchableAutoSetting key="freedomMode" />

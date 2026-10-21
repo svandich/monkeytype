@@ -53,7 +53,6 @@ export type ResultsQueryState = {
   timestamp: SnapshotResult<Mode>["timestamp"];
   quoteLength: SnapshotResult<Mode>["quoteLength"][];
   tags: SnapshotResult<Mode>["tags"];
-  funbox: SnapshotResult<Mode>["funbox"];
   language: SnapshotResult<Mode>["language"][];
 };
 
@@ -194,7 +193,6 @@ function normalizeResult(
   result.blindMode ??= false;
   result.lazyMode ??= false;
   result.difficulty ??= "normal";
-  result.funbox ??= [];
   result.language ??= "english";
   result.numbers ??= false;
   result.punctuation ??= false;
@@ -461,17 +459,6 @@ export function buildResultsQuery(state: ResultsQueryState) {
           tag === "none" ? eq(length(r.tags), 0) : inArray(tag, r.tags),
         ),
       ),
-    )
-    .where(({ r }) =>
-      or(
-        false,
-        false,
-        ...state.funbox.map((fb) =>
-          (fb as string) === "none"
-            ? eq(length(r.funbox), 0)
-            : inArray(fb, r.funbox),
-        ),
-      ),
     );
   applyMode2Filter("time", state.time, ["15", "30", "60", "120"]);
   applyMode2Filter("words", state.words, ["10", "25", "50", "100"]);
@@ -501,7 +488,6 @@ export function createResultsQueryState(
       -1, // fallback value for results without quoteLength, set in the collection
     ],
     tags: valueFilter(filters.tags),
-    funbox: valueFilter(filters.funbox),
     language: valueFilter(filters.language),
   };
 }

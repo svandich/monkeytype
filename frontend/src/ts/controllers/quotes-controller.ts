@@ -71,7 +71,6 @@ class QuotesController {
       data.quotes.forEach((quote) => {
         const monkeyTypeQuote: Quote = {
           text: quote.text,
-          britishText: quote.britishText,
           source: quote.source,
           length: quote.length,
           id: quote.id,

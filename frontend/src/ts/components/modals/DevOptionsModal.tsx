@@ -132,14 +132,13 @@ export function DevOptionsModal(): JSXElement {
             base: 100,
             quote: 10,
             corrected: 5,
-            funbox: 5,
             streak: 10,
             incomplete: 10,
             accPenalty: 5,
             configMultiplier: 2,
             daily: 10000,
           };
-          const totalFakeXp = 10270;
+          const totalFakeXp = 10265;
           addXp(totalFakeXp, fakeBreakdown);
         }, 500);
         hideModal("DevOptions");

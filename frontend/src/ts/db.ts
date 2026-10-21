@@ -31,7 +31,6 @@ import {
 } from "./states/snapshot";
 import { XpBreakdown } from "@monkeytype/schemas/results";
 import { setXpBarData } from "./states/header";
-import { FunboxMetadata } from "@monkeytype/funbox";
 import { __nonReactive } from "./collections/tags";
 import { fetchUserFromApi } from "./ape/user";
 import { SnapshotInitError } from "./utils/snapshot-init-error";
@@ -166,12 +165,7 @@ export function getLocalPB<M extends Mode>(
   language: string,
   difficulty: Difficulty,
   lazyMode: boolean,
-  funboxes: FunboxMetadata[],
 ): PersonalBest | undefined {
-  if (!funboxes.every((f) => f.canGetPb)) {
-    return undefined;
-  }
-
   const pbs = dbSnapshot?.personalBests?.[mode]?.[mode2] as
     | PersonalBest[]
     | undefined;

@@ -15,7 +15,6 @@ import { Language } from "@monkeytype/schemas/languages";
 
 const JsonQuoteSchema = z.object({
   text: z.string(),
-  britishText: z.string().optional(),
   approvedBy: z.string().optional(),
   source: z.string(),
   length: z.number(),

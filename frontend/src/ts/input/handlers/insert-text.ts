@@ -15,7 +15,6 @@ import { removeLanguageSize } from "../../utils/strings";
 import * as TestLogic from "../../test/test-logic";
 import { Config } from "../../config/store";
 import { flash } from "../../events/keymap";
-import * as WeakSpot from "../../test/weak-spot";
 import * as CompositionState from "../../legacy-states/composition";
 import {
   isCorrectShiftUsed,
@@ -296,7 +295,6 @@ export async function onInsertText(options: OnInsertTextParams): Promise<void> {
   });
 
   // this needs to be called after event logging
-  WeakSpot.updateScore(data, correct);
 
   // delete on error
   // skipped when the input was stopped - nothing was inserted to delete
@@ -314,8 +312,7 @@ export async function onInsertText(options: OnInsertTextParams): Promise<void> {
   let lastBurst: null | number = null;
   if (goingToNextWord) {
     const result = await goToNextWord({
-      correctInsert:
-        Config.mode === "zen" ? true : testInput + data === currentWord,
+      correctInsert: testInput + data === currentWord,
       now,
     });
     lastBurst = result.lastBurst;
@@ -329,7 +326,7 @@ export async function onInsertText(options: OnInsertTextParams): Promise<void> {
 
   //code mode - auto insert tabs
   if (
-    Config.language.startsWith("code") &&
+    (Config.language.startsWith("code") || Config.language === "ariasctl") &&
     correct &&
     doesNextWordHaveTab &&
     isCurrentCharTab
@@ -353,7 +350,6 @@ export async function onInsertText(options: OnInsertTextParams): Promise<void> {
     } else if (
       increasedWordIndex &&
       checkIfFailedDueToMinBurst({
-        testInputWithData: testInput + data,
         currentWord,
         lastBurst,
       })

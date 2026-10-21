@@ -89,8 +89,8 @@ function buildWordLetters(
       displayLetter = "_";
     }
 
-    if (Config.mode === "zen" || targetChar !== undefined) {
-      if (Config.mode === "zen" || inputChar === targetChar) {
+    if (targetChar !== undefined) {
+      if (inputChar === targetChar) {
         if (correctedChar === inputChar || correctedChar === undefined) {
           out.push({ char: displayLetter, state: "correct", extraCorrected });
         } else {
@@ -134,7 +134,6 @@ export function buildWordsHistory(eventLog: EventLog): HistoryWord[] {
     const isLastWord = i === inputHistoryLength - 1;
     const isPartiallyCorrect = target.startsWith(input ?? "");
     const shouldShowError =
-      Config.mode !== "zen" &&
       !(isLastWord && isTimedTest && isPartiallyCorrect) &&
       input !== undefined &&
       input !== "";
@@ -172,28 +171,18 @@ export function toggleResultWords(noAnimation = false): void {
 export async function copyWordsList(): Promise<void> {
   const eventLog = getLastEventLog();
   if (eventLog === null) return;
-  let words;
-  if (Config.mode === "zen") {
-    words = getInputHistory(eventLog).join("");
-  } else {
-    words = TestWords.words
-      .get()
-      .slice(0, getInputHistory(eventLog).length)
-      .map((w) => w.textWithCommit)
-      .join("");
-  }
+  const words = TestWords.words
+    .get()
+    .slice(0, getInputHistory(eventLog).length)
+    .map((w) => w.textWithCommit)
+    .join("");
   await copyToClipboard(words);
 }
 
 export async function copyMissedWordsList(): Promise<void> {
   const eventLog = getLastEventLog();
   if (eventLog === null) return;
-  let words;
-  if (Config.mode === "zen") {
-    words = getInputHistory(eventLog).join("");
-  } else {
-    words = Object.keys(getMissedWords(eventLog)).join(" ");
-  }
+  const words = Object.keys(getMissedWords(eventLog)).join(" ");
   await copyToClipboard(words);
 }
 
@@ -226,15 +215,10 @@ export function copySlowWordsList(): void {
       },
     },
     execFn: async ({ speedThreshold }) => {
-      let typedWords: string[];
-      if (Config.mode === "zen") {
-        typedWords = getInputHistory(eventLog);
-      } else {
-        typedWords = TestWords.words
-          .get()
-          .slice(0, getInputHistory(eventLog).length)
-          .map((w) => w.text);
-      }
+      const typedWords = TestWords.words
+        .get()
+        .slice(0, getInputHistory(eventLog).length)
+        .map((w) => w.text);
 
       const slowWords: string[] = [];
       typedWords.forEach((word, index) => {

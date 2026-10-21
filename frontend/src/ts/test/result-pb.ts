@@ -1,4 +1,3 @@
-import { getFunbox } from "@monkeytype/funbox";
 import { roundTo2 } from "@monkeytype/util/numbers";
 
 import {
@@ -25,13 +24,9 @@ export function getPbEligibility(
 ): PbEligibility | null {
   if (result.mode === "quote" || dontSave) return null;
 
-  const funboxesOk =
-    result.funbox.length === 0 ||
-    getFunbox(result.funbox).every((f) => f?.canGetPb);
   // allow stopOnError:letter to be PB only if 100% accuracy, since it doesn't affect gameplay
   const stopOnLetterTriggered = result.stopOnLetter && result.acc < 100;
 
-  if (!funboxesOk) return { value: false, reason: "funbox" };
   if (stopOnLetterTriggered) return { value: false, reason: "stop on letter" };
   if (result.bailedOut) return { value: false, reason: "bailed out" };
   return { value: true };
@@ -59,7 +54,6 @@ export function updateCrown(
     result.language,
     result.difficulty,
     result.lazyMode,
-    canGet.value ? getFunbox(result.funbox) : [],
   );
   const pbDiff = result.wpm - (localPb?.wpm ?? 0);
   console.debug("Local PB", localPb, "diff", pbDiff);

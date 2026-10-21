@@ -2,7 +2,7 @@ import { User, UserProfileDetails } from "@monkeytype/schemas/users";
 import { getDefaultConfig } from "./default-config";
 import { Mode } from "@monkeytype/schemas/shared";
 import { Result } from "@monkeytype/schemas/results";
-import { Difficulty, FunboxName } from "@monkeytype/schemas/configs";
+import { Difficulty } from "@monkeytype/schemas/configs";
 import {
   ModifiableTestActivityCalendar,
   TestActivityCalendar,
@@ -15,7 +15,6 @@ export type SnapshotResult<M extends Mode> = Omit<
   | "blindMode"
   | "lazyMode"
   | "difficulty"
-  | "funbox"
   | "language"
   | "numbers"
   | "punctuation"
@@ -29,7 +28,6 @@ export type SnapshotResult<M extends Mode> = Omit<
   blindMode: boolean;
   lazyMode: boolean;
   difficulty: Difficulty;
-  funbox: FunboxName[];
   language: Language;
   numbers: boolean;
   punctuation: boolean;

@@ -3,7 +3,6 @@ import type {
   LabelPosition,
 } from "chartjs-plugin-annotation";
 
-import { getFunbox } from "@monkeytype/funbox";
 import { roundTo2 } from "@monkeytype/util/numbers";
 import {
   Chart,
@@ -44,7 +43,6 @@ import {
   getWordIndexesForSecond,
 } from "../../../../test/events/stats";
 import { EventLog } from "../../../../test/events/types";
-import { get as getFunboxes } from "../../../../test/funbox/list";
 import { FaSolidIcon } from "../../../../types/font-awesome";
 import {
   lastElementFromArray,
@@ -174,7 +172,6 @@ function getLocalPbWpm(result: CompletedResult): number {
     result.language,
     result.difficulty,
     result.lazyMode,
-    getFunbox(result.funbox),
   );
   return localPb?.wpm ?? 0;
 }
@@ -244,47 +241,6 @@ function getMinMax(
   // round down to nearest multiple of 10
   const min = startAtZero ? 0 : Math.floor(Math.min(...values) / 10) * 10;
   return { min, max };
-}
-
-function funboxLabel(
-  result: CompletedResult,
-  min: number,
-  theme: Theme,
-  fontFamily: string,
-): AnnotationOptions<"line"> | undefined {
-  if (result.funbox.length === 0) return undefined;
-  const content = getFunboxes(result.funbox)
-    .map((fb) => {
-      const extra = fb.functions?.getResultContent?.();
-      return extra !== undefined ? `${fb.name}(${extra})` : fb.name;
-    })
-    .join(" ");
-  return {
-    display: true,
-    id: "funbox-label",
-    type: "line",
-    scaleID: "wpm",
-    value: min,
-    borderColor: "transparent",
-    borderWidth: 1,
-    borderDash: [2, 2],
-    label: {
-      backgroundColor: "transparent",
-      font: {
-        family: fontFamily,
-        size: 11,
-        style: "normal",
-        weight: Chart.defaults.font.weight as string,
-        lineHeight: Chart.defaults.font.lineHeight as number,
-      },
-      color: theme.sub,
-      padding: 3,
-      borderRadius: 3,
-      position: "start",
-      display: true,
-      content,
-    },
-  };
 }
 
 type LegendItem = {
@@ -612,10 +568,7 @@ export function ResultChart(props: {
       unit,
       getConfig.startGraphsAtZero,
     );
-    const label = funboxLabel(result, min, theme, fontFamily);
-    const annotations = label !== undefined ? [...pbLines, label] : pbLines;
-
-    return buildChartConfig(data, vis, annotations, min, max, unit, theme);
+    return buildChartConfig(data, vis, pbLines, min, max, unit, theme);
   });
 
   // the canvas has no size while the result is hidden

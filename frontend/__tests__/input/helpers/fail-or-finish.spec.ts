@@ -86,7 +86,6 @@ describe("checkIfFailedDueToMinBurst", () => {
     }
 
     const result = checkIfFailedDueToMinBurst({
-      testInputWithData: "test",
       currentWord: "test",
       lastBurst,
     });
@@ -94,20 +93,9 @@ describe("checkIfFailedDueToMinBurst", () => {
     expect(result).toBe(expected);
   });
 
-  it("uses correct length for whorf calculation in zen mode", () => {
-    replaceConfig({ minBurst: "flex", mode: "zen", minBurstCustomSpeed: 100 });
-    checkIfFailedDueToMinBurst({
-      testInputWithData: "zeninput",
-      currentWord: "ignored",
-      lastBurst: 50,
-    });
-    expect(Misc.whorf).toHaveBeenCalledWith(100, 8);
-  });
-
   it("uses correct length for whorf calculation in normal mode", () => {
     replaceConfig({ minBurst: "flex", mode: "time", minBurstCustomSpeed: 100 });
     checkIfFailedDueToMinBurst({
-      testInputWithData: "input",
       currentWord: "target",
       lastBurst: 50,
     });
@@ -128,26 +116,6 @@ describe("checkIfFailedDueToDifficulty", () => {
   });
 
   it.each([
-    {
-      desc: "zen mode, master - never fails",
-      config: { mode: "zen", difficulty: "master" },
-      correct: false,
-      data: " ",
-      testInput: "hello",
-      targetWord: "hello ",
-      commitCharacterType: "separator",
-      expected: false,
-    },
-    {
-      desc: "zen mode - never fails",
-      config: { mode: "zen", difficulty: "normal" },
-      correct: false,
-      data: " ",
-      testInput: "hello",
-      targetWord: "hello ",
-      commitCharacterType: "separator",
-      expected: false,
-    },
     //
     {
       desc: "normal typing incorrect- never fails",
@@ -230,38 +198,6 @@ describe("checkIfFailedDueToDifficulty", () => {
       commitCharacterType: false,
       expected: false,
     },
-    {
-      // nospace commits on the final letter (empty input for a 1-letter word);
-      // an incorrect commit must still fail expert
-      desc: "expert - fail on incorrect nospace 1-letter word on empty input",
-      config: { difficulty: "expert" },
-      correct: false,
-      data: "b",
-      testInput: "",
-      targetWord: "a",
-      commitCharacterType: "nospace",
-      expected: true,
-    },
-    {
-      desc: "expert - dont fail on correct nospace 1-letter word on empty input",
-      config: { difficulty: "expert" },
-      correct: true,
-      data: "a",
-      testInput: "",
-      targetWord: "a",
-      commitCharacterType: "nospace",
-      expected: false,
-    },
-    {
-      desc: "expert - fail on incorrect nospace multi-letter word commit",
-      config: { difficulty: "expert" },
-      correct: false,
-      data: "o",
-      testInput: "helx",
-      targetWord: "hello",
-      commitCharacterType: "nospace",
-      expected: true,
-    },
     //
     {
       desc: "master - fail if incorrect char",
@@ -320,10 +256,7 @@ describe("checkIfFailedDueToDifficulty", () => {
         testInput,
         targetWord,
         correct,
-        commitCharacterType: commitCharacterType as
-          | "separator"
-          | "nospace"
-          | false,
+        commitCharacterType: commitCharacterType as "separator" | false,
       });
       expect(result).toBe(expected);
     },

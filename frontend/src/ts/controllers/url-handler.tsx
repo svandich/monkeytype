@@ -1,21 +1,15 @@
-import { getChallenges } from "@monkeytype/challenges";
 import {
+  ConfigModeSchema,
   CustomBackgroundFilter,
   CustomBackgroundFilterSchema,
   CustomBackgroundSize,
   CustomBackgroundSizeSchema,
   CustomThemeColors,
   CustomThemeColorsSchema,
-  FunboxName,
-  FunboxSchema,
 } from "@monkeytype/schemas/configs";
 import { Language } from "@monkeytype/schemas/languages";
 import { CustomTextSettingsSchema } from "@monkeytype/schemas/results";
-import {
-  DifficultySchema,
-  Mode2Schema,
-  ModeSchema,
-} from "@monkeytype/schemas/shared";
+import { DifficultySchema, Mode2Schema } from "@monkeytype/schemas/shared";
 import { parseWithSchema as parseJsonWithSchema } from "@monkeytype/util/json";
 import { tryCatchSync } from "@monkeytype/util/trycatch";
 import { decompressFromURI } from "lz-ts";
@@ -36,7 +30,6 @@ import { setSelectedQuoteId } from "../states/test";
 import * as CustomText from "../test/custom-text";
 import { restart as restartTest } from "../test/test-logic";
 import * as Misc from "../utils/misc";
-import * as ChallengeController from "./challenge-controller";
 
 export async function linkDiscord(hashOverride: string): Promise<void> {
   if (!hashOverride) return;
@@ -142,29 +135,30 @@ export function loadCustomThemeFromUrl(getOverride?: string): void {
   }
 }
 
-const TestSettingsSchema = z.tuple([
-  ModeSchema.nullable(),
-  Mode2Schema.nullable(),
-  CustomTextSettingsSchema.partial({
-    pipeDelimiter: true,
-    limit: true,
-    mode: true,
-  })
-    //legacy values
-    .extend({
-      isTimeRandom: z.boolean().optional(),
-      isWordRandom: z.boolean().optional(),
-      word: z.number().int().optional(),
-      time: z.number().int().optional(),
-      delimiter: z.string().optional(),
+const TestSettingsSchema = z
+  .tuple([
+    ConfigModeSchema.nullable(),
+    Mode2Schema.nullable(),
+    CustomTextSettingsSchema.partial({
+      pipeDelimiter: true,
+      limit: true,
+      mode: true,
     })
-    .nullable(),
-  z.boolean().nullable(), //punctuation
-  z.boolean().nullable(), //numbers
-  z.string().nullable(), //language
-  DifficultySchema.nullable(),
-  FunboxSchema.or(z.string().nullable()), //funbox as array or legacy string as hash separated values
-]);
+      //legacy values
+      .extend({
+        isTimeRandom: z.boolean().optional(),
+        isWordRandom: z.boolean().optional(),
+        word: z.number().int().optional(),
+        time: z.number().int().optional(),
+        delimiter: z.string().optional(),
+      })
+      .nullable(),
+    z.boolean().nullable(), //punctuation
+    z.boolean().nullable(), //numbers
+    z.string().nullable(), //language
+    DifficultySchema.nullable(),
+  ])
+  .rest(z.unknown()); //ignore legacy trailing values (e.g. funbox)
 
 export function loadTestSettingsFromUrl(getOverride?: string): void {
   const getValue = Misc.findGetParameter("testSettings", getOverride);
@@ -274,20 +268,6 @@ export function loadTestSettingsFromUrl(getOverride?: string): void {
     applied["difficulty"] = de[6];
   }
 
-  if (de[7] !== null) {
-    let val: FunboxName[] = [];
-    //convert legacy values
-    if (typeof de[7] === "string") {
-      val = de[7].split("#") as FunboxName[];
-    } else {
-      val = de[7];
-    }
-    setConfig("funbox", val, {
-      nosave: true,
-    });
-    applied["funbox"] = val.join(", ");
-  }
-
   void restartTest({
     nosave: true,
   });
@@ -310,38 +290,6 @@ export function loadTestSettingsFromUrl(getOverride?: string): void {
   }
 }
 
-const challengeNameLookup = Object.fromEntries(
-  getChallenges().map((it) => [it.name.toLowerCase(), it.name]),
-);
-
-export async function loadChallengeFromUrl(
-  getOverride?: string,
-): Promise<void> {
-  const getValue =
-    Misc.findGetParameter("challenge", getOverride)?.toLowerCase() ?? "";
-  if (getValue === "") return;
-
-  const challengeName = challengeNameLookup[getValue];
-
-  if (challengeName === undefined) {
-    showErrorNotification(`Failed to load challenge: invalid name ${getValue}`);
-    return;
-  }
-
-  ChallengeController.setup(challengeName)
-    .then((result) => {
-      if (result) {
-        void restartTest({
-          nosave: true,
-        });
-      }
-    })
-    .catch((e: unknown) => {
-      showErrorNotification("Failed to load challenge");
-      console.error(e);
-    });
-}
-
 authEvent.subscribe(async (event) => {
   if (event.type === "authStateChanged") {
     const search = window.location.search;
@@ -351,7 +299,6 @@ authEvent.subscribe(async (event) => {
 
     loadCustomThemeFromUrl(search);
     loadTestSettingsFromUrl(search);
-    void loadChallengeFromUrl(search);
     void linkDiscord(hash);
   }
 });

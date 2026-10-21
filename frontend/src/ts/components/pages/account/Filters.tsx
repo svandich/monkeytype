@@ -333,6 +333,7 @@ export function Filters(props: {
                 icon="fa-tag"
                 text="tags"
                 group="tags"
+                class="col-span-2"
                 format={(tag) =>
                   tag === "none"
                     ? "no tag"
@@ -340,17 +341,6 @@ export function Filters(props: {
                 }
               />
             </Show>
-            <Dropdown
-              icon="fa-gamepad"
-              text="funbox"
-              group="funbox"
-              class={cn("", {
-                "col-span-2": tags().length === 0,
-              })}
-              format={(val) =>
-                val === "none" ? "no funbox" : replaceUnderscoresWithSpaces(val)
-              }
-            />
             <Dropdown
               icon="fa-globe-americas"
               text="language"
@@ -428,14 +418,6 @@ function fromCurrentSettings(tags: TagItem[]): ResultFilters {
     filters.language["english"] = true;
   } else {
     filters.language[getConfig.language] = true;
-  }
-
-  if (getConfig.funbox.length === 0) {
-    filters.funbox["none"] = true;
-  } else {
-    for (const f of getConfig.funbox) {
-      filters.funbox[f] = true;
-    }
   }
 
   filters.tags["none"] = true;

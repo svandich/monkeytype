@@ -1,7 +1,6 @@
 import { Config } from "../../config/store";
 import * as TestUI from "../../test/test-ui";
 import * as TestWords from "../../test/test-words";
-import { isFunboxActiveWithProperty } from "../../test/funbox/list";
 import { getInputElementValue } from "../input-element";
 import { isAwaitingNextWord } from "../state";
 import * as SlowTimer from "../../legacy-states/slow-timer";
@@ -33,13 +32,8 @@ export function onBeforeInsertText(data: string): boolean {
     return true;
   }
 
-  //only allow newlines if the test has newlines or in zen mode
-  if (data === "\n" && !wordsHaveNewline() && Config.mode !== "zen") {
-    return true;
-  }
-
-  //prevent space in nospace funbox
-  if (isSpace(data) && isFunboxActiveWithProperty("nospace")) {
+  //only allow newlines if the test has newlines
+  if (data === "\n" && !wordsHaveNewline()) {
     return true;
   }
 
@@ -61,12 +55,10 @@ export function onBeforeInsertText(data: string): boolean {
   //prevent separator from being inserted if input is empty
   //some conditions may override this
   //the hard delete on error variants need the separator to reach onInsertText
-  //so it can be counted as a mistake and send the user back a word - it can
-  //never be a mistake in zen, so dont let it through there
+  //so it can be counted as a mistake and send the user back a word
   const deleteOnErrorIsHard =
-    Config.mode !== "zen" &&
-    (Config.deleteOnError === "letter_hard" ||
-      Config.deleteOnError === "word_hard");
+    Config.deleteOnError === "letter_hard" ||
+    Config.deleteOnError === "word_hard";
   const allowFirstSeparator =
     Config.strictSpace || Config.difficulty !== "normal" || deleteOnErrorIsHard;
   if (isSpace(data) && inputValue === "" && !allowFirstSeparator) {
@@ -74,8 +66,7 @@ export function onBeforeInsertText(data: string): boolean {
   }
 
   // block input if the word is too long
-  const inputLimit =
-    Config.mode === "zen" ? 30 : currentWordTextWithCommit.length + 20;
+  const inputLimit = currentWordTextWithCommit.length + 20;
   const overLimit = inputValue.length >= inputLimit;
   const goingToNextWord = shouldGoToNextWord({
     data,
@@ -102,8 +93,7 @@ export function onBeforeInsertText(data: string): boolean {
     !Config.hideExtraLetters &&
     !Config.deleteOnError.includes("hard") &&
     inputIsLongerThanOrEqualToWord &&
-    !goingToNextWord &&
-    Config.mode !== "zen"
+    !goingToNextWord
   ) {
     // make sure to only check this when really necessary
     // because this check is expensive (causes layout reflows)

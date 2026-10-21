@@ -5,7 +5,7 @@ import { Config } from "../config/store";
 import { setConfig } from "../config/setters";
 import * as CustomText from "./custom-text";
 import { configEvent } from "../events/config";
-import { Mode } from "@monkeytype/schemas/shared";
+import { ConfigMode } from "@monkeytype/schemas/configs";
 import { CustomTextSettings } from "@monkeytype/schemas/results";
 import {
   getInputHistory,
@@ -16,7 +16,7 @@ import { setCustomTextIndicator } from "../states/core";
 import { getLastEventLog } from "../states/test";
 
 type Before = {
-  mode: Mode | null;
+  mode: ConfigMode | null;
   punctuation: boolean | null;
   numbers: boolean | null;
   customText: CustomTextSettings | null;
@@ -35,7 +35,6 @@ export function init(
 ): boolean {
   const eventLog = getLastEventLog();
   if (eventLog === null) return false;
-  if (Config.mode === "zen") return false;
   let limit;
   if ((missed === "words" && !slow) || (missed === "off" && slow)) {
     limit = 20;

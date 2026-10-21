@@ -78,8 +78,6 @@ export function TestPage(): JSXElement {
         <div>
           <CapsWarning />
         </div>
-        <div id="memoryTimer">Time left to memorise all words: 0s</div>
-        <div id="layoutfluidTimer">Time left to memorise all words: 0s</div>
         <div>
           <TestModesNotice />
         </div>

@@ -19,8 +19,7 @@ function canBailOut(): boolean {
         CustomText.getLimitValue() === 0)) ||
     (Config.mode === "words" && Config.words >= 5000) ||
     Config.words === 0 ||
-    (Config.mode === "time" && (Config.time >= 3600 || Config.time === 0)) ||
-    Config.mode === "zen"
+    (Config.mode === "time" && (Config.time >= 3600 || Config.time === 0))
   );
 }
 

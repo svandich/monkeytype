@@ -247,8 +247,6 @@ export function getMode2<M extends keyof PersonalBests>(
     retVal = config.words.toString();
   } else if (mode === "custom") {
     retVal = "custom";
-  } else if (mode === "zen") {
-    retVal = "zen";
   } else if (mode === "quote") {
     retVal = `${randomQuote?.id ?? -1}`;
   } else {
@@ -278,7 +276,6 @@ export async function downloadResultsCSV(array: Result<Mode>[]): Promise<void> {
       "punctuation",
       "numbers",
       "language",
-      "funbox",
       "difficulty",
       "lazyMode",
       "blindMode",
@@ -304,7 +301,6 @@ export async function downloadResultsCSV(array: Result<Mode>[]): Promise<void> {
       item.punctuation,
       item.numbers,
       item.language,
-      item.funbox,
       item.difficulty,
       item.lazyMode,
       item.blindMode,
@@ -414,22 +410,6 @@ export function loadCSS(href: string, prepend = false): void {
   } else {
     head.appendChild(link);
   }
-}
-
-export function zipfyRandomArrayIndex(dictLength: number): number {
-  /**
-   * get random index based on probability distribution of Zipf's law,
-   * where PMF is (1/n)/H_N,
-   * where H_N is the Harmonic number of (N), where N is dictLength
-   * and the harmonic number is approximated using the formula:
-   * H_n = ln(n + 0.5) + gamma
-   */
-  const gamma = 0.5772156649015329; // Euler–Mascheroni constant
-  const H_N = Math.log(dictLength + 0.5) + gamma; // approximation of H_N
-  const r = Math.random();
-  /* inverse of CDF where CDF is H_n/H_N */
-  const inverseCDF = Math.exp(r * H_N - gamma) - 0.5;
-  return Math.floor(inverseCDF);
 }
 
 // Function to get the bounding rectangle of a collection of elements

@@ -19,7 +19,7 @@ const dailyLeaderboardsConfig: Configuration["dailyLeaderboards"] = {
       mode2: "(15|60)",
     },
     {
-      language: "french",
+      language: "code_java",
       mode: "words",
       mode2: "\\d+",
     },
@@ -68,13 +68,13 @@ describe("Daily Leaderboards", () => {
         expected: false,
       },
       {
-        language: "french",
+        language: "code_java",
         mode: "time",
         mode2: "600",
         expected: false,
       },
       {
-        language: "french",
+        language: "code_java",
         mode: "words",
         mode2: "100",
         expected: true,

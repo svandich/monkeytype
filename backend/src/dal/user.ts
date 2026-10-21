@@ -1,4 +1,4 @@
-import { canFunboxGetPb, checkAndUpdatePb, LbPersonalBests } from "../utils/pb";
+import { checkAndUpdatePb, LbPersonalBests } from "../utils/pb";
 import * as db from "../init/db";
 import MonkeyError from "../utils/error";
 import {
@@ -465,7 +465,6 @@ export async function checkIfPb(
 ): Promise<boolean> {
   const { mode } = result;
 
-  if (!canFunboxGetPb(result)) return false;
   if (
     "stopOnLetter" in result &&
     result.stopOnLetter === true &&
@@ -514,7 +513,6 @@ export async function checkIfTagPb(
   }
 
   const { mode, tags: resultTags } = result;
-  if (!canFunboxGetPb(result)) return [];
   if (
     "stopOnLetter" in result &&
     result.stopOnLetter === true &&

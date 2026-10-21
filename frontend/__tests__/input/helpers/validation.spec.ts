@@ -4,15 +4,9 @@ import {
   shouldGoToNextWord,
 } from "../../../src/ts/input/helpers/validation";
 import { __testing } from "../../../src/ts/config/testing";
-import * as FunboxList from "../../../src/ts/test/funbox/list";
 import * as Strings from "../../../src/ts/utils/strings";
 
 const { replaceConfig } = __testing;
-
-// Mock dependencies
-vi.mock("../../../src/ts/test/funbox/list", () => ({
-  findSingleActiveFunboxWithFunction: vi.fn(),
-}));
 
 vi.mock("../../../src/ts/utils/strings", async () => {
   const actual = await vi.importActual<typeof Strings>(
@@ -36,29 +30,11 @@ describe("isCharCorrect", () => {
       strictSpace: false,
     });
     // oxlint-disable-next-line typescript/no-unsafe-call
-    (FunboxList.findSingleActiveFunboxWithFunction as any).mockReturnValue(
-      null,
-    );
-    // oxlint-disable-next-line typescript/no-unsafe-call
     (Strings.areCharactersVisuallyEqual as any).mockReturnValue(false);
   });
 
   afterAll(() => {
     replaceConfig({});
-  });
-
-  describe("Zen Mode", () => {
-    it("always returns true", () => {
-      replaceConfig({ mode: "zen" });
-      expect(
-        isCharCorrect({
-          data: "a",
-          inputValue: "test",
-          targetWord: "word",
-          correctShiftUsed: true,
-        }),
-      ).toBe(true);
-    });
   });
 
   describe("Shift Key", () => {
@@ -185,18 +161,6 @@ describe("shouldGoToNextWord", () => {
     ).toBe(false);
   });
 
-  it("returns true in zen mode", () => {
-    replaceConfig({ mode: "zen" });
-    expect(
-      shouldGoToNextWord({
-        data: " ",
-        inputValue: "test",
-        targetWord: "test ",
-        commitCharacterType: "separator",
-      }),
-    ).toBe(true);
-  });
-
   it("returns true when committing a word with a newline", () => {
     expect(
       shouldGoToNextWord({
@@ -207,26 +171,6 @@ describe("shouldGoToNextWord", () => {
       }),
     ).toBe(true);
   });
-
-  // the empty-input guard must not block a nospace commit on a 1-letter word,
-  // otherwise such words can never be advanced
-  it.each([
-    { desc: "strictSpace on", strictSpace: true, difficulty: "normal" },
-    { desc: "difficulty expert", strictSpace: false, difficulty: "expert" },
-  ])(
-    "commits a nospace 1-letter word on empty input ($desc)",
-    ({ strictSpace, difficulty }) => {
-      replaceConfig({ strictSpace, difficulty } as any);
-      expect(
-        shouldGoToNextWord({
-          data: "a",
-          inputValue: "",
-          targetWord: "a",
-          commitCharacterType: "nospace",
-        }),
-      ).toBe(true);
-    },
-  );
 
   describe("Logic Checks", () => {
     it.each([

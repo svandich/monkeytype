@@ -16,7 +16,6 @@ import {
 import { FaObject } from "../../../types/font-awesome";
 import { areUnsortedArraysEqual } from "../../../utils/arrays";
 import { cn } from "../../../utils/cn";
-import { Anime, AnimeShow } from "../../common/anime";
 import { Button } from "../../common/Button";
 
 const variables = cn(
@@ -93,40 +92,29 @@ function PuncAndNum(): JSXElement {
   const buttons = ["punctuation", "numbers"] as const;
 
   return (
-    <Anime
-      class="mr-(--card-gap) w-max place-self-end"
-      animation={{
-        opacity: getConfig.mode === "zen" ? 0 : 1,
-        // marginRight: getConfig.mode === "zen" ? "0" : "var(--card-gap)",
-        duration: durationMs,
-      }}
-    >
-      <AnimeShow when={getConfig.mode !== "zen"} duration={durationMs}>
-        <div class={cardClass}>
-          <For each={buttons}>
-            {(configKey) => (
-              <TCButton
-                fa={configMetadata[configKey].fa}
-                text={configMetadata[configKey].displayString ?? configKey}
-                active={getConfig[configKey]}
-                disabled={
-                  getConfig.mode === "zen" || getConfig.mode === "quote"
-                }
-                onClick={() => {
-                  setConfig(configKey, !getConfig[configKey]);
-                  restartTestEvent.dispatch();
-                }}
-              />
-            )}
-          </For>
-        </div>
-      </AnimeShow>
-    </Anime>
+    <div class="mr-(--card-gap) w-max place-self-end">
+      <div class={cardClass}>
+        <For each={buttons}>
+          {(configKey) => (
+            <TCButton
+              fa={configMetadata[configKey].fa}
+              text={configMetadata[configKey].displayString ?? configKey}
+              active={getConfig[configKey]}
+              disabled={getConfig.mode === "quote"}
+              onClick={() => {
+                setConfig(configKey, !getConfig[configKey]);
+                restartTestEvent.dispatch();
+              }}
+            />
+          )}
+        </For>
+      </div>
+    </div>
   );
 }
 
 function Mode(): JSXElement {
-  const modeOptions = ["time", "words", "quote", "zen", "custom"] as const;
+  const modeOptions = ["time", "words", "quote", "custom"] as const;
 
   return (
     <div class={cn("z-2", cardClass)}>
@@ -222,20 +210,12 @@ function Mode2(): JSXElement {
 
   return (
     <div class="relative grid w-max" ref={wrapperRef}>
-      <Anime
-        class="grid"
-        animation={{
-          opacity: getConfig.mode === "zen" ? 0 : 1,
-          // marginLeft:
-          // getConfig.mode === "zen" ? "calc(-1*var(--card-gap))" : "0",
-          duration: durationMs,
-        }}
-      >
+      <div class="grid">
         <Mode2Time class={cn(cardClass, sClass)} ref={timeRef} />
         <Mode2Words class={cn(cardClass, sClass)} ref={wordsRef} />
         <Mode2Quote class={cn(cardClass, sClass)} ref={quoteRef} />
         <Mode2Custom class={cn(cardClass, sClass)} ref={customRef} />
-      </Anime>
+      </div>
       <TCButton
         class={
           "pointer-events-none absolute right-0 self-center px-(--horizontal-padding) opacity-0 transition-[margin-right,background-color,opacity] duration-125 group-hover:pointer-events-auto group-hover:mr-[calc((1.25em+(var(--horizontal-padding)*2))*-1)] group-hover:opacity-100 hover:mr-[calc((1.25em+(var(--horizontal-padding)*2))*-1)] hover:opacity-100"

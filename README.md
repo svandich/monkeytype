@@ -38,7 +38,6 @@ Monkeytype is a minimalistic and customizable [typing test](https://www.monkeyty
 - Themes
 - Smooth caret
 - Account system
-- Challenges and just-for-fun test modifiers
 - And much more
 
 # Discord bot

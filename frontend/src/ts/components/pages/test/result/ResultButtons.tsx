@@ -1,10 +1,8 @@
 import { createKeyHold } from "@tanstack/solid-hotkeys";
 import { JSXElement, Show } from "solid-js";
 
-import { getConfig } from "../../../../config/store";
 import { getIsScreenshotting } from "../../../../states/core";
 import { showModal } from "../../../../states/modals";
-import { showNoticeNotification } from "../../../../states/notifications";
 import {
   captureAndCopyToClipboard,
   captureAndDownload,
@@ -50,15 +48,7 @@ export function ResultButtons(props: { glarses: boolean }): JSXElement {
           id="practiseWordsButton"
           text="Practice words"
           fa={{ icon: "fa-exclamation-triangle" }}
-          onClick={() => {
-            if (getConfig.mode === "zen") {
-              showNoticeNotification(
-                "Practice words is unsupported in zen mode",
-              );
-              return;
-            }
-            showModal("PractiseWords");
-          }}
+          onClick={() => showModal("PractiseWords")}
         />
         <Show when={!props.glarses}>
           <ResultButton

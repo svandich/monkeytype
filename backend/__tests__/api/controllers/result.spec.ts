@@ -461,7 +461,6 @@ describe("result controller test", () => {
       const partialResult = omit(result, [
         "difficulty",
         "language",
-        "funbox",
         "lazyMode",
         "punctuation",
         "numbers",
@@ -500,7 +499,6 @@ describe("result controller test", () => {
         ...result,
         difficulty: "normal",
         language: "english",
-        funbox: [],
         lazyMode: false,
         punctuation: false,
         numbers: false,
@@ -588,9 +586,7 @@ describe("result controller test", () => {
     it("should add result", async () => {
       //GIVEN
 
-      const completedEvent = buildCompletedEvent({
-        funbox: ["58008", "read_ahead_hard"],
-      });
+      const completedEvent = buildCompletedEvent();
       //WHEN
       const { body } = await mockApp
         .post("/results")
@@ -608,10 +604,9 @@ describe("result controller test", () => {
         dailyXpBonus: false,
         xpBreakdown: {
           configMultiplier: 0,
-          accPenalty: 28,
+          accPenalty: 6,
           base: 20,
           incomplete: 5,
-          funbox: 80,
           daily: 0,
         },
         streak: 0,
@@ -719,24 +714,6 @@ describe("result controller test", () => {
       });
     });
 
-    it("should fail wit duplicate funboxes", async () => {
-      //GIVEN
-
-      //WHEN
-      const { body } = await mockApp
-        .post("/results")
-        .set("Authorization", `Bearer ${uid}`)
-        .send({
-          result: buildCompletedEvent({
-            funbox: ["58008", "58008"],
-          }),
-        })
-        .expect(400);
-
-      //THEN
-      expect(body.message).toEqual("Duplicate funboxes");
-    });
-
     // it("should fail invalid properties ", async () => {
     //GIVEN
     //WHEN
@@ -768,7 +745,6 @@ function buildCompletedEvent(result?: Partial<CompletedEvent>): CompletedEvent {
     chartData: { wpm: [1, 2, 3], burst: [50, 55, 56], err: [0, 2, 0] },
     consistency: 23.5,
     difficulty: "normal",
-    funbox: [],
     hash: "hash",
     incompleteTestSeconds: 2,
     incompleteTests: [{ acc: 75, seconds: 10 }],
@@ -861,7 +837,7 @@ async function enableResultsSaving(enabled: boolean): Promise<void> {
 }
 async function enableUsersXpGain(enabled: boolean): Promise<void> {
   const mockConfig = await configuration;
-  mockConfig.users.xp = { ...mockConfig.users.xp, enabled, funboxBonus: 1 };
+  mockConfig.users.xp = { ...mockConfig.users.xp, enabled };
 
   vi.spyOn(Configuration, "getCachedConfiguration").mockResolvedValue(
     mockConfig,
