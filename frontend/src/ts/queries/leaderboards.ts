@@ -1,6 +1,7 @@
 import {
   GetLeaderboardQuery,
   GetLeaderboardRankQuery,
+  GetOrganizationLeaderboardQuery,
 } from "@monkeytype/contracts/leaderboards";
 import { queryOptions } from "@tanstack/solid-query";
 import Ape from "../ape";
@@ -20,6 +21,7 @@ const queryKeys = {
       language: options.language,
       friendsOnly: options.friendsOnly,
       previous: options.previous,
+      organization: options.organization,
     },
   ],
   data: (options: Selection & { page: number }) => [
@@ -62,7 +64,9 @@ export const getLeaderboardQueryOptions = (
         };
 
         if (options.type === "allTime") {
-          request = Ape.leaderboards.get({ query: modeQuery });
+          request = Ape.leaderboards.get({
+            query: { ...modeQuery, organization: options.organization },
+          });
         } else {
           request = Ape.leaderboards.getDaily({
             query: {
@@ -118,7 +122,9 @@ export const getRankQueryOptions = (options: Selection) =>
           friendsOnly: options.friendsOnly ? true : undefined,
         };
         if (options.type === "allTime") {
-          request = Ape.leaderboards.getRank({ query: baseQuery });
+          request = Ape.leaderboards.getRank({
+            query: { ...baseQuery, organization: options.organization },
+          });
         } else {
           request = Ape.leaderboards.getDailyRank({
             query: {
@@ -141,4 +147,24 @@ export const getRankQueryOptions = (options: Selection) =>
     },
     //5 minutes for alltime, one minute for others
     staleTime: options.type === "allTime" ? 1000 * 60 * 5 : 1000 * 60,
+  });
+
+export const getOrganizationLeaderboardQueryOptions = (
+  options: GetOrganizationLeaderboardQuery,
+  // oxlint-disable-next-line typescript/explicit-function-return-type
+) =>
+  queryOptions({
+    queryKey: ["leaderboard", "leaderboard", "universities", options],
+    queryFn: async () => {
+      const response = await Ape.leaderboards.getOrganizations({
+        query: options,
+      });
+      if (response.status !== 200) {
+        throw new Error(
+          `Failed to get university leaderboard data: ${response.body.message}`,
+        );
+      }
+      return response.body.data;
+    },
+    staleTime: 1000 * 60 * 5,
   });

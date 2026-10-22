@@ -96,12 +96,14 @@ describe("Loaderboard Controller", () => {
         50,
         false,
         undefined,
+        undefined,
       );
 
       expect(getLeaderboardCountMock).toHaveBeenCalledWith(
         "time",
         "60",
         "english",
+        undefined,
         undefined,
       );
     });
@@ -144,6 +146,7 @@ describe("Loaderboard Controller", () => {
         pageSize,
         false,
         undefined,
+        undefined,
       );
     });
 
@@ -177,12 +180,54 @@ describe("Loaderboard Controller", () => {
         50,
         false,
         uid,
+        undefined,
       );
       expect(getLeaderboardCountMock).toHaveBeenCalledWith(
         "time",
         "60",
         "english",
         uid,
+        undefined,
+      );
+    });
+
+    it("should get for organization", async () => {
+      //GIVEN
+      await enableConnectionsFeature(true);
+      getLeaderboardMock.mockResolvedValue([]);
+      getLeaderboardCountMock.mockResolvedValue(2);
+
+      //WHEN
+      await mockApp
+        .get("/leaderboards")
+        .set("Authorization", `Bearer ${uid}`)
+        .query({
+          language: "ariasctl",
+          mode: "time",
+          mode2: "60",
+          organization: "UCH",
+          friendsOnly: true,
+        })
+        .expect(200);
+
+      //THEN
+      //organization wins over friendsOnly
+      expect(getLeaderboardMock).toHaveBeenCalledWith(
+        "time",
+        "60",
+        "ariasctl",
+        0,
+        50,
+        false,
+        undefined,
+        "UCH",
+      );
+      expect(getLeaderboardCountMock).toHaveBeenCalledWith(
+        "time",
+        "60",
+        "ariasctl",
+        undefined,
+        "UCH",
       );
     });
 
@@ -332,6 +377,7 @@ describe("Loaderboard Controller", () => {
         "english",
         uid,
         false,
+        undefined,
       );
     });
     it("should get for english time 60 friends only", async () => {
@@ -358,6 +404,7 @@ describe("Loaderboard Controller", () => {
         "english",
         uid,
         true,
+        undefined,
       );
     });
     it("should get null if no rank", async () => {
@@ -384,6 +431,7 @@ describe("Loaderboard Controller", () => {
         "english",
         uid,
         true,
+        undefined,
       );
       expect(body).toEqual({
         message: "Rank retrieved",
@@ -492,6 +540,65 @@ describe("Loaderboard Controller", () => {
       expect(body.message).toEqual(
         "Leaderboard is currently updating. Please try again in a few seconds.",
       );
+    });
+  });
+
+  describe("get organization leaderboard", () => {
+    const getOrganizationsMock = vi.spyOn(LeaderboardDal, "getOrganizations");
+
+    beforeEach(() => {
+      getOrganizationsMock.mockClear();
+    });
+
+    it("should get for ariasctl time 60", async () => {
+      //GIVEN
+      const entries = [
+        {
+          rank: 1,
+          organization: "UCH",
+          score: 80,
+          members: 4,
+          team: [
+            { uid: "u1", name: "one", wpm: 120, acc: 99, rank: 1 },
+            { uid: "u2", name: "two", wpm: 70, acc: 95, rank: 3 },
+            { uid: "u3", name: "three", wpm: 50, acc: 97, rank: 5 },
+          ],
+        },
+        {
+          rank: 2,
+          organization: "PUC",
+          score: 33.33,
+          members: 1,
+          team: [{ uid: "u4", name: "four", wpm: 100, acc: 98, rank: 2 }],
+        },
+      ];
+      getOrganizationsMock.mockResolvedValue(entries);
+
+      //WHEN
+      const { body } = await mockApp
+        .get("/leaderboards/organizations")
+        .query({ language: "ariasctl", mode: "time", mode2: "60" })
+        .expect(200);
+
+      //THEN
+      expect(body).toEqual({
+        message: "Organization leaderboard retrieved",
+        data: entries,
+      });
+      expect(getOrganizationsMock).toHaveBeenCalledWith(
+        "time",
+        "60",
+        "ariasctl",
+      );
+    });
+
+    it("fails for a mode without all-time leaderboard", async () => {
+      await mockApp
+        .get("/leaderboards/organizations")
+        .query({ language: "ariasctl", mode: "time", mode2: "30" })
+        .expect(404);
+
+      expect(getOrganizationsMock).not.toHaveBeenCalled();
     });
   });
 

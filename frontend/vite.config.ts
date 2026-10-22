@@ -127,8 +127,8 @@ function getPlugins({
       injectRegister: null,
       registerType: "autoUpdate",
       manifest: {
-        short_name: "Monkeytype",
-        name: "Monkeytype",
+        short_name: "progcompea",
+        name: "progcompea type",
         start_url: "/",
         icons: [
           {
@@ -144,9 +144,9 @@ function getPlugins({
             purpose: "any",
           },
         ],
-        background_color: "#323437",
+        background_color: "#1a122a",
         display: "standalone",
-        theme_color: "#323437",
+        theme_color: "#1a122a",
       },
       manifestFilename: "manifest.json",
       workbox: {
@@ -158,7 +158,8 @@ function getPlugins({
         runtimeCaching: [
           {
             urlPattern: (options) => {
-              const isApi = options.url.hostname === "api.monkeytype.com";
+              // the backend is served from the same origin, under /api
+              const isApi = options.url.pathname.startsWith("/api/");
               return options.sameOrigin && !isApi;
             },
             handler: "NetworkFirst",
@@ -208,9 +209,6 @@ function getBuildOptions({
     rolldownOptions: {
       input: {
         monkeytype: path.resolve(__dirname, "src/index.html"),
-        privacy: path.resolve(__dirname, "src/privacy-policy.html"),
-        security: path.resolve(__dirname, "src/security-policy.html"),
-        terms: path.resolve(__dirname, "src/terms-of-service.html"),
         404: path.resolve(__dirname, "src/404.html"),
       },
       output: {

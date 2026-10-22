@@ -32,6 +32,10 @@ export function envConfig(options: {
             options.env["PROGCOMP_API_URL"],
             "http://localhost:5029",
           ),
+          progcompSiteUrl: fallback(
+            options.env["PROGCOMP_SITE_URL"],
+            "https://progcomp.joliva.cl",
+          ),
           clientVersion: options.clientVersion,
           requireLogin: options.env["REQUIRE_LOGIN"] ?? "",
           quickLoginEmail: options.env["QUICK_LOGIN_EMAIL"],
@@ -47,6 +51,10 @@ export function envConfig(options: {
           progcompApiUrl: fallback(
             options.env["PROGCOMP_API_URL"],
             "https://progcomp.joliva.cl:8443",
+          ),
+          progcompSiteUrl: fallback(
+            options.env["PROGCOMP_SITE_URL"],
+            "https://progcomp.joliva.cl",
           ),
           requireLogin: options.env["REQUIRE_LOGIN"] ?? "",
           quickLoginEmail: undefined,

@@ -129,6 +129,7 @@ export async function initSnapshot(): Promise<Snapshot | false> {
     snap.maxStreak = userData?.streak?.maxLength ?? 0;
     snap.isPremium = userData?.isPremium ?? false;
     snap.allTimeLbs = userData.allTimeLbs;
+    snap.progcomp = userData.progcomp;
 
     if (userData.testActivity !== undefined) {
       snap.testActivity = new ModifiableTestActivityCalendar(

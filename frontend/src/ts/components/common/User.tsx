@@ -9,6 +9,7 @@ import {
 } from "../../controllers/user-flag-controller";
 import { BreakpointKey } from "../../states/breakpoints";
 import { cn } from "../../utils/cn";
+import { getDisplayName } from "../../utils/progcomp";
 import { Anime } from "./anime";
 import { AnimePresence } from "./anime/AnimePresence";
 import { Button } from "./Button";
@@ -21,8 +22,10 @@ import { UserFlags } from "./UserFlags";
 type Props = {
   class?: string;
   user: SupportsFlags &
-    Pick<UserType, "uid" | "name" | "discordId" | "discordAvatar" | "xp"> & {
+    Pick<UserType, "uid" | "name" | "discordId" | "discordAvatar" | "xp"> &
+    Partial<Pick<UserType, "progcomp">> & {
       badgeId?: number;
+      progcompNickname?: string;
     };
   showAvatar?: boolean;
   avatarFallback?: "user" | "user-circle";
@@ -126,11 +129,14 @@ export function User(props: Props): JSXElement {
           "hidden sm:block": props.hideNameOnSmallScreens,
         })}
       >
-        <Show when={props.linkToProfile ?? false} fallback={props.user.name}>
+        <Show
+          when={props.linkToProfile ?? false}
+          fallback={getDisplayName(props.user)}
+        >
           <Button
             variant="text"
             href={`/profile/${props.user.name}`}
-            text={props.user.name}
+            text={getDisplayName(props.user)}
             router-link
             class="px-0"
           />

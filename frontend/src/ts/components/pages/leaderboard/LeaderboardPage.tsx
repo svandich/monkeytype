@@ -7,6 +7,7 @@ import { PageName } from "../../../pages/page";
 import { queryClient } from "../../../queries";
 import {
   getLeaderboardQueryOptions,
+  getOrganizationLeaderboardQueryOptions,
   getRankQueryOptions,
 } from "../../../queries/leaderboards";
 import { getServerConfigurationQueryOptions } from "../../../queries/server-configuration";
@@ -30,6 +31,7 @@ import { Page } from "../../common/Page";
 import { Separator } from "../../common/Separator";
 import { Navigation } from "./Navigation";
 import { NextUpdate } from "./NextUpdate";
+import { OrganizationTable } from "./OrganizationTable";
 import { Sidebar } from "./Sidebar";
 import { Table } from "./Table";
 import { Title } from "./Title";
@@ -39,6 +41,7 @@ const pageName: PageName = "leaderboards";
 
 export function LeaderboardPage(): JSXElement {
   const isOpen = () => getActivePage() === pageName;
+  const isUniversities = () => getSelection().type === "universities";
 
   const [scrollToUser, setScrollToUser] = createSignal(false);
 
@@ -56,7 +59,7 @@ export function LeaderboardPage(): JSXElement {
 
   //prefetch next page
   createEffect(() => {
-    if (isOpen()) {
+    if (isOpen() && !isUniversities()) {
       void queryClient.prefetchQuery(
         getLeaderboardQueryOptions({
           ...getSelection(),
@@ -68,7 +71,10 @@ export function LeaderboardPage(): JSXElement {
 
   //update url after the data is loaded
   createEffect(() => {
-    if (isOpen() && entriesQuery.isSuccess) {
+    if (
+      isOpen() &&
+      (isUniversities() ? organizationsQuery.isSuccess : entriesQuery.isSuccess)
+    ) {
       updateGetParameters(getSelection(), getPage());
     }
   });
@@ -97,13 +103,29 @@ export function LeaderboardPage(): JSXElement {
       ...getSelection(),
       page: getPage() ?? 0,
     }),
-    enabled: isOpen(),
+    enabled: isOpen() && !isUniversities(),
   }));
 
   const rankQuery = useQuery(() => ({
     ...getRankQueryOptions(getSelection()),
-    enabled: isAuthenticated() && isOpen(),
+    enabled: isAuthenticated() && isOpen() && !isUniversities(),
   }));
+
+  // universities of the selected all-time leaderboard, for the universities
+  // view and the organization filter
+  const organizationsQuery = useQuery(() => {
+    const selection = getSelection();
+    return {
+      ...getOrganizationLeaderboardQueryOptions({
+        mode: selection.mode ?? "time",
+        mode2: selection.mode2 ?? "15",
+        language: selection.language ?? "ariasctl",
+      }),
+      enabled:
+        isOpen() &&
+        (selection.type === "allTime" || selection.type === "universities"),
+    };
+  });
 
   const serverConfigurationQuery = useQuery(() => ({
     ...getServerConfigurationQueryOptions(),
@@ -118,8 +140,11 @@ export function LeaderboardPage(): JSXElement {
   /**
    * the page that contains the user
    */
+  const isFiltered = () =>
+    getSelection().friendsOnly || getSelection().organization !== undefined;
+
   const userPage = () => {
-    const userRank = getSelection().friendsOnly
+    const userRank = isFiltered()
       ? rankQuery.data?.friendsRank
       : rankQuery.data?.rank;
     if (userRank === undefined) return undefined;
@@ -156,6 +181,7 @@ export function LeaderboardPage(): JSXElement {
       selection.type !== "allTime" ||
       selection.mode !== "time" ||
       selection.friendsOnly ||
+      selection.organization !== undefined ||
       currentRank === undefined
     ) {
       return undefined;
@@ -184,6 +210,9 @@ export function LeaderboardPage(): JSXElement {
                 connectionsEnabled={
                   serverConfigurationQueryData().connections.enabled
                 }
+                organizations={
+                  organizationsQuery.data?.map((it) => it.organization) ?? []
+                }
               />
             )}
           </AsyncContent>
@@ -198,112 +227,141 @@ export function LeaderboardPage(): JSXElement {
           />
 
           <Show
-            when={isAuthenticated() && !entriesQuery.isLoading}
-            fallback={<Separator />}
-          >
-            <AsyncContent
-              queries={{
-                entriesQuery,
-                rankQuery,
-                serverConfigurationQuery,
-              }}
-              alwaysShowContent
-              errorClass="rounded bg-sub-alt p-4"
-            >
-              {({
-                entriesQueryData,
-                rankQueryData,
-                serverConfigurationQueryData,
-              }) => {
-                const minWpm = () => {
-                  const d = entriesQueryData();
-                  return d && "minWpm" in d ? (d.minWpm as number) : undefined;
-                };
-
-                return (
-                  <UserRank
-                    type={getSelection().type === "weekly" ? "xp" : "speed"}
-                    data={rankQueryData()}
-                    friendsOnly={getSelection().friendsOnly}
-                    total={entriesQueryData()?.count}
-                    minWpm={minWpm()}
-                    memoryDifference={getLbMemoryDifference(
-                      getSelection(),
-                      rankQueryData()?.rank,
-                    )}
-                    isLbOptOut={getSnapshot()?.lbOptOut ?? false}
-                    isBanned={getSnapshot()?.banned ?? false}
-                    minTimeTyping={
-                      serverConfigurationQueryData()?.leaderboards
-                        .minTimeTyping ?? 0
-                    }
-                    userTimeTyping={getSnapshot()?.typingStats.timeTyping ?? 0}
-                  />
-                );
-              }}
-            </AsyncContent>
-          </Show>
-
-          <AsyncContent
-            queries={{ entriesQuery }}
-            loader={
-              <div class="flex justify-center pt-4 text-4xl">
-                <LoadingCircle />
-              </div>
+            when={!isUniversities()}
+            fallback={
+              <AsyncContent
+                queries={{ organizationsQuery }}
+                loader={
+                  <div class="flex justify-center pt-4 text-4xl">
+                    <LoadingCircle />
+                  </div>
+                }
+              >
+                {({ organizationsQueryData }) => (
+                  <div>
+                    <NextUpdate
+                      type={getSelection().type}
+                      class="mb-2 text-sm sm:text-base"
+                    />
+                    <OrganizationTable entries={organizationsQueryData()} />
+                  </div>
+                )}
+              </AsyncContent>
             }
           >
-            {({ entriesQueryData }) => (
-              <div>
-                <div
-                  class={cn(
-                    "mb-2 grid grid-cols-1 items-center justify-between gap-2 text-sm sm:grid-cols-2 sm:text-base",
-                  )}
-                >
-                  <NextUpdate type={getSelection().type} />
-                  <Navigation
-                    isLoading={
-                      entriesQuery.isLoading ||
-                      entriesQuery.isFetching ||
-                      entriesQuery.isRefetching
-                    }
-                    lastPage={Math.ceil(
-                      (entriesQueryData()?.count ?? 0) / pageSize,
-                    )}
-                    userPage={userPage()}
-                    currentPage={getPage()}
-                    onPageChange={setPage}
-                    onScrollToUser={setScrollToUser}
-                    class="w-full sm:w-max"
-                  />
-                </div>
+            <Show
+              when={isAuthenticated() && !entriesQuery.isLoading}
+              fallback={<Separator />}
+            >
+              <AsyncContent
+                queries={{
+                  entriesQuery,
+                  rankQuery,
+                  serverConfigurationQuery,
+                }}
+                alwaysShowContent
+                errorClass="rounded bg-sub-alt p-4"
+              >
+                {({
+                  entriesQueryData,
+                  rankQueryData,
+                  serverConfigurationQueryData,
+                }) => {
+                  const minWpm = () => {
+                    const d = entriesQueryData();
+                    return d && "minWpm" in d
+                      ? (d.minWpm as number)
+                      : undefined;
+                  };
 
+                  return (
+                    <UserRank
+                      type={getSelection().type === "weekly" ? "xp" : "speed"}
+                      data={rankQueryData()}
+                      friendsOnly={isFiltered()}
+                      total={entriesQueryData()?.count}
+                      minWpm={minWpm()}
+                      memoryDifference={getLbMemoryDifference(
+                        getSelection(),
+                        rankQueryData()?.rank,
+                      )}
+                      isLbOptOut={getSnapshot()?.lbOptOut ?? false}
+                      isBanned={getSnapshot()?.banned ?? false}
+                      minTimeTyping={
+                        serverConfigurationQueryData()?.leaderboards
+                          .minTimeTyping ?? 0
+                      }
+                      userTimeTyping={
+                        getSnapshot()?.typingStats.timeTyping ?? 0
+                      }
+                    />
+                  );
+                }}
+              </AsyncContent>
+            </Show>
+
+            <AsyncContent
+              queries={{ entriesQuery }}
+              loader={
+                <div class="flex justify-center pt-4 text-4xl">
+                  <LoadingCircle />
+                </div>
+              }
+            >
+              {({ entriesQueryData }) => (
                 <div>
-                  <Table
-                    type={getSelection().type === "weekly" ? "xp" : "speed"}
-                    entries={entriesQueryData()?.entries ?? []}
-                    friendsOnly={getSelection().friendsOnly}
-                    scrollToUser={scrollToUser}
-                    onScrolledToUser={() => setScrollToUser(false)}
-                  />
-                </div>
-
-                <div class="mt-4 grid grid-cols-1 items-center justify-between text-sm sm:text-base">
-                  <Navigation
-                    lastPage={Math.ceil(
-                      (entriesQueryData()?.count ?? 0) / pageSize,
+                  <div
+                    class={cn(
+                      "mb-2 grid grid-cols-1 items-center justify-between gap-2 text-sm sm:grid-cols-2 sm:text-base",
                     )}
-                    currentPage={getPage()}
-                    onPageChange={(page) => {
-                      setPage(page);
-                      scrollToTop();
-                    }}
-                    onScrollToUser={setScrollToUser}
-                    class="w-full sm:w-max"
-                  />
+                  >
+                    <NextUpdate type={getSelection().type} />
+                    <Navigation
+                      isLoading={
+                        entriesQuery.isLoading ||
+                        entriesQuery.isFetching ||
+                        entriesQuery.isRefetching
+                      }
+                      lastPage={Math.ceil(
+                        (entriesQueryData()?.count ?? 0) / pageSize,
+                      )}
+                      userPage={userPage()}
+                      currentPage={getPage()}
+                      onPageChange={setPage}
+                      onScrollToUser={setScrollToUser}
+                      class="w-full sm:w-max"
+                    />
+                  </div>
+
+                  <div>
+                    <Table
+                      type={getSelection().type === "weekly" ? "xp" : "speed"}
+                      entries={entriesQueryData()?.entries ?? []}
+                      friendsOnly={getSelection().friendsOnly}
+                      organization={getSelection().organization}
+                      scrollToUser={scrollToUser}
+                      onScrolledToUser={() => setScrollToUser(false)}
+                    />
+                  </div>
+
+                  <div class="mt-4 grid grid-cols-1 items-center justify-between text-sm sm:text-base">
+                    <Navigation
+                      lastPage={Math.ceil(
+                        (entriesQueryData()?.count ?? 0) / pageSize,
+                      )}
+                      currentPage={getPage()}
+                      onPageChange={(page) => {
+                        setPage(page);
+                        scrollToTop();
+                      }}
+                      onScrollToUser={setScrollToUser}
+                      class="w-full sm:w-max"
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
-          </AsyncContent>
+              )}
+            </AsyncContent>
+          </Show>
         </div>
       </div>
     </Page>

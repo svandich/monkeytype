@@ -13,11 +13,7 @@ type GroupItem<T> = { id: T; text: string; icon: FaSolidIcon };
 
 type LanguagesByModeByMode2 = Partial<Record<Mode, Record<string, Language[]>>>;
 
-type ValidLeaderboards = {
-  allTime: LanguagesByModeByMode2;
-  weekly: LanguagesByModeByMode2;
-  daily: LanguagesByModeByMode2;
-};
+type ValidLeaderboards = Record<Selection["type"], LanguagesByModeByMode2>;
 
 export type ModeSelect = Pick<Selection, "mode" | "mode2">;
 
@@ -26,6 +22,8 @@ export function Sidebar(props: {
   onSelect: (selection: Selection) => void;
   validModeRules: ValidModeRule[];
   connectionsEnabled: boolean;
+  /** organizations (short names) to offer as a filter */
+  organizations: string[];
 }): JSXElement {
   const updateSelection = (patch: Partial<Selection>) => {
     props.onSelect(
@@ -48,8 +46,27 @@ export function Sidebar(props: {
     updateSelection({ language });
   };
   const selectFriendsOnly = (friendsOnly: boolean) => {
-    updateSelection({ friendsOnly });
+    updateSelection({
+      friendsOnly,
+      organization: friendsOnly ? undefined : props.selection().organization,
+    });
   };
+  const selectOrganization = (organization: string | undefined) => {
+    updateSelection({
+      organization,
+      friendsOnly:
+        organization === undefined ? props.selection().friendsOnly : false,
+    });
+  };
+
+  const languageButtons = () =>
+    props.selection().type === "weekly"
+      ? []
+      : getLanguageButtons(
+          getValidLeaderboards(props.validModeRules)[props.selection().type],
+          props.selection().mode,
+          props.selection().mode2,
+        );
 
   return (
     <>
@@ -62,11 +79,18 @@ export function Sidebar(props: {
             text: "all-time",
             icon: "fa-globe-americas",
           },
+          { id: "universities", text: "universities", icon: "fa-university" },
           { id: "weekly", text: "weekly xp", icon: "fa-calendar-day" },
           { id: "daily", text: "daily", icon: "fa-sun" },
         ]}
       />
-      <Show when={isAuthenticated() && props.connectionsEnabled}>
+      <Show
+        when={
+          isAuthenticated() &&
+          props.connectionsEnabled &&
+          props.selection().type !== "universities"
+        }
+      >
         <Group
           selected={props.selection().friendsOnly}
           onSelect={selectFriendsOnly}
@@ -90,15 +114,33 @@ export function Sidebar(props: {
           )}
         />
       </Show>
-      <Show when={props.selection().type === "daily"}>
+      <Show when={languageButtons().length > 1}>
         <Group
           selected={props.selection().language}
           onSelect={selectLanguage}
-          items={getLanguageButtons(
-            getValidLeaderboards(props.validModeRules).daily,
-            props.selection().mode,
-            props.selection().mode2,
-          )}
+          items={languageButtons()}
+        />
+      </Show>
+      <Show
+        when={
+          props.selection().type === "allTime" && props.organizations.length > 0
+        }
+      >
+        <Group<string | undefined>
+          selected={props.selection().organization}
+          onSelect={selectOrganization}
+          items={[
+            {
+              id: undefined,
+              text: "all universities",
+              icon: "fa-globe-americas",
+            },
+            ...props.organizations.map((organization) => ({
+              id: organization,
+              text: organization,
+              icon: "fa-university" as const,
+            })),
+          ]}
         />
       </Show>
     </>
@@ -140,8 +182,15 @@ function normalizeSelection(
       mode: undefined,
       mode2: undefined,
       language: undefined,
+      organization: undefined,
       previous: false,
     };
+  }
+  if (draft.type !== "allTime") {
+    draft = { ...draft, organization: undefined };
+  }
+  if (draft.type === "universities") {
+    draft = { ...draft, friendsOnly: false, previous: false };
   }
 
   let { mode, mode2, language } = draft;
@@ -229,13 +278,16 @@ function getValidLeaderboards(
     }));
   });
 
-  return {
-    allTime: {
-      time: {
-        "15": [...ALL_TIME_LEADERBOARD_LANGUAGES],
-        "60": [...ALL_TIME_LEADERBOARD_LANGUAGES],
-      },
+  const allTime = {
+    time: {
+      "15": [...ALL_TIME_LEADERBOARD_LANGUAGES],
+      "60": [...ALL_TIME_LEADERBOARD_LANGUAGES],
     },
+  };
+
+  return {
+    allTime,
+    universities: allTime,
     weekly: {},
     daily: dailyRules.reduce<
       Partial<Record<Mode, Record<string /*mode2*/, Language[]>>>

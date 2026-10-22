@@ -248,6 +248,15 @@ export const UserNameSchema = doesNotContainDisallowedWords(
   UserNameWithoutFilterSchema,
 );
 
+export const ProgcompInfoSchema = z.object({
+  nickname: z.string(),
+  organization: z
+    .string()
+    .optional()
+    .describe("organization (university) short name"),
+});
+export type ProgcompInfo = z.infer<typeof ProgcompInfoSchema>;
+
 export const UserSchema = z.object({
   name: UserNameSchema,
   email: UserEmailSchema,
@@ -283,6 +292,9 @@ export const UserSchema = z.object({
   quoteMod: QuoteModSchema.optional(),
   resultFilterPresets: z.array(ResultFiltersSchema).optional(),
   testActivity: TestActivitySchema.optional(),
+  progcomp: ProgcompInfoSchema.optional().describe(
+    "ProgCompJOliva account info, synced from the auth token",
+  ),
 });
 export type User = z.infer<typeof UserSchema>;
 
@@ -311,6 +323,7 @@ export const UserProfileSchema = UserSchema.pick({
   inventory: true,
   allTimeLbs: true,
   testActivity: true,
+  progcomp: true,
 })
   .extend({
     typingStats: TypingStatsSchema,

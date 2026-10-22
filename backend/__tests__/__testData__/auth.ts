@@ -66,6 +66,7 @@ export function mockBearerAuthentication(
     uid,
     email: "newuser@mail.com",
     nickname: "NewUser",
+    org: "",
     iat: Date.now(),
     exp: Date.now() + 3600,
   };

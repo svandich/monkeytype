@@ -1,10 +1,10 @@
 import { Config, CustomThemeColors } from "@monkeytype/schemas/configs";
 
 const obj: Config = {
-  theme: "serika_dark",
-  themeLight: "serika",
-  themeDark: "serika_dark",
-  autoSwitchTheme: false,
+  theme: "progcompea",
+  themeLight: "progcompea_light",
+  themeDark: "progcompea",
+  autoSwitchTheme: true,
   customTheme: false,
   customThemeColors: [
     "#323437",

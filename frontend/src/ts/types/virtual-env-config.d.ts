@@ -2,6 +2,8 @@ export type EnvConfig = {
   backendUrl: string;
   /** ProgCompJOlivaApi base url, users sign in there */
   progcompApiUrl: string;
+  /** ProgCompJOliva website, user profiles are linked there */
+  progcompSiteUrl: string;
   isDevelopment: boolean;
   clientVersion: string;
   /** "true" makes every page except the login page require signing in */

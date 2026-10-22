@@ -8,6 +8,7 @@ import {
 } from "./util/api";
 import {
   LeaderboardEntrySchema,
+  OrganizationLeaderboardEntrySchema,
   XpLeaderboardEntrySchema,
 } from "@monkeytype/schemas/leaderboards";
 import { Mode2Schema, ModeSchema } from "@monkeytype/schemas/shared";
@@ -36,6 +37,17 @@ const FriendsOnlyQuerySchema = z.object({
 });
 export type FriendsOnlyQuery = z.infer<typeof FriendsOnlyQuerySchema>;
 
+const OrganizationQuerySchema = z.object({
+  organization: z
+    .string()
+    .min(1)
+    .max(64)
+    .optional()
+    .describe(
+      "include only users from this organization (university short name)",
+    ),
+});
+
 const LeaderboardResponseSchema = z.object({
   count: z.number().int().nonnegative(),
   pageSize: z.number().int().positive(),
@@ -45,7 +57,9 @@ const LeaderboardResponseSchema = z.object({
 
 export const GetLeaderboardQuerySchema = LanguageAndModeQuerySchema.merge(
   PaginationQuerySchema,
-).merge(FriendsOnlyQuerySchema);
+)
+  .merge(FriendsOnlyQuerySchema)
+  .merge(OrganizationQuerySchema);
 export type GetLeaderboardQuery = z.infer<typeof GetLeaderboardQuerySchema>;
 
 export const GetLeaderboardResponseSchema = responseWithData(
@@ -61,7 +75,7 @@ export type GetLeaderboardResponse = z.infer<
 
 export const GetLeaderboardRankQuerySchema = LanguageAndModeQuerySchema.merge(
   FriendsOnlyQuerySchema,
-);
+).merge(OrganizationQuerySchema);
 export type GetLeaderboardRankQuery = z.infer<
   typeof GetLeaderboardRankQuerySchema
 >;
@@ -70,6 +84,19 @@ export const GetLeaderboardRankResponseSchema = responseWithNullableData(
 );
 export type GetLeaderboardRankResponse = z.infer<
   typeof GetLeaderboardRankResponseSchema
+>;
+
+//--------------------------------------------------------------------------
+
+export const GetOrganizationLeaderboardQuerySchema = LanguageAndModeQuerySchema;
+export type GetOrganizationLeaderboardQuery = z.infer<
+  typeof GetOrganizationLeaderboardQuerySchema
+>;
+export const GetOrganizationLeaderboardResponseSchema = responseWithData(
+  z.array(OrganizationLeaderboardEntrySchema),
+);
+export type GetOrganizationLeaderboardResponse = z.infer<
+  typeof GetOrganizationLeaderboardResponseSchema
 >;
 
 //--------------------------------------------------------------------------
@@ -177,6 +204,21 @@ export const leaderboardsContract = c.router(
       },
       metadata: meta({
         authenticationOptions: { acceptApeKeys: true },
+      }),
+    },
+    getOrganizations: {
+      summary: "get organization leaderboard",
+      description:
+        "Get organizations (universities) ranked by the average wpm of their best typists on the all-time leaderboard.",
+      method: "GET",
+      path: "/organizations",
+      query: GetOrganizationLeaderboardQuerySchema.strict(),
+      responses: {
+        200: GetOrganizationLeaderboardResponseSchema,
+        404: MonkeyClientError,
+      },
+      metadata: meta({
+        authenticationOptions: { isPublic: true },
       }),
     },
     getDaily: {

@@ -4,14 +4,13 @@ import { For, JSXElement } from "solid-js";
 import {
   getContributorsQueryOptions,
   getSpeedHistogramQueryOptions,
-  getSupportersQueryOptions,
   getTypingStatsQueryOptions,
 } from "../../queries/public";
 import { getActivePage } from "../../states/core";
 import { showModal } from "../../states/modals";
 import { getTheme } from "../../states/theme";
 import { getNumberWithMagnitude } from "../../utils/numbers";
-import { Advertisement } from "../common/Advertisement";
+import { getProgcompSiteUrl } from "../../utils/progcomp";
 import AsyncContent from "../common/AsyncContent";
 import { Button } from "../common/Button";
 import { ChartJs } from "../common/ChartJs";
@@ -25,11 +24,6 @@ export function AboutPage(): JSXElement {
 
   const contributors = useQuery(() => ({
     ...getContributorsQueryOptions(),
-    enabled: isOpen(),
-  }));
-
-  const supporters = useQuery(() => ({
-    ...getSupportersQueryOptions(),
     enabled: isOpen(),
   }));
 
@@ -54,13 +48,18 @@ export function AboutPage(): JSXElement {
   return (
     <Page id="about">
       <div class="content-grid grid gap-8">
-        <section class="text-center text-sub">
-          Created with love by Miodec.
-          <br />
-          <a href="#supporters_title">Supported</a> and{" "}
-          <a href="#contributors_title">expanded</a> by many awesome people.
-          <br />
-          Launched on 15th of May, 2020.
+        <section class="grid justify-items-center gap-4 text-center text-sub">
+          <img
+            src="/images/progcompea/frog.png"
+            alt="the progcompea frog typing on a laptop"
+            class="w-48"
+          />
+          <div>
+            The typing trainer of Programación Competitiva UChile.
+            <br />
+            Built on <a href="#credits_title">Monkeytype</a>, by Miodec and its
+            contributors.
+          </div>
         </section>
         <section>
           <AsyncContent
@@ -190,27 +189,37 @@ export function AboutPage(): JSXElement {
         <section>
           <H2 fa={{ icon: "fa-info-circle" }} text="about" />
           <p>
-            Monkeytype is a minimalistic and customizable typing test. It
-            features many test modes, an account system to save your typing
-            speed history, and user-configurable features such as themes,
-            sounds, a smooth caret, and more. Monkeytype attempts to emulate the
-            experience of natural keyboard typing during a typing test, by
-            unobtrusively presenting the text prompts and displaying typed
-            characters in-place, providing straightforward, real-time feedback
-            on typos, speed, and accuracy.
+            progcompea type is where the{" "}
+            <a href={getProgcompSiteUrl()} target="_blank">
+              ProgCompJOliva
+            </a>{" "}
+            community practices typing. Fast, accurate typing won&apos;t solve
+            the problem for you, but it does mean less time between having the
+            idea and getting an accepted verdict.
             <br />
             <br />
-            Test yourself in various modes, track your progress and improve your
-            speed.
+            You sign in with your ProgCompJOliva account. Your nickname,
+            password and university are managed there, and your typing personal
+            bests are shared with ProgCompJOliva.
           </p>
         </section>
         <section>
           <H3 fa={{ icon: "fa-align-left" }} text="word set" />
           <p>
-            By default, this website uses the most common 200 words in the
-            English language to generate its tests. You can change to an
-            expanded set (1000 most common words) in the options, or change the
-            language entirely.
+            By default, tests use ariasctl: the most common tokens of real
+            competitive programming code (keywords, types, macros and the names
+            we all use). English and many other languages are still available in
+            the options.
+          </p>
+        </section>
+        <section>
+          <H3 fa={{ icon: "fa-university" }} text="universities" />
+          <p>
+            The all-time leaderboards can be filtered by university. On the
+            university leaderboard, each university is ranked by the average
+            speed of its 3 fastest typists, like an ICPC team. A university with
+            fewer than 3 typists counts the missing ones as 0 wpm, so bring your
+            teammates.
           </p>
         </section>
         <section>
@@ -253,7 +262,6 @@ export function AboutPage(): JSXElement {
             </dd>
           </dl>
         </section>
-        <Advertisement id="ad-about-1" visible="sellout" />
         <section>
           <H3 fa={{ icon: "fa-chart-area" }} text="results screen" />
           <p>
@@ -269,137 +277,54 @@ export function AboutPage(): JSXElement {
         <section>
           <H3 fa={{ icon: "fa-bug" }} text="bug report or feature request" />
           <p>
-            If you encounter a bug, or have a feature request - join the Discord
-            server, send me an email, a direct message on Twitter or create an
-            issue on GitHub.
+            If you encounter a bug or have a feature request, talk to the
+            ProgCompJOliva admins.
           </p>
-        </section>
-        <div></div>
-        <section>
-          <H2 fa={{ icon: "fa-life-ring" }} text="support" />
-          <p>
-            Thanks to everyone who has supported this project. It would not be
-            possible without you and your continued support.
-          </p>
-          <div class="mt-4 text-xl">
+          <div class="mt-4 grid w-full grid-cols-1 gap-4 text-xl sm:grid-cols-2">
             <Button
-              fa={{
-                icon: "fa-donate",
-              }}
-              onClick={() => showModal("Support")}
-              text="support"
-              class="w-full p-8"
-            />
-          </div>
-        </section>
-        <div></div>
-        <section>
-          <H2 fa={{ icon: "fa-envelope" }} text="contact" />
-          <p>
-            If you encounter a bug, have a feature request or just want to say
-            hi - here are the different ways you can contact me directly.
-          </p>
-          <div class="mt-4 grid w-full grid-cols-1 gap-4 text-xl sm:grid-cols-2 lg:grid-cols-4">
-            <Button
-              text="mail"
+              text="contact"
               fa={{ icon: "fa-envelope" }}
               onClick={() => showModal("Contact")}
               class="w-full p-8"
             />
             <Button
-              text="twitter"
-              fa={{ icon: "fa-twitter", variant: "brand" }}
-              href="https://x.com/monkeytype"
-              class="w-full p-8"
-            />
-            <Button
-              text="discord"
-              fa={{ icon: "fa-discord", variant: "brand" }}
-              href="https://discord.gg/monkeytype"
-              class="w-full p-8"
-            />
-            <Button
-              text="github"
-              fa={{ icon: "fa-github", variant: "brand" }}
-              href="https://github.com/monkeytypegame/monkeytype"
+              text="ProgCompJOliva"
+              fa={{ icon: "fa-external-link-alt" }}
+              href={getProgcompSiteUrl()}
               class="w-full p-8"
             />
           </div>
         </section>
         <div></div>
         <section>
-          <H2 fa={{ icon: "fa-users" }} text="credits" />
+          <H2 id="credits_title" fa={{ icon: "fa-users" }} text="credits" />
           <p>
+            This site is a fork of{" "}
             <Button
               variant="text"
-              text="Montydrei"
-              href="https://www.reddit.com/user/montydrei"
-              class="p-0 pt-2 pr-2 pb-2"
+              text="Monkeytype"
+              href="https://github.com/monkeytypegame/monkeytype"
+              class="p-0"
             />
-            for the name suggestion
-          </p>
-          <p>
+            , a minimalistic and customizable typing test created by Miodec and
+            released under the GPL-3.0 license. All the credit for the typing
+            test goes to Monkeytype and its contributors. If you like it,
+            consider{" "}
             <Button
               variant="text"
-              text="Everyone"
-              href="https://www.reddit.com/r/MechanicalKeyboards/comments/gc6wx3/experimenting_with_a_completely_new_type_of/"
-              class="p-0 pt-2 pr-2 pb-2"
+              text="supporting Monkeytype"
+              onClick={() => showModal("Support")}
+              class="p-0"
             />
-            who provided valuable feedback on the original reddit post for the
-            prototype of this website
+            .
           </p>
-          <p>
-            <Button
-              variant="text"
-              text="Supporters"
-              href="#supporters_title"
-              class="p-0 pt-2 pr-2 pb-2"
-            />
-            who helped financially by donating, enabling optional ads or buying
-            merch
-          </p>
-          <p>
-            <Button
-              variant="text"
-              text="Contributors"
-              href="https://github.com/monkeytypegame/monkeytype/graphs/contributors"
-              class="p-0 pt-2 pr-2 pb-2"
-            />
-            on GitHub that have helped with implementing various features,
-            adding themes and more
-          </p>
-        </section>
-        <Advertisement id="ad-about-2" visible="sellout" />
-        <div></div>
-        <section>
-          <H2
-            id="supporters_title"
-            fa={{ icon: "fa-hand-holding-usd" }}
-            text="top supporters"
-          />
-          <AsyncContent
-            queries={{ supporters }}
-            errorMessage="Failed to get supporters"
-          >
-            {({ supportersData }) => (
-              <div
-                class="grid"
-                style={{
-                  "grid-template-columns":
-                    "repeat(auto-fill, minmax(13em, 1fr))",
-                }}
-              >
-                <For each={supportersData()}>{(name) => <div>{name}</div>}</For>
-              </div>
-            )}
-          </AsyncContent>
         </section>
         <div></div>
         <section>
           <H2
             id="contributors_title"
             fa={{ icon: "fa-code-branch" }}
-            text="contributors"
+            text="monkeytype contributors"
           />
           <AsyncContent
             queries={{ contributors }}

@@ -1,3 +1,5 @@
+import { Language } from "@monkeytype/schemas/languages";
+import { ALL_TIME_LEADERBOARD_LANGUAGES } from "@monkeytype/schemas/leaderboards";
 import { PersonalBest, PersonalBests } from "@monkeytype/schemas/shared";
 import {
   RankAndCount,
@@ -9,6 +11,7 @@ import { createMemo, For, JSXElement, Show } from "solid-js";
 import { getFormatting } from "../../../states/core";
 import { showPbTablesModal } from "../../../states/pb-tables-modal";
 import { formatTopPercentage } from "../../../utils/misc";
+import { capitalizeFirstLetter } from "../../../utils/strings";
 import { Button } from "../../common/Button";
 import { ActivityCalendar } from "./ActivityCalendar";
 import { UserDetails } from "./UserDetails";
@@ -24,10 +27,15 @@ export function UserProfile(props: {
         isAccountPage={props.isAccountPage}
       />
       <Show when={!props.profile.banned && !props.profile.lbOptOut}>
-        <LeaderboardPosition
-          top15={props.profile.allTimeLbs?.time?.["15"]?.["english"]}
-          top60={props.profile.allTimeLbs?.time?.["60"]?.["english"]}
-        />
+        <For each={ALL_TIME_LEADERBOARD_LANGUAGES}>
+          {(language) => (
+            <LeaderboardPosition
+              language={language}
+              top15={props.profile.allTimeLbs?.time?.["15"]?.[language]}
+              top60={props.profile.allTimeLbs?.time?.["60"]?.[language]}
+            />
+          )}
+        </For>
       </Show>
       <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <PbCard
@@ -62,6 +70,7 @@ export function UserProfile(props: {
 }
 
 function LeaderboardPosition(props: {
+  language: Language;
   top15?: RankAndCount;
   top60?: RankAndCount;
 }): JSXElement {
@@ -71,7 +80,7 @@ function LeaderboardPosition(props: {
     <Show when={props.top15 !== undefined || props.top60 !== undefined}>
       <div class="grid w-full grid-cols-1 items-center gap-4 rounded bg-sub-alt p-4 text-sub md:grid-cols-2 lg:grid-cols-3">
         <span class="text-center md:col-span-2 lg:col-span-1">
-          All-Time English Leaderboards
+          All-Time {capitalizeFirstLetter(props.language)} Leaderboards
         </span>
         <Show when={props.top15 !== undefined}>
           <div class="grid grid-cols-2 gap-x-4">

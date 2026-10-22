@@ -19,14 +19,17 @@ const XpSelection = z.object({
   language: z.never().optional(),
   mode: z.never().optional(),
   mode2: z.never().optional(),
+  organization: z.never().optional(),
 });
 const SpeedSelection = z.object({
-  type: z.enum(["daily", "allTime"]),
+  type: z.enum(["daily", "allTime", "universities"]),
   friendsOnly: z.boolean(),
   previous: z.boolean(),
   mode: ModeSchema,
   mode2: z.string(),
   language: LanguageSchema,
+  /** organization (university) short name, all-time leaderboards only */
+  organization: z.string().optional(),
 });
 
 export const SelectionSchema = SpeedSelection.or(XpSelection);
@@ -34,13 +37,14 @@ export type Selection = z.infer<typeof SelectionSchema>;
 
 export const LeaderboardUrlParamsSchema = z
   .object({
-    type: z.enum(["allTime", "daily", "weekly"]),
+    type: z.enum(["allTime", "daily", "weekly", "universities"]),
     mode: ModeSchema.optional(),
     mode2: z.string().optional(),
     language: LanguageSchema.optional(),
     yesterday: z.boolean().optional(),
     lastWeek: z.boolean().optional(),
     friendsOnly: z.boolean().optional(),
+    organization: z.string().optional(),
     page: z.number().optional(),
     goToUserPage: z.boolean().optional(),
   })
@@ -87,6 +91,8 @@ export function readLeaderboardGetParameters(
       params.language ?? ALL_TIME_LEADERBOARD_LANGUAGES[0];
     newSelection.previous =
       params.type === "daily" && (params.yesterday ?? false);
+    newSelection.organization =
+      params.type === "allTime" ? params.organization : undefined;
   }
 
   setSelection({ ...getSelection(), ...newSelection } as Selection);
@@ -118,6 +124,9 @@ export function updateGetParameters(
   }
   if (selection.friendsOnly) {
     params.friendsOnly = true;
+  }
+  if (selection.organization !== undefined) {
+    params.organization = selection.organization;
   }
 
   const urlParams = serializeUrlSearchParams({
@@ -157,6 +166,7 @@ function lsSelection(): [Accessor<Selection>, Setter<Selection>] {
         delete result.mode;
         delete result.mode2;
         delete result.language;
+        delete result.organization;
       }
       return result;
     },

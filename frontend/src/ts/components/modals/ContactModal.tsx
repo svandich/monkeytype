@@ -1,5 +1,6 @@
 import { JSXElement } from "solid-js";
 
+import { getProgcompSiteUrl } from "../../utils/progcomp";
 import { AnimatedModal } from "../common/AnimatedModal";
 import { Button } from "../common/Button";
 
@@ -9,75 +10,35 @@ export function ContactModal(): JSXElement {
   return (
     <AnimatedModal id="Contact" modalClass="max-w-4xl" title="Contact">
       <div>
-        Feel free to send an email to contact@monkeytype.com. For business
-        inquiries, email jack@monkeytype.com (the buttons below will open the
-        default mail client).
+        progcompea type is run by the ProgCompJOliva community. For questions,
+        feedback or bug reports, reach out to the ProgCompJOliva admins.
         <br />
         <br />
-        Please <span class="text-error">do not send</span> requests to delete
-        account, update email, update name or clear personal bests - you can do
-        that in the <a href="/account-settings">account settings</a> page.
+        Your nickname, email, password and university come from your
+        ProgCompJOliva account, change them there. Personal bests and typing
+        data can be reset in the{" "}
+        <a href="/account-settings">account settings</a> page.
       </div>
       <div class="mt-4 grid gap-4 md:grid-cols-2">
         <Button
           variant="button"
-          href="mailto:contact@monkeytype.com?subject=[Question] "
-          text="Question"
+          href={getProgcompSiteUrl()}
+          text="ProgCompJOliva"
           class={buttonClass}
           fa={{
-            icon: "fa-question-circle",
+            icon: "fa-external-link-alt",
             fixedWidth: true,
           }}
         />
         <Button
           variant="button"
-          href="mailto:contact@monkeytype.com?subject=[Feedback] "
+          href="https://github.com/monkeytypegame/monkeytype"
+          text="Monkeytype (the original)"
+          class={buttonClass}
           fa={{
-            icon: "fa-comment-dots",
+            icon: "fa-code",
             fixedWidth: true,
           }}
-          text="Feedback"
-          class={buttonClass}
-        />
-        <Button
-          variant="button"
-          href="mailto:support@monkeytype.com?subject=[Bug] "
-          fa={{
-            icon: "fa-bug",
-            fixedWidth: true,
-          }}
-          text="Bug Report"
-          class={buttonClass}
-        />
-        <Button
-          variant="button"
-          href="mailto:support@monkeytype.com?subject=[Account] "
-          fa={{
-            icon: "fa-user-circle",
-            fixedWidth: true,
-          }}
-          text="Account Help"
-          class={buttonClass}
-        />
-        <Button
-          variant="button"
-          href="mailto:jack@monkeytype.com?subject=[Business] "
-          fa={{
-            icon: "fa-briefcase",
-            fixedWidth: true,
-          }}
-          text="Business Inquiry"
-          class={buttonClass}
-        />
-        <Button
-          variant="button"
-          href="mailto:contact@monkeytype.com?subject=[Other] "
-          fa={{
-            icon: "fa-ellipsis-h",
-            fixedWidth: true,
-          }}
-          text="Other"
-          class={buttonClass}
         />
       </div>
     </AnimatedModal>

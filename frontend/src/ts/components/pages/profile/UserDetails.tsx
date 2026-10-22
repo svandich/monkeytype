@@ -26,11 +26,14 @@ import { cn } from "../../../utils/cn";
 import { secondsToString } from "../../../utils/date-and-time";
 import { formatXp, getXpDetails } from "../../../utils/levels";
 import { formatTypingStatsRatio } from "../../../utils/misc";
+import { getDisplayName } from "../../../utils/progcomp";
 import { AutoShrink } from "../../common/AutoShrink";
 import { Balloon, BalloonProps } from "../../common/Balloon";
 import { Bar } from "../../common/Bar";
 import { Button } from "../../common/Button";
 import { DiscordAvatar } from "../../common/DiscordAvatar";
+import { Organization } from "../../common/Organization";
+import { ProgcompProfileLink } from "../../common/ProgcompProfileLink";
 import { UserBadge } from "../../common/UserBadge";
 import { UserFlags } from "../../common/UserFlags";
 import { EditProfile } from "../../modals/EditProfileModal";
@@ -273,7 +276,7 @@ function AvatarAndName(props: {
 
       <div class="flex h-min flex-col gap-1 text-xs [&>div]:w-fit">
         <AutoShrink upperLimitRem={2} class="flex text-text">
-          {props.profile.name}
+          {getDisplayName(props.profile)}
 
           <div class="flex flex-row gap-1 pl-1 text-sub">
             <UserFlags
@@ -282,6 +285,18 @@ function AvatarAndName(props: {
             />
           </div>
         </AutoShrink>
+        <Show when={props.profile.progcomp}>
+          {(progcomp) => (
+            <div class="flex flex-row items-center gap-3 text-base">
+              <Organization shortName={progcomp().organization} />
+              <ProgcompProfileLink
+                nickname={progcomp().nickname}
+                text="ProgCompJOliva profile"
+                class="px-0 text-sub"
+              />
+            </div>
+          )}
+        </Show>
         <div class="flex flex-col gap-1 text-base">
           <UserBadge
             id={props.profile.inventory?.badges.find((it) => it.selected)?.id}

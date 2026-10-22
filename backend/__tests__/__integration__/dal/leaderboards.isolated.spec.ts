@@ -464,6 +464,149 @@ describe("LeaderboardsDal", () => {
         );
     });
   });
+
+  describe("organizations", () => {
+    const uch = (nickname: string): Partial<UserDal.DBUser> => ({
+      progcomp: { nickname, organization: "UCH" },
+    });
+    const puc = (nickname: string): Partial<UserDal.DBUser> => ({
+      progcomp: { nickname, organization: "PUC" },
+    });
+
+    it("should copy the ProgCompJOliva info into the leaderboard", async () => {
+      //GIVEN
+      const withOrg = await createUser(lbBests(undefined, pb(100)), uch("one"));
+      const withoutOrg = await createUser(lbBests(undefined, pb(90)), {
+        progcomp: { nickname: "two" },
+      });
+      const legacy = await createUser(lbBests(undefined, pb(80)));
+      await LeaderboardsDal.update("time", "60", "english");
+
+      //WHEN
+      const results = (await LeaderboardsDal.get(
+        "time",
+        "60",
+        "english",
+        0,
+        50,
+      )) as DBLeaderboardEntry[];
+
+      //THEN
+      expect(results.map((it) => omit(it, ["_id"]))).toEqual([
+        {
+          ...expectedLbEntry("60", { rank: 1, user: withOrg }),
+          progcompNickname: "one",
+          organization: "UCH",
+        },
+        {
+          ...expectedLbEntry("60", { rank: 2, user: withoutOrg }),
+          progcompNickname: "two",
+        },
+        expectedLbEntry("60", { rank: 3, user: legacy }),
+      ]);
+      expect(results[2]).not.toHaveProperty("organization");
+    });
+
+    it("should filter by organization", async () => {
+      //GIVEN
+      await createUser(lbBests(undefined, pb(105)), uch("a"));
+      await createUser(lbBests(undefined, pb(100)), puc("b"));
+      const me = await createUser(lbBests(undefined, pb(95)), uch("me"));
+      await createUser(lbBests(undefined, pb(90)), uch("c"));
+      await LeaderboardsDal.update("time", "60", "english");
+
+      //WHEN
+      const results = (await LeaderboardsDal.get(
+        "time",
+        "60",
+        "english",
+        0,
+        50,
+        false,
+        undefined,
+        "UCH",
+      )) as DBLeaderboardEntry[];
+
+      //THEN
+      expect(
+        results.map((it) => [it.progcompNickname, it.rank, it.friendsRank]),
+      ).toEqual([
+        ["a", 1, 1],
+        ["me", 3, 2],
+        ["c", 4, 3],
+      ]);
+      expect(
+        await LeaderboardsDal.getCount(
+          "time",
+          "60",
+          "english",
+          undefined,
+          "UCH",
+        ),
+      ).toEqual(3);
+      expect(
+        await LeaderboardsDal.getRank(
+          "time",
+          "60",
+          "english",
+          me.uid,
+          false,
+          "UCH",
+        ),
+      ).toEqual(expect.objectContaining({ rank: 3, friendsRank: 2 }));
+      expect(
+        await LeaderboardsDal.getRank(
+          "time",
+          "60",
+          "english",
+          me.uid,
+          false,
+          "PUC",
+        ),
+      ).toBeNull();
+    });
+
+    it("should rank organizations by the average of their best 3", async () => {
+      //GIVEN
+      await createUser(lbBests(undefined, pb(120)), uch("u1"));
+      await createUser(lbBests(undefined, pb(90)), uch("u2"));
+      await createUser(lbBests(undefined, pb(60)), uch("u3"));
+      await createUser(lbBests(undefined, pb(30)), uch("u4"));
+      // a single fast typist, the missing two count as 0
+      await createUser(lbBests(undefined, pb(150)), puc("p1"));
+      await createUser(lbBests(undefined, pb(200)));
+      await LeaderboardsDal.update("time", "60", "english");
+
+      //WHEN
+      const result = await LeaderboardsDal.getOrganizations(
+        "time",
+        "60",
+        "english",
+      );
+
+      //THEN
+      expect(result).toEqual([
+        {
+          rank: 1,
+          organization: "UCH",
+          score: 90,
+          members: 4,
+          team: [
+            expect.objectContaining({ wpm: 120, progcompNickname: "u1" }),
+            expect.objectContaining({ wpm: 90, progcompNickname: "u2" }),
+            expect.objectContaining({ wpm: 60, progcompNickname: "u3" }),
+          ],
+        },
+        {
+          rank: 2,
+          organization: "PUC",
+          score: 50,
+          members: 1,
+          team: [expect.objectContaining({ wpm: 150, progcompNickname: "p1" })],
+        },
+      ]);
+    });
+  });
 });
 
 function expectedLbEntry(

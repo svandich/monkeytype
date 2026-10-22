@@ -34,6 +34,7 @@ import {
 } from "../components/layout/overlays/FpsCounter";
 import { applyConfigFromJson } from "../config/lifecycle";
 import { getLastEventLog } from "../states/test";
+import { getProgcompSiteUrl } from "../utils/progcomp";
 
 const adsCommands = buildCommands("ads");
 
@@ -335,11 +336,11 @@ export const commands: CommandsSubgroup = {
       },
     },
     {
-      id: "joinDiscord",
-      display: "Join the Discord server",
-      icon: "fa-users",
+      id: "openProgcomp",
+      display: "Open ProgCompJOliva",
+      icon: "fa-external-link-alt",
       exec: (): void => {
-        window.open("https://discord.gg/monkeytype");
+        window.open(getProgcompSiteUrl());
       },
     },
     {

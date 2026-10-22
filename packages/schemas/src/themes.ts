@@ -134,6 +134,8 @@ export const ThemeNameSchema = z.enum(
     "peaches",
     "phantom",
     "pink_lemonade",
+    "progcompea",
+    "progcompea_light",
     "pulse",
     "purpleish",
     "rainbow_trail",

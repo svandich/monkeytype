@@ -21,14 +21,18 @@ export function Title(props: {
   onPreviousSelect: () => void;
 }): JSXElement {
   const title = createMemo(() => {
-    const type =
-      props.selection.type === "allTime"
-        ? "All-time"
-        : props.selection.type === "weekly"
-          ? "Weekly XP"
-          : "Daily";
+    const type = {
+      allTime: "All-time",
+      universities: "University",
+      weekly: "Weekly XP",
+      daily: "Daily",
+    }[props.selection.type];
 
     const friend = props.selection.friendsOnly ? "Friends " : "";
+    const organization =
+      props.selection.organization !== undefined
+        ? `${props.selection.organization} `
+        : "";
 
     const language = capitalizeFirstLetter(props.selection.language ?? "");
 
@@ -36,7 +40,7 @@ export function Title(props: {
       props.selection.type !== "weekly"
         ? ` ${capitalizeFirstLetter(props.selection.mode ?? "")} ${props.selection.mode2}`
         : "";
-    return `${type} ${language} ${mode} ${friend}Leaderboard`;
+    return `${type} ${language} ${mode} ${organization}${friend}Leaderboard`;
   });
 
   const subTitle = createMemo(() => {

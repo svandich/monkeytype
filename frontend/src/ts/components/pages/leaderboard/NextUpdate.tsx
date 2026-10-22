@@ -29,7 +29,7 @@ export function NextUpdate(props: {
     if (props.type === "daily") {
       const diff = differenceInSeconds(endOfDay(new UTCDateMini()), now);
       return `Next reset in: ${secondsToString(diff, true)}`;
-    } else if (props.type === "allTime") {
+    } else if (props.type === "allTime" || props.type === "universities") {
       const minutesToNextUpdate = 14 - (now.getMinutes() % 15);
       const secondsToNextUpdate = 60 - now.getSeconds();
       const totalSeconds = minutesToNextUpdate * 60 + secondsToNextUpdate;

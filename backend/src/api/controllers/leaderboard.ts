@@ -14,6 +14,8 @@ import {
   GetLeaderboardRankQuery,
   GetLeaderboardRankResponse,
   GetLeaderboardResponse,
+  GetOrganizationLeaderboardQuery,
+  GetOrganizationLeaderboardResponse,
   GetWeeklyXpLeaderboardQuery,
   GetWeeklyXpLeaderboardRankQuery,
   GetWeeklyXpLeaderboardRankResponse,
@@ -32,13 +34,18 @@ import { omit } from "../../utils/misc";
 export async function getLeaderboard(
   req: MonkeyRequest<GetLeaderboardQuery>,
 ): Promise<GetLeaderboardResponse> {
-  const { language, mode, mode2, page, pageSize, friendsOnly } = req.query;
+  const { language, mode, mode2, page, pageSize, friendsOnly, organization } =
+    req.query;
   const { uid } = req.ctx.decodedToken;
   const connectionsConfig = req.ctx.configuration.connections;
 
   assertAllTimeLeaderboardExists(mode, mode2, language);
 
-  const friendsOnlyUid = getFriendsOnlyUid(uid, friendsOnly, connectionsConfig);
+  // organization and friends filters don't combine, organization wins
+  const friendsOnlyUid =
+    organization === undefined
+      ? getFriendsOnlyUid(uid, friendsOnly, connectionsConfig)
+      : undefined;
 
   const leaderboard = await LeaderboardsDAL.get(
     mode,
@@ -48,6 +55,7 @@ export async function getLeaderboard(
     pageSize,
     req.ctx.configuration.users.premium.enabled,
     friendsOnlyUid,
+    organization,
   );
 
   if (leaderboard === false) {
@@ -62,6 +70,7 @@ export async function getLeaderboard(
     mode2,
     language,
     friendsOnlyUid,
+    organization,
   );
   const normalizedLeaderboard = leaderboard.map((it) => omit(it, ["_id"]));
 
@@ -75,7 +84,7 @@ export async function getLeaderboard(
 export async function getRankFromLeaderboard(
   req: MonkeyRequest<GetLeaderboardRankQuery>,
 ): Promise<GetLeaderboardRankResponse> {
-  const { language, mode, mode2, friendsOnly } = req.query;
+  const { language, mode, mode2, friendsOnly, organization } = req.query;
   const { uid } = req.ctx.decodedToken;
   const connectionsConfig = req.ctx.configuration.connections;
 
@@ -85,6 +94,7 @@ export async function getRankFromLeaderboard(
     language,
     uid,
     getFriendsOnlyUid(uid, friendsOnly, connectionsConfig) !== undefined,
+    organization,
   );
   if (data === false) {
     throw new MonkeyError(
@@ -98,6 +108,18 @@ export async function getRankFromLeaderboard(
   }
 
   return new MonkeyResponse("Rank retrieved", omit(data, ["_id"]));
+}
+
+export async function getOrganizationLeaderboard(
+  req: MonkeyRequest<GetOrganizationLeaderboardQuery>,
+): Promise<GetOrganizationLeaderboardResponse> {
+  const { language, mode, mode2 } = req.query;
+
+  assertAllTimeLeaderboardExists(mode, mode2, language);
+
+  const entries = await LeaderboardsDAL.getOrganizations(mode, mode2, language);
+
+  return new MonkeyResponse("Organization leaderboard retrieved", entries);
 }
 
 function assertAllTimeLeaderboardExists(

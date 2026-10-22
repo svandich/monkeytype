@@ -128,7 +128,7 @@ function Watermark(): JSXElement {
             </Show>
             <span>{date}</span>
             <span>|</span>
-            <span>monkeytype.com</span>
+            <span>{location.host}</span>
           </div>
         );
       }}

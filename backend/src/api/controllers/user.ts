@@ -33,7 +33,9 @@ import {
   CountByYearAndDay,
   TestActivity,
   UserProfileDetails,
+  ProgcompInfo,
 } from "@monkeytype/schemas/users";
+import { ALL_TIME_LEADERBOARD_LANGUAGES } from "@monkeytype/schemas/leaderboards";
 import { addImportantLog, addLog } from "../../dal/logs";
 import {
   AddCustomThemeRequest,
@@ -144,7 +146,7 @@ async function provisionUserFromToken(
   }
 
   const name = await getAvailableNameFromNickname(nickname, uid);
-  await UserDAL.addUser(name, email, uid);
+  await UserDAL.addUser(name, email, uid, getProgcompInfo(decodedToken));
   void addImportantLog(
     "user_created",
     `${name} ${email} (ProgCompJOliva ${nickname})`,
@@ -345,13 +347,38 @@ function getRelevantUserInfo(user: UserDAL.DBUser): RelevantUserInfo {
   ]);
 }
 
+function getProgcompInfo(
+  decodedToken: MonkeyRequest["ctx"]["decodedToken"],
+): ProgcompInfo | undefined {
+  if (decodedToken.type !== "Bearer" || decodedToken.nickname === undefined) {
+    return undefined;
+  }
+  const info: ProgcompInfo = { nickname: decodedToken.nickname };
+  if (decodedToken.org !== undefined && decodedToken.org !== "") {
+    info.organization = decodedToken.org;
+  }
+  return info;
+}
+
 async function getOrProvisionUser(
   decodedToken: MonkeyRequest["ctx"]["decodedToken"],
 ): Promise<UserDAL.DBUser> {
   const { data: userInfo, error } = await tryCatch(
     UserDAL.getUser(decodedToken.uid, "get user"),
   );
-  if (error === null) return userInfo;
+  if (error === null) {
+    // nickname and organization are managed on ProgCompJOliva, keep them in sync
+    const progcomp = getProgcompInfo(decodedToken);
+    if (
+      progcomp !== undefined &&
+      (userInfo.progcomp?.nickname !== progcomp.nickname ||
+        userInfo.progcomp?.organization !== progcomp.organization)
+    ) {
+      await UserDAL.setProgcompInfo(decodedToken.uid, progcomp);
+      userInfo.progcomp = progcomp;
+    }
+    return userInfo;
+  }
   if (!(error instanceof MonkeyError) || error.status !== 404) throw error;
 
   await provisionUserFromToken(decodedToken);
@@ -726,6 +753,7 @@ export async function getProfile(
     xp,
     streak,
     lbOptOut,
+    progcomp,
   } = user;
 
   const extractValid = (
@@ -777,6 +805,7 @@ export async function getProfile(
     maxStreak: streak?.maxLength ?? 0,
     lbOptOut,
     isPremium: await UserDAL.checkIfUserIsPremium(user.uid, user),
+    progcomp,
   };
 
   if (banned) {
@@ -935,58 +964,20 @@ export async function revokeAllTokens(
 }
 
 async function getAllTimeLbs(uid: string): Promise<AllTimeLbs> {
-  const allTime15English = await LeaderboardsDAL.getRank(
-    "time",
-    "15",
-    "english",
-    uid,
-  );
+  const allTimeLbs: AllTimeLbs = { time: { "15": {}, "60": {} } };
 
-  const allTime15EnglishCount = await LeaderboardsDAL.getCount(
-    "time",
-    "15",
-    "english",
-  );
+  for (const language of ALL_TIME_LEADERBOARD_LANGUAGES) {
+    for (const mode2 of ["15", "60"] as const) {
+      const rank = await LeaderboardsDAL.getRank("time", mode2, language, uid);
+      if (rank === false || rank === null) continue;
 
-  const allTime60English = await LeaderboardsDAL.getRank(
-    "time",
-    "60",
-    "english",
-    uid,
-  );
+      const count = await LeaderboardsDAL.getCount("time", mode2, language);
+      // oxlint-disable-next-line typescript/no-non-null-assertion
+      allTimeLbs.time[mode2]![language] = { rank: rank.rank, count };
+    }
+  }
 
-  const allTime60EnglishCount = await LeaderboardsDAL.getCount(
-    "time",
-    "60",
-    "english",
-  );
-
-  const english15 =
-    allTime15English === false || allTime15English === null
-      ? undefined
-      : {
-          rank: allTime15English.rank,
-          count: allTime15EnglishCount,
-        };
-
-  const english60 =
-    allTime60English === false || allTime60English === null
-      ? undefined
-      : {
-          rank: allTime60English.rank,
-          count: allTime60EnglishCount,
-        };
-
-  return {
-    time: {
-      "15": {
-        english: english15,
-      },
-      "60": {
-        english: english60,
-      },
-    },
-  };
+  return allTimeLbs;
 }
 
 export function generateCurrentTestActivity(

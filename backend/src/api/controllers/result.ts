@@ -62,6 +62,7 @@ import {
   getStartOfDayTimestamp,
 } from "@monkeytype/util/date-and-time";
 import { MonkeyRequest } from "../types";
+import * as ProgcompSync from "../../services/progcomp-sync";
 import { tryCatch } from "@monkeytype/util/trycatch";
 import { getCachedConfiguration } from "../../init/configuration";
 
@@ -521,6 +522,8 @@ export async function addResult(
         discordId: user.discordId,
         badgeId: selectedBadgeId,
         isPremium,
+        progcompNickname: user.progcomp?.nickname,
+        organization: user.progcomp?.organization,
       },
       dailyLeaderboardsConfig,
     );
@@ -667,6 +670,7 @@ export async function addResult(
   }
 
   incrementResult(completedEvent, dbresult.isPb);
+  ProgcompSync.schedulePush(uid);
 
   return new MonkeyResponse("Result saved", data);
 }

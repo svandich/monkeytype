@@ -4,6 +4,7 @@ import { getIsScreenshotting } from "../../../states/core";
 import { showModal } from "../../../states/modals";
 import { getFocus } from "../../../states/test";
 import { cn } from "../../../utils/cn";
+import { getProgcompSiteUrl } from "../../../utils/progcomp";
 import { Button } from "../../common/Button";
 import { Keytips } from "./Keytips";
 import { ThemeIndicator } from "./ThemeIndicator";
@@ -36,16 +37,16 @@ export function Footer(): JSXElement {
           />
           <Button
             variant="text"
-            text="support"
+            text="progcompjoliva"
             fa={{
-              icon: "fa-donate",
+              icon: "fa-external-link-alt",
               fixedWidth: true,
             }}
-            onClick={() => showModal("Support")}
+            href={getProgcompSiteUrl()}
           />
           <Button
             variant="text"
-            text="github"
+            text="built on monkeytype"
             fa={{
               icon: "fa-code",
               fixedWidth: true,
@@ -54,50 +55,12 @@ export function Footer(): JSXElement {
           />
           <Button
             variant="text"
-            text="discord"
+            text="support monkeytype"
             fa={{
-              icon: "fa-discord",
-              variant: "brand",
+              icon: "fa-donate",
               fixedWidth: true,
             }}
-            href="https://www.discord.gg/monkeytype"
-          />
-          <Button
-            variant="text"
-            text="twitter"
-            fa={{
-              icon: "fa-twitter",
-              variant: "brand",
-              fixedWidth: true,
-            }}
-            href="https://x.com/monkeytype"
-          />
-          <Button
-            variant="text"
-            text="terms"
-            fa={{
-              icon: "fa-file-contract",
-              fixedWidth: true,
-            }}
-            href="/terms-of-service.html"
-          />
-          <Button
-            href="/security-policy.html"
-            variant="text"
-            text="security"
-            fa={{
-              icon: "fa-shield-alt",
-              fixedWidth: true,
-            }}
-          />
-          <Button
-            href="/privacy-policy.html"
-            variant="text"
-            text="privacy"
-            fa={{
-              icon: "fa-lock",
-              fixedWidth: true,
-            }}
+            onClick={() => showModal("Support")}
           />
         </div>
         <div class="flex flex-col items-end text-right lg:flex-row">

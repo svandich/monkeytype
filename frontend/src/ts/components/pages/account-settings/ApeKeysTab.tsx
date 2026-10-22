@@ -3,6 +3,7 @@ import { tryCatch } from "@monkeytype/util/trycatch";
 import { createColumnHelper } from "@tanstack/solid-table";
 import { format as dateFormat } from "date-fns";
 import { createMemo, Show } from "solid-js";
+import { envConfig } from "virtual:env-config";
 import { z } from "zod";
 
 import {
@@ -35,7 +36,7 @@ export function ApeKeysTab() {
           Generate Ape Keys to access certain API endpoints (
           <Button
             text="documentation"
-            href="https://api.monkeytype.com/docs"
+            href={`${envConfig.backendUrl}/docs`}
             variant="text"
           />
           ).

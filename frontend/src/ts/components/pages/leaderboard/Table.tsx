@@ -17,6 +17,8 @@ import { qs } from "../../../utils/dom";
 import { Formatting } from "../../../utils/format";
 import { abbreviateNumber } from "../../../utils/numbers";
 import { Fa } from "../../common/Fa";
+import { Organization } from "../../common/Organization";
+import { ProgcompProfileLink } from "../../common/ProgcompProfileLink";
 import { User } from "../../common/User";
 import { DataTable, DataTableColumnDef } from "../../ui/table/DataTable";
 
@@ -29,6 +31,8 @@ export function Table(
     type: "speed" | "xp";
     entries: TableEntry[];
     friendsOnly: boolean;
+    /** organization filter, ranks within it are in friendsRank */
+    organization?: string;
     hideHeader?: true;
   } & (
     | {
@@ -69,6 +73,7 @@ export function Table(
   const speedColumns = createMemo(() => {
     return getSpeedColumns({
       friendsOnly: props.friendsOnly,
+      organization: props.organization,
       format: getFormatting(),
       userOverride: props.userOverride,
       addHeader: props.userOverride !== undefined && bp().xl,
@@ -130,15 +135,20 @@ function NoEntriesFound(): JSXElement {
   );
 }
 
-const friendsRankColumn = () =>
+const friendsRankColumn = (organization?: string) =>
   createColumnHelper<SpeedEntry | XpEntry>().accessor("friendsRank", {
-    header: () => <Fa icon="fa-user-friends" />,
+    header: () => (
+      <Fa
+        icon={organization !== undefined ? "fa-university" : "fa-user-friends"}
+      />
+    ),
     cell: (info) =>
       info.getValue() === 1 ? <Fa icon="fa-crown" /> : info.getValue(),
     meta: {
       align: "center",
       headerMeta: {
-        "aria-label": "Friends rank",
+        "aria-label":
+          organization !== undefined ? `${organization} rank` : "Friends rank",
         "data-balloon-pos": "down",
       },
     },
@@ -167,15 +177,27 @@ const userColumn = ({
     header: "name",
     cell: (info) =>
       userOverride?.() ?? (
-        <User
-          avatarFallback="user-circle"
-          avatarColor="sub"
-          flagsColor="sub"
-          user={info.row.original}
-          isFriend={hasConnection(info.row.original.uid, "accepted")}
-          class="w-min text-[1em] **:data-[ui-element='button']:[--themable-button-text:var(--text-color)]"
-          linkToProfile={true}
-        />
+        <div class="flex items-center gap-[0.75em]">
+          <User
+            avatarFallback="user-circle"
+            avatarColor="sub"
+            flagsColor="sub"
+            user={info.row.original}
+            isFriend={hasConnection(info.row.original.uid, "accepted")}
+            class="w-min text-[1em] **:data-[ui-element='button']:[--themable-button-text:var(--text-color)]"
+            linkToProfile={true}
+          />
+          <Organization
+            shortName={(info.row.original as Partial<SpeedEntry>).organization}
+            class="text-em-sm"
+          />
+          <ProgcompProfileLink
+            nickname={
+              (info.row.original as Partial<SpeedEntry>).progcompNickname
+            }
+            class="text-em-sm text-sub"
+          />
+        </div>
       ),
     meta: {
       cellMeta: () => ({ class: "w-full" }),
@@ -253,19 +275,23 @@ function defineResponsivePair<T>() {
 
 function getSpeedColumns({
   friendsOnly,
+  organization,
   format,
   userOverride,
   addHeader,
 }: {
   friendsOnly: boolean;
+  organization?: string;
   format: Formatting;
   userOverride?: Accessor<JSXElement>;
   addHeader?: boolean;
 }): DataTableColumnDef<SpeedEntry>[] {
   const defineColumn = createColumnHelper<SpeedEntry>().accessor;
   const columns = [
-    friendsRankColumn() as DataTableColumnDef<SpeedEntry>,
-    rankColumn(friendsOnly) as DataTableColumnDef<SpeedEntry>,
+    friendsRankColumn(organization) as DataTableColumnDef<SpeedEntry>,
+    rankColumn(
+      friendsOnly || organization !== undefined,
+    ) as DataTableColumnDef<SpeedEntry>,
     userColumn({ userOverride }) as DataTableColumnDef<SpeedEntry>,
     ...defineResponsivePair<SpeedEntry>()({
       columns: [
@@ -325,8 +351,8 @@ function getSpeedColumns({
     }),
   ];
 
-  //remove first column if not friendsOnly
-  if (!friendsOnly) {
+  //remove first column if not filtered
+  if (!friendsOnly && organization === undefined) {
     columns.shift();
   }
 

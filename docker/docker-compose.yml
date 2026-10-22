@@ -59,6 +59,7 @@ services:
     environment:
       - MONKEYTYPE_BACKENDURL=${BASE_URL:-http://localhost}/api
       - PROGCOMP_API_URL=${PROGCOMP_API_URL:-https://progcomp.joliva.cl:8443}
+      - PROGCOMP_SITE_URL=${PROGCOMP_SITE_URL:-https://progcomp.joliva.cl}
       - REQUIRE_LOGIN=${REQUIRE_LOGIN:-}
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "80"]
@@ -86,6 +87,8 @@ services:
       - PROGCOMP_API_URL=${PROGCOMP_API_URL:-https://progcomp.joliva.cl:8443}
       - PROGCOMP_JWT_ISSUER=${PROGCOMP_JWT_ISSUER:-ProgCompJOlivaApi}
       - PROGCOMP_JWT_AUDIENCE=${PROGCOMP_JWT_AUDIENCE:-ProgCompJOlivaClient}
+      # shared secret to push typing stats to ProgCompJOlivaApi (its Typing:IngestToken), empty disables it
+      - PROGCOMP_TYPING_TOKEN=${PROGCOMP_TYPING_TOKEN:-}
     volumes:
       - type: bind
         source: ./backend-configuration.json

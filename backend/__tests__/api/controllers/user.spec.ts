@@ -181,6 +181,7 @@ describe("user controller test", () => {
     const leaderboardGetCountMock = vi.spyOn(LeaderboardDal, "getCount");
     const addLogMock = vi.spyOn(LogDal, "addLog");
     const addImportantLogMock = vi.spyOn(LogDal, "addImportantLog");
+    const setProgcompInfoMock = vi.spyOn(UserDal, "setProgcompInfo");
 
     const provisionedUser = {
       uid,
@@ -201,8 +202,10 @@ describe("user controller test", () => {
         leaderboardGetCountMock,
         addLogMock,
         addImportantLogMock,
+        setProgcompInfoMock,
       ].forEach((it) => it.mockReset());
       addUserMock.mockResolvedValue();
+      setProgcompInfoMock.mockResolvedValue();
       checkIfUserIsPremiumMock.mockResolvedValue(false);
       logIpAddressMock.mockResolvedValue();
       leaderboardGetRankMock.mockResolvedValue(null);
@@ -230,6 +233,7 @@ describe("user controller test", () => {
         "NewUser",
         "newuser@mail.com",
         uid,
+        { nickname: "NewUser" },
       );
     });
 
@@ -259,6 +263,7 @@ describe("user controller test", () => {
         "Jos__P_rez_the_1",
         "newuser@mail.com",
         uid,
+        { nickname: "José Pérez the third" },
       );
     });
 
@@ -274,6 +279,48 @@ describe("user controller test", () => {
 
       //THEN
       expect(addUserMock).not.toHaveBeenCalled();
+    });
+
+    it("should sync the ProgCompJOliva nickname and organization", async () => {
+      //GIVEN
+      mockAuth.modifyToken({ nickname: "NewNick", org: "UCH" });
+      getUserMock.mockResolvedValue({
+        ...provisionedUser,
+        progcomp: { nickname: "NewUser" },
+      });
+
+      //WHEN
+      const { body } = await mockApp
+        .get("/users")
+        .set("Authorization", `Bearer ${uid}`)
+        .expect(200);
+
+      //THEN
+      expect(setProgcompInfoMock).toHaveBeenCalledWith(uid, {
+        nickname: "NewNick",
+        organization: "UCH",
+      });
+      expect(body.data.progcomp).toEqual({
+        nickname: "NewNick",
+        organization: "UCH",
+      });
+    });
+
+    it("should not write unchanged ProgCompJOliva info", async () => {
+      //GIVEN
+      getUserMock.mockResolvedValue({
+        ...provisionedUser,
+        progcomp: { nickname: "NewUser" },
+      });
+
+      //WHEN
+      await mockApp
+        .get("/users")
+        .set("Authorization", `Bearer ${uid}`)
+        .expect(200);
+
+      //THEN
+      expect(setProgcompInfoMock).not.toHaveBeenCalled();
     });
   });
   describe("checkName", () => {
@@ -2553,8 +2600,14 @@ describe("user controller test", () => {
           isPremium: true,
           allTimeLbs: {
             time: {
-              "15": { english: { count: 100, rank: 24 } },
-              "60": { english: { count: 100, rank: 24 } },
+              "15": {
+                ariasctl: { count: 100, rank: 24 },
+                english: { count: 100, rank: 24 },
+              },
+              "60": {
+                ariasctl: { count: 100, rank: 24 },
+                english: { count: 100, rank: 24 },
+              },
             },
           },
           inventory: foundUser.inventory,

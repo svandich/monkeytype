@@ -13,6 +13,10 @@ export default s.router(leaderboardsContract, {
     handler: async (r) =>
       callController(LeaderboardController.getRankFromLeaderboard)(r),
   },
+  getOrganizations: {
+    handler: async (r) =>
+      callController(LeaderboardController.getOrganizationLeaderboard)(r),
+  },
   getDaily: {
     handler: async (r) =>
       callController(LeaderboardController.getDailyLeaderboard)(r),

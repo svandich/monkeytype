@@ -50,7 +50,13 @@
     },
     "@monkeytype/frontend#build": {
       "dependsOn": ["^build"],
-      "env": ["BACKEND_URL", "PROGCOMP_API_URL", "REQUIRE_LOGIN", "SENTRY"],
+      "env": [
+        "BACKEND_URL",
+        "PROGCOMP_API_URL",
+        "PROGCOMP_SITE_URL",
+        "REQUIRE_LOGIN",
+        "SENTRY"
+      ],
       "outputs": ["dist/**"]
     },
     "@monkeytype/frontend#dev": {
@@ -58,6 +64,7 @@
       "env": [
         "BACKEND_URL",
         "PROGCOMP_API_URL",
+        "PROGCOMP_SITE_URL",
         "REQUIRE_LOGIN",
         "SERVER_OPEN"
       ],

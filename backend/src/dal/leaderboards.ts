@@ -13,6 +13,8 @@ import { Collection, Document, ObjectId } from "mongodb";
 import {
   ALL_TIME_LEADERBOARD_LANGUAGES,
   LeaderboardEntry,
+  ORGANIZATION_TEAM_SIZE,
+  OrganizationLeaderboardEntry,
 } from "@monkeytype/schemas/leaderboards";
 import { DBUser, getUsersCollection } from "./user";
 import MonkeyError from "../utils/error";
@@ -44,6 +46,7 @@ export async function get(
   pageSize: number,
   premiumFeaturesEnabled: boolean = false,
   uid?: string,
+  organization?: string,
 ): Promise<DBLeaderboardEntry[] | false> {
   if (page < 0 || pageSize < 0) {
     throw new MonkeyError(500, "Invalid page or pageSize");
@@ -61,7 +64,15 @@ export async function get(
   ];
 
   try {
-    if (uid !== undefined) {
+    if (organization !== undefined) {
+      leaderboard = await getCollection({ language, mode, mode2 })
+        .aggregate<DBLeaderboardEntry>([
+          { $match: { organization } },
+          ...filteredRankStage,
+          ...pipeline,
+        ])
+        .toArray();
+    } else if (uid !== undefined) {
       leaderboard = await aggregateWithAcceptedConnections(
         {
           uid,
@@ -97,14 +108,84 @@ export async function get(
   }
 }
 
+/**
+ * Organizations (universities) ranked by the average wpm of their best
+ * ORGANIZATION_TEAM_SIZE typists on an all-time leaderboard.
+ */
+export async function getOrganizations(
+  mode: string,
+  mode2: string,
+  language: string,
+): Promise<OrganizationLeaderboardEntry[]> {
+  const entries = await getCollection({ language, mode, mode2 })
+    .aggregate<Omit<OrganizationLeaderboardEntry, "rank">>([
+      { $match: { organization: { $exists: true } } },
+      { $sort: { rank: 1 } },
+      {
+        $group: {
+          _id: "$organization",
+          members: { $sum: 1 },
+          team: {
+            $push: {
+              uid: "$uid",
+              name: "$name",
+              wpm: "$wpm",
+              acc: "$acc",
+              rank: "$rank",
+              progcompNickname: "$progcompNickname",
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          organization: "$_id",
+          members: 1,
+          team: { $slice: ["$team", ORGANIZATION_TEAM_SIZE] },
+        },
+      },
+      {
+        $addFields: {
+          score: {
+            $round: [
+              { $divide: [{ $sum: "$team.wpm" }, ORGANIZATION_TEAM_SIZE] },
+              2,
+            ],
+          },
+        },
+      },
+      { $sort: { score: -1, members: -1 } },
+    ])
+    .toArray();
+
+  return entries.map((entry, index) => ({ ...entry, rank: index + 1 }));
+}
+
 const cachedCounts = new Map<string, number>();
+
+/** ranks entries of a filtered (friends or organization) leaderboard */
+const filteredRankStage: Document[] = [
+  {
+    $setWindowFields: {
+      sortBy: { rank: 1 },
+      output: { friendsRank: { $documentNumber: {} } },
+    },
+  },
+];
 
 export async function getCount(
   mode: string,
   mode2: string,
   language: string,
   uid?: string,
+  organization?: string,
 ): Promise<number> {
+  if (organization !== undefined) {
+    return getCollection({ language, mode, mode2 }).countDocuments({
+      organization,
+    });
+  }
   const key = `${language}_${mode}_${mode2}`;
   if (uid === undefined && cachedCounts.has(key)) {
     return cachedCounts.get(key) as number;
@@ -138,9 +219,19 @@ export async function getRank(
   language: string,
   uid: string,
   friendsOnly: boolean = false,
+  organization?: string,
 ): Promise<DBLeaderboardEntry | null | false> {
   try {
-    if (!friendsOnly) {
+    if (organization !== undefined) {
+      const results = await getCollection({ language, mode, mode2 })
+        .aggregate<DBLeaderboardEntry>([
+          { $match: { organization } },
+          ...filteredRankStage,
+          { $match: { uid } },
+        ])
+        .toArray();
+      return results[0] ?? null;
+    } else if (!friendsOnly) {
       const entry = await getCollection({ language, mode, mode2 }).findOne({
         uid,
       });
@@ -235,6 +326,7 @@ export async function update(
           discordAvatar: 1,
           inventory: 1,
           premium: 1,
+          progcomp: 1,
         },
       },
 
@@ -244,6 +336,12 @@ export async function update(
           "user.name": "$name",
           "user.discordId": { $ifNull: ["$discordId", "$$REMOVE"] },
           "user.discordAvatar": { $ifNull: ["$discordAvatar", "$$REMOVE"] },
+          "user.progcompNickname": {
+            $ifNull: ["$progcomp.nickname", "$$REMOVE"],
+          },
+          "user.organization": {
+            $ifNull: ["$progcomp.organization", "$$REMOVE"],
+          },
           [`${key}.consistency`]: {
             $ifNull: [`$${key}.consistency`, "$$REMOVE"],
           },
@@ -285,6 +383,9 @@ export async function update(
   const start2 = performance.now();
   await db.collection(lbCollectionName).createIndex({ uid: -1 });
   await db.collection(lbCollectionName).createIndex({ rank: 1 });
+  await db
+    .collection(lbCollectionName)
+    .createIndex({ organization: 1, rank: 1 });
   const end2 = performance.now();
 
   cachedCounts.delete(`${language}_${mode}_${mode2}`);
@@ -374,6 +475,7 @@ async function createIndex(
     discordAvatar: 1,
     inventory: 1,
     premium: 1,
+    progcomp: 1,
   };
   const partial = {
     partialFilterExpression: {

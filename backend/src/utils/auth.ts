@@ -17,6 +17,8 @@ export type DecodedIdToken = {
   uid: string;
   email: string;
   nickname: string;
+  /** organization (university) short name, empty when the user has none */
+  org: string;
   iat: number;
   exp: number;
 };
@@ -208,11 +210,13 @@ async function decodeAndVerify(idToken: string): Promise<DecodedIdToken> {
 
   const email = payload["email"];
   const nickname = payload["unique_name"];
+  const org = payload["org"];
 
   return {
     uid,
     email: typeof email === "string" ? email.toLowerCase() : "",
     nickname: typeof nickname === "string" ? nickname : "",
+    org: typeof org === "string" ? org : "",
     iat: Number(payload["iat"] ?? nbf),
     exp,
   };

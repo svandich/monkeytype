@@ -37,8 +37,41 @@ export const LeaderboardEntrySchema = z.object({
   friendsRank: FriendsRankSchema,
   badgeId: z.number().int().optional(),
   isPremium: z.boolean().optional(),
+  progcompNickname: z.string().optional(),
+  organization: z
+    .string()
+    .optional()
+    .describe("organization (university) short name"),
 });
 export type LeaderboardEntry = z.infer<typeof LeaderboardEntrySchema>;
+
+/** how many of an organization's best typists make up its score, like an ICPC team */
+export const ORGANIZATION_TEAM_SIZE = 3;
+
+export const OrganizationLeaderboardEntrySchema = z.object({
+  rank: z.number().nonnegative().int(),
+  organization: z.string().describe("organization (university) short name"),
+  score: z
+    .number()
+    .nonnegative()
+    .describe(
+      "average wpm of the organization's best typists, missing ones count as 0",
+    ),
+  members: z.number().int().nonnegative(),
+  team: z.array(
+    LeaderboardEntrySchema.pick({
+      uid: true,
+      name: true,
+      wpm: true,
+      acc: true,
+      rank: true,
+      progcompNickname: true,
+    }),
+  ),
+});
+export type OrganizationLeaderboardEntry = z.infer<
+  typeof OrganizationLeaderboardEntrySchema
+>;
 
 export const RedisDailyLeaderboardEntrySchema = LeaderboardEntrySchema.omit({
   rank: true,

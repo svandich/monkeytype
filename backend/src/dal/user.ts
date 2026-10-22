@@ -26,6 +26,7 @@ import {
   User,
   CountByYearAndDay,
   Friend,
+  ProgcompInfo,
 } from "@monkeytype/schemas/users";
 import {
   Mode,
@@ -83,11 +84,13 @@ export async function addUser(
   name: string,
   email: string,
   uid: string,
+  progcomp?: ProgcompInfo,
 ): Promise<void> {
   const newUserDocument: Partial<DBUser> = {
     name,
     email,
     uid,
+    ...(progcomp !== undefined ? { progcomp } : {}),
     addedAt: Date.now(),
     personalBests: {
       time: {},
@@ -184,6 +187,13 @@ export async function updateName(
       $push: { nameHistory: previousName },
     },
   );
+}
+
+export async function setProgcompInfo(
+  uid: string,
+  progcomp: ProgcompInfo,
+): Promise<void> {
+  await getUsersCollection().updateOne({ uid }, { $set: { progcomp } });
 }
 
 export async function flagForNameChange(uid: string): Promise<void> {
