@@ -10,7 +10,7 @@ export function Logo(): JSXElement {
   return (
     <a
       href={`${location.origin}/`}
-      class="-m-2 flex h-6 w-max gap-2 rounded-[0.8rem] p-2 focus-visible:**:data-[ui-element='logoSubtext']:text-transparent"
+      class="-m-2 flex h-6 w-max shrink-0 gap-2 rounded-[0.8rem] p-2 focus-visible:**:data-[ui-element='logoSubtext']:text-transparent"
       aria-label="progcompea type home"
       router-link
       style={{
@@ -47,7 +47,7 @@ export function Logo(): JSXElement {
           })}
           data-ui-element="logoText"
         >
-          progcompea type
+          progcompea
         </h1>
       </div>
     </a>
