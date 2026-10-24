@@ -291,8 +291,8 @@ function AvatarAndName(props: {
               <Organization shortName={progcomp().organization} />
               <ProgcompProfileLink
                 nickname={progcomp().nickname}
-                text="ProgCompJOliva profile"
-                class="px-0 text-sub"
+                logo
+                class="gap-[0.25em] px-0 text-sub"
               />
             </div>
           )}
