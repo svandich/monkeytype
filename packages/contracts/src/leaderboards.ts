@@ -9,6 +9,7 @@ import {
 import {
   LeaderboardEntrySchema,
   OrganizationLeaderboardEntrySchema,
+  QuoteLeaderboardEntrySchema,
   XpLeaderboardEntrySchema,
 } from "@monkeytype/schemas/leaderboards";
 import { Mode2Schema, ModeSchema } from "@monkeytype/schemas/shared";
@@ -97,6 +98,53 @@ export const GetOrganizationLeaderboardResponseSchema = responseWithData(
 );
 export type GetOrganizationLeaderboardResponse = z.infer<
   typeof GetOrganizationLeaderboardResponseSchema
+>;
+
+//--------------------------------------------------------------------------
+
+const QuoteLeaderboardQuerySchema = z
+  .object({
+    language: LanguageSchema,
+    quoteId: z
+      .number()
+      .int()
+      .safe()
+      .positive()
+      .optional()
+      .describe(
+        "leaderboard of a single quote, omit for the overall quote leaderboard",
+      ),
+  })
+  .merge(FriendsOnlyQuerySchema)
+  .merge(OrganizationQuerySchema);
+export type QuoteLeaderboardQuery = z.infer<typeof QuoteLeaderboardQuerySchema>;
+
+export const GetQuoteLeaderboardQuerySchema = QuoteLeaderboardQuerySchema.merge(
+  PaginationQuerySchema,
+);
+export type GetQuoteLeaderboardQuery = z.infer<
+  typeof GetQuoteLeaderboardQuerySchema
+>;
+export const GetQuoteLeaderboardResponseSchema = responseWithData(
+  LeaderboardResponseSchema.extend({
+    entries: z.array(QuoteLeaderboardEntrySchema),
+  }),
+);
+export type GetQuoteLeaderboardResponse = z.infer<
+  typeof GetQuoteLeaderboardResponseSchema
+>;
+
+//--------------------------------------------------------------------------
+
+export const GetQuoteLeaderboardRankQuerySchema = QuoteLeaderboardQuerySchema;
+export type GetQuoteLeaderboardRankQuery = z.infer<
+  typeof GetQuoteLeaderboardRankQuerySchema
+>;
+export const GetQuoteLeaderboardRankResponseSchema = responseWithNullableData(
+  QuoteLeaderboardEntrySchema,
+);
+export type GetQuoteLeaderboardRankResponse = z.infer<
+  typeof GetQuoteLeaderboardRankResponseSchema
 >;
 
 //--------------------------------------------------------------------------
@@ -219,6 +267,35 @@ export const leaderboardsContract = c.router(
       },
       metadata: meta({
         authenticationOptions: { isPublic: true },
+      }),
+    },
+    getQuotes: {
+      summary: "get quote leaderboard",
+      description:
+        "Get the leaderboard of a single quote (best result per user), or the overall quote leaderboard (average of each user's best result per quote).",
+      method: "GET",
+      path: "/quotes",
+      query: GetQuoteLeaderboardQuerySchema.strict(),
+      responses: {
+        200: GetQuoteLeaderboardResponseSchema,
+        404: MonkeyClientError,
+      },
+      metadata: meta({
+        authenticationOptions: { isPublic: true },
+      }),
+    },
+    getQuotesRank: {
+      summary: "get quote leaderboard rank",
+      description: "Get the rank of the current user on a quote leaderboard",
+      method: "GET",
+      path: "/quotes/rank",
+      query: GetQuoteLeaderboardRankQuerySchema.strict(),
+      responses: {
+        200: GetQuoteLeaderboardRankResponseSchema,
+        404: MonkeyClientError,
+      },
+      metadata: meta({
+        authenticationOptions: { acceptApeKeys: true },
       }),
     },
     getDaily: {

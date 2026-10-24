@@ -1,3 +1,8 @@
+import {
+  ALL_TIME_LEADERBOARD_LANGUAGES,
+  QUOTE_LEADERBOARD_LANGUAGES,
+  QUOTE_LEADERBOARD_MIN_QUOTES,
+} from "@monkeytype/schemas/leaderboards";
 import { useQuery } from "@tanstack/solid-query";
 import { createEffect, createSignal, JSXElement, Show } from "solid-js";
 
@@ -7,7 +12,9 @@ import { PageName } from "../../../pages/page";
 import { queryClient } from "../../../queries";
 import {
   getLeaderboardQueryOptions,
+  getLeaderboardQuotesQueryOptions,
   getOrganizationLeaderboardQueryOptions,
+  getQuoteId,
   getRankQueryOptions,
 } from "../../../queries/leaderboards";
 import { getServerConfigurationQueryOptions } from "../../../queries/server-configuration";
@@ -42,6 +49,9 @@ const pageName: PageName = "leaderboards";
 export function LeaderboardPage(): JSXElement {
   const isOpen = () => getActivePage() === pageName;
   const isUniversities = () => getSelection().type === "universities";
+  const isQuotes = () => getSelection().type === "quotes";
+  const isOverallQuotes = () =>
+    isQuotes() && getQuoteId(getSelection()) === undefined;
 
   const [scrollToUser, setScrollToUser] = createSignal(false);
 
@@ -52,7 +62,7 @@ export function LeaderboardPage(): JSXElement {
         predicate: (query) =>
           query.queryKey.length >= 3 &&
           query.queryKey[1] === "leaderboard" &&
-          ["weekly", "daily"].includes(query.queryKey[2] as string),
+          ["weekly", "daily", "quotes"].includes(query.queryKey[2] as string),
       });
     }
   });
@@ -112,20 +122,45 @@ export function LeaderboardPage(): JSXElement {
   }));
 
   // universities of the selected all-time leaderboard, for the universities
-  // view and the organization filter
+  // view and the organization filter. quote leaderboards offer the ones of the
+  // default all-time leaderboard
   const organizationsQuery = useQuery(() => {
     const selection = getSelection();
     return {
-      ...getOrganizationLeaderboardQueryOptions({
-        mode: selection.mode ?? "time",
-        mode2: selection.mode2 ?? "15",
-        language: selection.language ?? "ariasctl",
-      }),
+      ...getOrganizationLeaderboardQueryOptions(
+        selection.type === "quotes"
+          ? {
+              mode: "time",
+              mode2: "15",
+              language: ALL_TIME_LEADERBOARD_LANGUAGES[0],
+            }
+          : {
+              mode: selection.mode ?? "time",
+              mode2: selection.mode2 ?? "15",
+              language: selection.language ?? "ariasctl",
+            },
+      ),
       enabled:
         isOpen() &&
-        (selection.type === "allTime" || selection.type === "universities"),
+        (selection.type === "allTime" ||
+          selection.type === "universities" ||
+          selection.type === "quotes"),
     };
   });
+
+  const quotesQuery = useQuery(() => ({
+    ...getLeaderboardQuotesQueryOptions(
+      getSelection().language ?? QUOTE_LEADERBOARD_LANGUAGES[0],
+    ),
+    enabled: isOpen() && isQuotes(),
+  }));
+
+  const selectedQuote = () => {
+    const quoteId = getQuoteId(getSelection());
+    return isQuotes() && quoteId !== undefined
+      ? quotesQuery.data?.find((it) => it.id === quoteId)
+      : undefined;
+  };
 
   const serverConfigurationQuery = useQuery(() => ({
     ...getServerConfigurationQueryOptions(),
@@ -213,6 +248,7 @@ export function LeaderboardPage(): JSXElement {
                 organizations={
                   organizationsQuery.data?.map((it) => it.organization) ?? []
                 }
+                quotes={quotesQuery.data ?? []}
               />
             )}
           </AsyncContent>
@@ -224,6 +260,7 @@ export function LeaderboardPage(): JSXElement {
             onPreviousSelect={() =>
               setSelection((old) => ({ ...old, previous: !old.previous }))
             }
+            quote={selectedQuote()}
           />
 
           <Show
@@ -279,6 +316,14 @@ export function LeaderboardPage(): JSXElement {
                       type={getSelection().type === "weekly" ? "xp" : "speed"}
                       data={rankQueryData()}
                       friendsOnly={isFiltered()}
+                      showQuotes={isOverallQuotes()}
+                      notQualifiedMessage={
+                        isQuotes()
+                          ? isOverallQuotes()
+                            ? `Complete at least ${QUOTE_LEADERBOARD_MIN_QUOTES} different quotes to be placed on this leaderboard.`
+                            : "You haven't completed this quote yet."
+                          : undefined
+                      }
                       total={entriesQueryData()?.count}
                       minWpm={minWpm()}
                       memoryDifference={getLbMemoryDifference(
@@ -339,6 +384,7 @@ export function LeaderboardPage(): JSXElement {
                       entries={entriesQueryData()?.entries ?? []}
                       friendsOnly={getSelection().friendsOnly}
                       organization={getSelection().organization}
+                      showQuotes={isOverallQuotes()}
                       scrollToUser={scrollToUser}
                       onScrolledToUser={() => setScrollToUser(false)}
                     />

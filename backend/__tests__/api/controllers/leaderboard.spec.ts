@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { setup } from "../../__testData__/controller-test";
 import { ObjectId } from "mongodb";
 import * as LeaderboardDal from "../../../src/dal/leaderboards";
+import * as QuoteLeaderboardDal from "../../../src/dal/quote-leaderboards";
 import * as ConnectionsDal from "../../../src/dal/connections";
 import * as DailyLeaderboards from "../../../src/utils/daily-leaderboards";
 import * as WeeklyXpLeaderboard from "../../../src/services/weekly-xp-leaderboard";
@@ -599,6 +600,181 @@ describe("Loaderboard Controller", () => {
         .expect(404);
 
       expect(getOrganizationsMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("get quote leaderboard", () => {
+    const getQuoteLeaderboardMock = vi.spyOn(QuoteLeaderboardDal, "get");
+    const getFriendsUidsMock = vi.spyOn(ConnectionsDal, "getFriendsUids");
+
+    const entries = Array.from({ length: 12 }, (_, index) => ({
+      wpm: 100 - index,
+      acc: 95,
+      timestamp: 1000,
+      raw: 101 - index,
+      consistency: 80,
+      uid: `user${index + 1}`,
+      name: `user${index + 1}`,
+      rank: index + 1,
+    }));
+
+    beforeEach(() => {
+      [getQuoteLeaderboardMock, getFriendsUidsMock].forEach((it) =>
+        it.mockClear(),
+      );
+      getQuoteLeaderboardMock.mockResolvedValue(entries);
+    });
+
+    it("should get a page of a single quote", async () => {
+      //WHEN
+      const { body } = await mockApp
+        .get("/leaderboards/quotes")
+        .query({ language: "ariasctl", quoteId: 7, page: 1, pageSize: 10 })
+        .expect(200);
+
+      //THEN
+      expect(body).toEqual({
+        message: "Quote leaderboard retrieved",
+        data: { count: 12, pageSize: 10, entries: entries.slice(10) },
+      });
+      expect(getQuoteLeaderboardMock).toHaveBeenCalledWith("ariasctl", 7, {
+        uids: undefined,
+        organization: undefined,
+      });
+    });
+
+    it("should get the overall leaderboard", async () => {
+      //WHEN
+      await mockApp
+        .get("/leaderboards/quotes")
+        .query({ language: "ariasctl" })
+        .expect(200);
+
+      //THEN
+      expect(getQuoteLeaderboardMock).toHaveBeenCalledWith(
+        "ariasctl",
+        undefined,
+        { uids: undefined, organization: undefined },
+      );
+    });
+
+    it("should get for friendsOnly", async () => {
+      //GIVEN
+      await enableConnectionsFeature(true);
+      getFriendsUidsMock.mockResolvedValue(["friend1", "friend2"]);
+
+      //WHEN
+      await mockApp
+        .get("/leaderboards/quotes")
+        .set("Authorization", `Bearer ${uid}`)
+        .query({ language: "ariasctl", friendsOnly: true })
+        .expect(200);
+
+      //THEN
+      expect(getFriendsUidsMock).toHaveBeenCalledWith(uid);
+      expect(getQuoteLeaderboardMock).toHaveBeenCalledWith(
+        "ariasctl",
+        undefined,
+        { uids: ["friend1", "friend2", uid], organization: undefined },
+      );
+    });
+
+    it("should get for organization", async () => {
+      //GIVEN
+      await enableConnectionsFeature(true);
+
+      //WHEN
+      await mockApp
+        .get("/leaderboards/quotes")
+        .set("Authorization", `Bearer ${uid}`)
+        .query({ language: "ariasctl", organization: "UCH", friendsOnly: true })
+        .expect(200);
+
+      //THEN
+      //organization wins over friendsOnly
+      expect(getFriendsUidsMock).not.toHaveBeenCalled();
+      expect(getQuoteLeaderboardMock).toHaveBeenCalledWith(
+        "ariasctl",
+        undefined,
+        { uids: undefined, organization: "UCH" },
+      );
+    });
+
+    it("fails for a language without quote leaderboard", async () => {
+      await mockApp
+        .get("/leaderboards/quotes")
+        .query({ language: "english" })
+        .expect(404);
+
+      expect(getQuoteLeaderboardMock).not.toHaveBeenCalled();
+    });
+
+    it("fails for invalid quote id", async () => {
+      await mockApp
+        .get("/leaderboards/quotes")
+        .query({ language: "ariasctl", quoteId: 0 })
+        .expect(422);
+    });
+  });
+
+  describe("get quote leaderboard rank", () => {
+    const getQuoteLeaderboardMock = vi.spyOn(QuoteLeaderboardDal, "get");
+
+    beforeEach(() => {
+      getQuoteLeaderboardMock.mockClear();
+    });
+
+    it("fails without authentication", async () => {
+      await mockApp
+        .get("/leaderboards/quotes/rank")
+        .query({ language: "ariasctl", quoteId: 1 })
+        .expect(401);
+    });
+
+    it("should get the user's entry", async () => {
+      //GIVEN
+      const entry = {
+        wpm: 90,
+        acc: 95,
+        timestamp: 1000,
+        raw: 91,
+        uid,
+        name: "me",
+        rank: 2,
+      };
+      getQuoteLeaderboardMock.mockResolvedValue([
+        { ...entry, uid: "other", name: "other", rank: 1, wpm: 100 },
+        entry,
+      ]);
+
+      //WHEN
+      const { body } = await mockApp
+        .get("/leaderboards/quotes/rank")
+        .set("Authorization", `Bearer ${uid}`)
+        .query({ language: "ariasctl", quoteId: 1 })
+        .expect(200);
+
+      //THEN
+      expect(body).toEqual({ message: "Rank retrieved", data: entry });
+      expect(getQuoteLeaderboardMock).toHaveBeenCalledWith("ariasctl", 1, {
+        uids: undefined,
+        organization: undefined,
+      });
+    });
+
+    it("should get null if the user is not on it", async () => {
+      //GIVEN
+      getQuoteLeaderboardMock.mockResolvedValue([]);
+
+      //WHEN
+      const { body } = await mockApp
+        .get("/leaderboards/quotes/rank")
+        .set("Authorization", `Bearer ${uid}`)
+        .query({ language: "ariasctl" })
+        .expect(200);
+
+      //THEN
+      expect(body).toEqual({ message: "Rank retrieved", data: null });
     });
   });
 

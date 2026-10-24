@@ -1,5 +1,6 @@
 import { MonkeyResponse } from "../../utils/monkey-response";
 import * as LeaderboardsDAL from "../../dal/leaderboards";
+import * as QuoteLeaderboardsDAL from "../../dal/quote-leaderboards";
 import * as ConnectionsDal from "../../dal/connections";
 import MonkeyError from "../../utils/error";
 import * as DailyLeaderboards from "../../utils/daily-leaderboards";
@@ -16,13 +17,21 @@ import {
   GetLeaderboardResponse,
   GetOrganizationLeaderboardQuery,
   GetOrganizationLeaderboardResponse,
+  GetQuoteLeaderboardQuery,
+  GetQuoteLeaderboardRankQuery,
+  GetQuoteLeaderboardRankResponse,
+  GetQuoteLeaderboardResponse,
+  QuoteLeaderboardQuery,
   GetWeeklyXpLeaderboardQuery,
   GetWeeklyXpLeaderboardRankQuery,
   GetWeeklyXpLeaderboardRankResponse,
   GetWeeklyXpLeaderboardResponse,
 } from "@monkeytype/contracts/leaderboards";
 import { Configuration } from "@monkeytype/schemas/configuration";
-import { isAllTimeLeaderboardLanguage } from "@monkeytype/schemas/leaderboards";
+import {
+  isAllTimeLeaderboardLanguage,
+  isQuoteLeaderboardLanguage,
+} from "@monkeytype/schemas/leaderboards";
 import {
   getCurrentDayTimestamp,
   getCurrentWeekTimestamp,
@@ -120,6 +129,62 @@ export async function getOrganizationLeaderboard(
   const entries = await LeaderboardsDAL.getOrganizations(mode, mode2, language);
 
   return new MonkeyResponse("Organization leaderboard retrieved", entries);
+}
+
+export async function getQuoteLeaderboard(
+  req: MonkeyRequest<GetQuoteLeaderboardQuery>,
+): Promise<GetQuoteLeaderboardResponse> {
+  const { page, pageSize } = req.query;
+
+  const entries = await getQuoteLeaderboardEntries(req);
+
+  return new MonkeyResponse("Quote leaderboard retrieved", {
+    count: entries.length,
+    entries: entries.slice(page * pageSize, (page + 1) * pageSize),
+    pageSize,
+  });
+}
+
+export async function getQuoteLeaderboardRank(
+  req: MonkeyRequest<GetQuoteLeaderboardRankQuery>,
+): Promise<GetQuoteLeaderboardRankResponse> {
+  const { uid } = req.ctx.decodedToken;
+
+  const entries = await getQuoteLeaderboardEntries(req);
+
+  return new MonkeyResponse(
+    "Rank retrieved",
+    entries.find((it) => it.uid === uid) ?? null,
+  );
+}
+
+async function getQuoteLeaderboardEntries(
+  req: MonkeyRequest<QuoteLeaderboardQuery>,
+): ReturnType<typeof QuoteLeaderboardsDAL.get> {
+  const { language, quoteId, friendsOnly, organization } = req.query;
+  const { uid } = req.ctx.decodedToken;
+
+  if (!isQuoteLeaderboardLanguage(language)) {
+    throw new MonkeyError(
+      404,
+      "There is no quote leaderboard for this language",
+    );
+  }
+
+  // organization and friends filters don't combine, organization wins
+  const friendUids =
+    organization === undefined
+      ? await getFriendsUids(
+          uid,
+          friendsOnly === true,
+          req.ctx.configuration.connections,
+        )
+      : undefined;
+
+  return QuoteLeaderboardsDAL.get(language, quoteId, {
+    uids: friendUids !== undefined ? [...friendUids, uid] : undefined,
+    organization,
+  });
 }
 
 function assertAllTimeLeaderboardExists(

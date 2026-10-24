@@ -3,9 +3,19 @@ import {
   GetLeaderboardRankQuery,
   GetOrganizationLeaderboardQuery,
 } from "@monkeytype/contracts/leaderboards";
+import { Language } from "@monkeytype/schemas/languages";
+import { QuoteData } from "@monkeytype/schemas/quotes";
 import { queryOptions } from "@tanstack/solid-query";
 import Ape from "../ape";
 import { pageSize, Selection, setPage } from "../states/leaderboard-selection";
+import { cachedFetchJson } from "../utils/json-data";
+
+/** quote id of a quote leaderboard selection, undefined for the overall one */
+export function getQuoteId(selection: Selection): number | undefined {
+  return selection.mode2 === undefined || selection.mode2 === "all"
+    ? undefined
+    : parseInt(selection.mode2);
+}
 
 const queryKeys = {
   root: (options: Selection & { userSpecific?: true }) => [
@@ -53,6 +63,15 @@ export const getLeaderboardQueryOptions = (
           query: {
             ...baseQuery,
             weeksBefore: options.previous ? 1 : undefined,
+          },
+        });
+      } else if (options.type === "quotes") {
+        request = Ape.leaderboards.getQuotes({
+          query: {
+            ...baseQuery,
+            language: options.language,
+            quoteId: getQuoteId(options),
+            organization: options.organization,
           },
         });
       } else {
@@ -114,6 +133,15 @@ export const getRankQueryOptions = (options: Selection) =>
             weeksBefore: options.previous ? 1 : undefined,
           },
         });
+      } else if (options.type === "quotes") {
+        request = Ape.leaderboards.getQuotesRank({
+          query: {
+            language: options.language,
+            quoteId: getQuoteId(options),
+            friendsOnly: options.friendsOnly ? true : undefined,
+            organization: options.organization,
+          },
+        });
       } else {
         const baseQuery: GetLeaderboardRankQuery = {
           mode: options.mode,
@@ -167,4 +195,15 @@ export const getOrganizationLeaderboardQueryOptions = (
       return response.body.data;
     },
     staleTime: 1000 * 60 * 5,
+  });
+
+export const getLeaderboardQuotesQueryOptions = (
+  language: Language,
+  // oxlint-disable-next-line typescript/explicit-function-return-type
+) =>
+  queryOptions({
+    queryKey: ["leaderboard", "quotes", language],
+    queryFn: async () =>
+      (await cachedFetchJson<QuoteData>(`quotes/${language}.json`)).quotes,
+    staleTime: Infinity,
   });

@@ -34,6 +34,8 @@ export function NextUpdate(props: {
       const secondsToNextUpdate = 60 - now.getSeconds();
       const totalSeconds = minutesToNextUpdate * 60 + secondsToNextUpdate;
       return `Next update in: ${secondsToString(totalSeconds, true)}`;
+    } else if (props.type === "quotes") {
+      return "Updates every minute";
     } else if (props.type === "weekly") {
       const nextWeekTimestamp = endOfWeek(new UTCDateMini(), {
         weekStartsOn: 1,

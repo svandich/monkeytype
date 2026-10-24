@@ -1,5 +1,8 @@
 import { LanguageSchema } from "@monkeytype/schemas/languages";
-import { ALL_TIME_LEADERBOARD_LANGUAGES } from "@monkeytype/schemas/leaderboards";
+import {
+  ALL_TIME_LEADERBOARD_LANGUAGES,
+  QUOTE_LEADERBOARD_LANGUAGES,
+} from "@monkeytype/schemas/leaderboards";
 import { ModeSchema } from "@monkeytype/schemas/shared";
 import { Accessor, createEffect, createSignal, Setter } from "solid-js";
 import { z } from "zod";
@@ -22,13 +25,14 @@ const XpSelection = z.object({
   organization: z.never().optional(),
 });
 const SpeedSelection = z.object({
-  type: z.enum(["daily", "allTime", "universities"]),
+  type: z.enum(["daily", "allTime", "universities", "quotes"]),
   friendsOnly: z.boolean(),
   previous: z.boolean(),
   mode: ModeSchema,
+  /** on quote leaderboards the quote id, or "all" for the overall one */
   mode2: z.string(),
   language: LanguageSchema,
-  /** organization (university) short name, all-time leaderboards only */
+  /** organization (university) short name, all-time and quote leaderboards only */
   organization: z.string().optional(),
 });
 
@@ -37,7 +41,7 @@ export type Selection = z.infer<typeof SelectionSchema>;
 
 export const LeaderboardUrlParamsSchema = z
   .object({
-    type: z.enum(["allTime", "daily", "weekly", "universities"]),
+    type: z.enum(["allTime", "daily", "weekly", "universities", "quotes"]),
     mode: ModeSchema.optional(),
     mode2: z.string().optional(),
     language: LanguageSchema.optional(),
@@ -84,6 +88,12 @@ export function readLeaderboardGetParameters(
 
   if (params.type === "weekly") {
     newSelection.previous = params.lastWeek ?? false;
+  } else if (params.type === "quotes") {
+    newSelection.mode = "quote";
+    newSelection.mode2 = params.mode2 ?? "all";
+    newSelection.language = params.language ?? QUOTE_LEADERBOARD_LANGUAGES[0];
+    newSelection.previous = false;
+    newSelection.organization = params.organization;
   } else {
     newSelection.mode = params.mode ?? "time";
     newSelection.mode2 = params.mode2 ?? "15";

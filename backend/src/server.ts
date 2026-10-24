@@ -15,6 +15,7 @@ import workers from "./workers";
 import Logger from "./utils/logger";
 import { isAuthConfigured } from "./utils/auth";
 import { createIndicies as leaderboardDbSetup } from "./dal/leaderboards";
+import { createIndicies as quoteLeaderboardDbSetup } from "./dal/quote-leaderboards";
 import { createIndicies as blocklistDbSetup } from "./dal/blocklist";
 import { createIndicies as connectionsDbSetup } from "./dal/connections";
 import { getErrorMessage } from "./utils/error";
@@ -72,6 +73,9 @@ async function bootServer(port: number): Promise<Server> {
 
     Logger.info("Setting up leaderboard indicies...");
     await leaderboardDbSetup();
+
+    Logger.info("Setting up quote leaderboard indicies...");
+    await quoteLeaderboardDbSetup();
 
     Logger.info("Setting up blocklist indicies...");
     await blocklistDbSetup();

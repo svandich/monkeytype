@@ -1,6 +1,11 @@
 import { ValidModeRule } from "@monkeytype/schemas/configuration";
 import { Language } from "@monkeytype/schemas/languages";
-import { ALL_TIME_LEADERBOARD_LANGUAGES } from "@monkeytype/schemas/leaderboards";
+import {
+  ALL_TIME_LEADERBOARD_LANGUAGES,
+  isQuoteLeaderboardLanguage,
+  QUOTE_LEADERBOARD_LANGUAGES,
+} from "@monkeytype/schemas/leaderboards";
+import { QuoteData } from "@monkeytype/schemas/quotes";
 import { Mode } from "@monkeytype/schemas/shared";
 import { Accessor, For, JSXElement, Show } from "solid-js";
 
@@ -8,6 +13,7 @@ import { isAuthenticated } from "../../../states/core";
 import { Selection } from "../../../states/leaderboard-selection";
 import { FaSolidIcon } from "../../../types/font-awesome";
 import { Button } from "../../common/Button";
+import SlimSelect from "../../ui/SlimSelect";
 
 type GroupItem<T> = { id: T; text: string; icon: FaSolidIcon };
 
@@ -24,6 +30,8 @@ export function Sidebar(props: {
   connectionsEnabled: boolean;
   /** organizations (short names) to offer as a filter */
   organizations: string[];
+  /** quotes of the selected quote leaderboard language */
+  quotes: QuoteData["quotes"];
 }): JSXElement {
   const updateSelection = (patch: Partial<Selection>) => {
     props.onSelect(
@@ -59,14 +67,28 @@ export function Sidebar(props: {
     });
   };
 
+  const quoteOptions = () => [
+    { value: "all", text: "all quotes (average)" },
+    ...props.quotes.map((quote) => ({
+      value: `${quote.id}`,
+      text: `#${quote.id} ${quote.source}`,
+    })),
+  ];
+
   const languageButtons = () =>
     props.selection().type === "weekly"
       ? []
-      : getLanguageButtons(
-          getValidLeaderboards(props.validModeRules)[props.selection().type],
-          props.selection().mode,
-          props.selection().mode2,
-        );
+      : props.selection().type === "quotes"
+        ? QUOTE_LEADERBOARD_LANGUAGES.map((language) => ({
+            id: language as Language,
+            text: language,
+            icon: "fa-globe" as const,
+          }))
+        : getLanguageButtons(
+            getValidLeaderboards(props.validModeRules)[props.selection().type],
+            props.selection().mode,
+            props.selection().mode2,
+          );
 
   return (
     <>
@@ -80,6 +102,7 @@ export function Sidebar(props: {
             icon: "fa-globe-americas",
           },
           { id: "universities", text: "universities", icon: "fa-university" },
+          { id: "quotes", text: "quotes", icon: "fa-quote-left" },
           { id: "weekly", text: "weekly xp", icon: "fa-calendar-day" },
           { id: "daily", text: "daily", icon: "fa-sun" },
         ]}
@@ -101,7 +124,28 @@ export function Sidebar(props: {
         />
       </Show>
 
-      <Show when={props.selection().type !== "weekly"}>
+      {/* wait for the quotes, the select would fall back to "all" otherwise */}
+      <Show
+        when={props.selection().type === "quotes" && props.quotes.length > 0}
+      >
+        <div class="mb-4 rounded-xl bg-sub-alt p-4">
+          <SlimSelect
+            options={quoteOptions()}
+            selected={props.selection().mode2}
+            onChange={(mode2) => {
+              if (mode2 !== undefined && mode2 !== props.selection().mode2) {
+                updateSelection({ mode2 });
+              }
+            }}
+          />
+        </div>
+      </Show>
+      <Show
+        when={
+          props.selection().type !== "weekly" &&
+          props.selection().type !== "quotes"
+        }
+      >
         <Group
           selected={{
             mode: props.selection().mode,
@@ -123,7 +167,9 @@ export function Sidebar(props: {
       </Show>
       <Show
         when={
-          props.selection().type === "allTime" && props.organizations.length > 0
+          (props.selection().type === "allTime" ||
+            props.selection().type === "quotes") &&
+          props.organizations.length > 0
         }
       >
         <Group<string | undefined>
@@ -183,6 +229,19 @@ function normalizeSelection(
       mode2: undefined,
       language: undefined,
       organization: undefined,
+      previous: false,
+    };
+  }
+  if (draft.type === "quotes") {
+    return {
+      ...draft,
+      mode: "quote",
+      mode2: draft.mode === "quote" ? draft.mode2 : "all",
+      language:
+        draft.language !== undefined &&
+        isQuoteLeaderboardLanguage(draft.language)
+          ? draft.language
+          : QUOTE_LEADERBOARD_LANGUAGES[0],
       previous: false,
     };
   }
@@ -288,6 +347,8 @@ function getValidLeaderboards(
   return {
     allTime,
     universities: allTime,
+    // quote leaderboards are not picked by mode, see normalizeSelection
+    quotes: {},
     weekly: {},
     daily: dailyRules.reduce<
       Partial<Record<Mode, Record<string /*mode2*/, Language[]>>>

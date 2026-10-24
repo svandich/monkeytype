@@ -17,6 +17,14 @@ export default s.router(leaderboardsContract, {
     handler: async (r) =>
       callController(LeaderboardController.getOrganizationLeaderboard)(r),
   },
+  getQuotes: {
+    handler: async (r) =>
+      callController(LeaderboardController.getQuoteLeaderboard)(r),
+  },
+  getQuotesRank: {
+    handler: async (r) =>
+      callController(LeaderboardController.getQuoteLeaderboardRank)(r),
+  },
   getDaily: {
     handler: async (r) =>
       callController(LeaderboardController.getDailyLeaderboard)(r),

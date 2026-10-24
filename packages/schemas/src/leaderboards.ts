@@ -16,6 +16,21 @@ export function isAllTimeLeaderboardLanguage(language: string): boolean {
   );
 }
 
+/**
+ * Languages with a quote leaderboard. The first one is the default selection on
+ * the leaderboard page.
+ */
+export const QUOTE_LEADERBOARD_LANGUAGES = [
+  "ariasctl",
+] as const satisfies Language[];
+
+export function isQuoteLeaderboardLanguage(language: string): boolean {
+  return (QUOTE_LEADERBOARD_LANGUAGES as readonly string[]).includes(language);
+}
+
+/** how many different quotes a user needs to type to be on the overall quote leaderboard */
+export const QUOTE_LEADERBOARD_MIN_QUOTES = 5;
+
 const FriendsRankSchema = z
   .number()
   .nonnegative()
@@ -44,6 +59,18 @@ export const LeaderboardEntrySchema = z.object({
     .describe("organization (university) short name"),
 });
 export type LeaderboardEntry = z.infer<typeof LeaderboardEntrySchema>;
+
+export const QuoteLeaderboardEntrySchema = LeaderboardEntrySchema.extend({
+  quotes: z
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .describe(
+      "number of different quotes the averages are taken over, overall leaderboard only",
+    ),
+});
+export type QuoteLeaderboardEntry = z.infer<typeof QuoteLeaderboardEntrySchema>;
 
 /** how many of an organization's best typists make up its score, like an ICPC team */
 export const ORGANIZATION_TEAM_SIZE = 3;

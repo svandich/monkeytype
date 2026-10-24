@@ -1,5 +1,5 @@
 import {
-  LeaderboardEntry,
+  QuoteLeaderboardEntry,
   XpLeaderboardEntry,
 } from "@monkeytype/schemas/leaderboards";
 import { createColumnHelper } from "@tanstack/solid-table";
@@ -22,7 +22,7 @@ import { ProgcompProfileLink } from "../../common/ProgcompProfileLink";
 import { User } from "../../common/User";
 import { DataTable, DataTableColumnDef } from "../../ui/table/DataTable";
 
-type SpeedEntry = LeaderboardEntry;
+type SpeedEntry = QuoteLeaderboardEntry;
 type XpEntry = XpLeaderboardEntry;
 export type TableEntry = SpeedEntry | XpEntry;
 
@@ -33,6 +33,8 @@ export function Table(
     friendsOnly: boolean;
     /** organization filter, ranks within it are in friendsRank */
     organization?: string;
+    /** show how many quotes the averages are over (overall quote leaderboard) */
+    showQuotes?: boolean;
     hideHeader?: true;
   } & (
     | {
@@ -74,6 +76,7 @@ export function Table(
     return getSpeedColumns({
       friendsOnly: props.friendsOnly,
       organization: props.organization,
+      showQuotes: props.showQuotes ?? false,
       format: getFormatting(),
       userOverride: props.userOverride,
       addHeader: props.userOverride !== undefined && bp().xl,
@@ -118,7 +121,7 @@ export function Table(
       <DataTable
         {...commonProps()}
         columns={speedColumns()}
-        data={props.entries as LeaderboardEntry[]}
+        data={props.entries as SpeedEntry[]}
         noDataRow={{
           content: <NoEntriesFound />,
         }}
@@ -276,12 +279,14 @@ function defineResponsivePair<T>() {
 function getSpeedColumns({
   friendsOnly,
   organization,
+  showQuotes,
   format,
   userOverride,
   addHeader,
 }: {
   friendsOnly: boolean;
   organization?: string;
+  showQuotes: boolean;
   format: Formatting;
   userOverride?: Accessor<JSXElement>;
   addHeader?: boolean;
@@ -326,6 +331,26 @@ function getSpeedColumns({
       addHeader,
       mergedMeta: { breakpoint: "xs" },
     }),
+    ...(showQuotes
+      ? [
+          defineColumn("quotes", {
+            header: "quotes",
+            cell: (info) =>
+              wrapWithHeader({
+                value: `${info.getValue() ?? ""}`,
+                header: "quotes",
+                enabled: addHeader,
+              }),
+            meta: {
+              align: "right",
+              headerMeta: {
+                "aria-label": "different quotes typed",
+                "data-balloon-pos": "down",
+              },
+            },
+          }),
+        ]
+      : []),
     defineColumn("timestamp", {
       header: "date",
       cell: (info) =>

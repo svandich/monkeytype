@@ -1,4 +1,6 @@
 import { UTCDateMini } from "@date-fns/utc/date/mini";
+import { QUOTE_LEADERBOARD_MIN_QUOTES } from "@monkeytype/schemas/leaderboards";
+import { QuoteData } from "@monkeytype/schemas/quotes";
 import {
   endOfDay,
   endOfWeek,
@@ -19,11 +21,14 @@ import { H2 } from "../../common/Headers";
 export function Title(props: {
   selection: Selection;
   onPreviousSelect: () => void;
+  /** the selected quote, on single quote leaderboards */
+  quote?: QuoteData["quotes"][number];
 }): JSXElement {
   const title = createMemo(() => {
     const type = {
       allTime: "All-time",
       universities: "University",
+      quotes: "Quote",
       weekly: "Weekly XP",
       daily: "Daily",
     }[props.selection.type];
@@ -36,10 +41,16 @@ export function Title(props: {
 
     const language = capitalizeFirstLetter(props.selection.language ?? "");
 
-    const mode =
+    let mode =
       props.selection.type !== "weekly"
         ? ` ${capitalizeFirstLetter(props.selection.mode ?? "")} ${props.selection.mode2}`
         : "";
+    if (props.selection.type === "quotes") {
+      mode =
+        props.selection.mode2 === "all"
+          ? " Overall"
+          : ` #${props.selection.mode2} ${props.quote?.source ?? ""}`;
+    }
     return `${type} ${language} ${mode} ${organization}${friend}Leaderboard`;
   });
 
@@ -108,6 +119,23 @@ export function Title(props: {
             }}
           />
         </div>
+      </Show>
+      <Show when={props.selection.type === "quotes"}>
+        <Show
+          when={props.quote}
+          fallback={
+            <div class="text-sub">
+              Average of the best result on each quote typed, at least{" "}
+              {QUOTE_LEADERBOARD_MIN_QUOTES} different quotes required.
+            </div>
+          }
+        >
+          {(quote) => (
+            <pre class="mt-2 max-h-48 overflow-auto rounded bg-sub-alt p-4 text-sm [tab-size:4] text-sub">
+              {quote().text}
+            </pre>
+          )}
+        </Show>
       </Show>
     </div>
   );

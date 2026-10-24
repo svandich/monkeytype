@@ -15,6 +15,10 @@ export function UserRank(props: {
   data?: LeaderboardEntry | XpLeaderboardEntry | null;
   minWpm?: number;
   friendsOnly: boolean;
+  /** show how many quotes the averages are over (overall quote leaderboard) */
+  showQuotes?: boolean;
+  /** shown when not on the leaderboard for no other reason */
+  notQualifiedMessage?: string;
   total: number | undefined;
   memoryDifference: number | undefined;
   isLbOptOut: boolean;
@@ -77,7 +81,7 @@ export function UserRank(props: {
           when={props.data !== null}
           fallback={
             <div class="grid w-full place-items-center p-4 text-center text-sub">
-              <Switch fallback="Not qualified">
+              <Switch fallback={props.notQualifiedMessage ?? "Not qualified"}>
                 <Match when={props.isLbOptOut}>
                   <div>You have opted out of the leaderboards.</div>
                 </Match>
@@ -114,6 +118,7 @@ export function UserRank(props: {
             type={props.type}
             entries={[props.data as TableEntry]}
             friendsOnly={props.friendsOnly}
+            showQuotes={props.showQuotes}
             userOverride={userOverride}
             hideHeader={true}
           />
