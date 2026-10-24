@@ -722,58 +722,46 @@
       "id": 119
     },
     {
-      "text": "== Permutations\n=== Cycles\nLet $g_S (n)$ be the number of $n$-permutations whose cycle lengths all belong to the set $S$. Then\n$ sum_(n=0)^oo g_S (n) (x^n)/(n!) = exp(sum_(n in S) (x^n)/n) $\n\n=== Derangements\nPermutations of a set such that none of the elements appear in their original position.\n$ D(n) = (n-1)(D(n-1)+D(n-2)) = n D(n-1)+(-1)^n = lr(floor.l (n!)/e ceil.r) $\n\n=== Burnside's lemma\nGiven a group $G$ of symmetries and a set $X$, the number of elements of $X$ _up to symmetry_ equals\n$ 1/abs(G) sum_(g in G) abs(X^g), $\nwhere $X^g$ are the elements fixed by $g$ ($g.x = x$).\n\nIf $f(n)$ counts \"configurations\" (of some sort) of length $n$, we can ignore rotational symmetry using $G = ZZ_n$ to get\n$ g(n) = 1/n sum_(k=0)^(n-1) f(gcd(n, k)) = 1/n sum_(k divides n) f(k) phi.alt(n\\/k). $\n\n== Partitions and subsets\n=== Partition function\nNumber of ways of writing $n$ as a sum of positive integers, disregarding the order of the summands.\n$ p(0) = 1, p(n) = sum_(k in ZZ without {0}) (-1)^(k+1) p(n - k(3k-1)\\/2) $\n$ p(n) tilde.op 0.145\\/n dot exp(2.56 sqrt(n)) $\n\n=== Lucas' Theorem\nLet $n,m$ be non-negative integers and $p$ a prime. Write $n=n_k p^k+...+n_1 p+n_0$ and $m=m_k p^k+...+m_1 p+m_0$. Then $binom(n, m) equiv product_(i=0)^k binom(n_i, m_i) quad (mod p)$.\n\n== General purpose numbers\n=== Bernoulli numbers\nEGF of Bernoulli numbers is $B(t)=t/(e^t-1)$ (FFT-able).\n$B[0,dots] = [1, -1/2, 1/6, 0, -1/30, 0, 1/42, dots]$\n\nSums of powers:\n$ sum_(i=1)^n n^m = 1/(m+1) sum_(k=0)^m binom(m+1, k) B_k dot (n+1)^(m+1-k) $\n\nEuler-Maclaurin formula for infinite sums:\n$ sum_(i=m)^oo f(i) = integral_m^oo f(x) dif x - sum_(k=1)^oo (B_k)/(k!) f^((k-1))(m) $\n$ approx integral_m^oo f(x) dif x + (f(m))/2 - (f'(m))/12 + (f'''(m))/720 + O(f^((5))(m)) $\n\n=== Stirling numbers of the first kind\nNumber of permutations on $n$ items with $k$ cycles.\n$ &c(n,k) = c(n-1,k-1) + (n-1) c(n-1,k), c(0,0) = 1 \\\n\t&sum_(k=0)^n c(n,k)x^k = x(x+1) dots (x+n-1) $\n$c(8,k) = 8, 0, 5040, 13068, 13132, 6769, 1960, 322, 28, 1$ \\\n$c(n,2) = 0, 0, 1, 3, 11, 50, 274, 1764, 13068, 109584, dots$\n\n=== Eulerian numbers\nNumber of permutations $pi in S_n$ in which exactly $k$ elements are greater than the previous element. $k$ $j$:s s.t. $pi(j)>pi(j+1)$, $k+1$ $j$:s s.t. $pi(j)>=j$, $k$ $j$:s s.t. $pi(j)>j$.\n$ E(n,k) = (n-k)E(n-1,k-1) + (k+1)E(n-1,k) $\n$ E(n,0) = E(n,n-1) = 1 $\n$ E(n,k) = sum_(j=0)^k (-1)^j binom(n+1, j)(k+1-j)^n $\n\n=== Stirling numbers of the second kind\nPartitions of $n$ distinct elements into exactly $k$ groups.\n$ S(n,k) = S(n-1,k-1) + k S(n-1,k) $\n$ S(n,1) = S(n,n) = 1 $\n$ S(n,k) = 1/(k!) sum_(j=0)^k (-1)^(k-j) binom(k, j) j^n $\n\n=== Bell numbers\nTotal number of partitions of $n$ distinct elements. $B(n) =$\n$1, 1, 2, 5, 15, 52, 203, 877, 4140, 21147, dots$. For $p$ prime,\n$ B(p^m+n) equiv m B(n)+B(n+1) quad (mod p) $\n\n=== Labeled unrooted trees\n\\# on $n$ vertices: $n^(n-2)$ \\\n\\# on $k$ existing trees of size $n_i$: $n_1 n_2 dots.c n_k n^(k-2)$ \\\n\\# with degrees $d_i$: $(n-2)! \\/ ((d_1-1)! dots.c (d_n-1)!)$\n\n=== Catalan numbers\n$ C_n=1/(n+1) binom(2n, n)= binom(2n, n)- binom(2n, n+1) = ((2n)!)/((n+1)!n!) $\n$ C_0=1, C_(n+1) = (2(2n+1))/(n+2)C_n, C_(n+1)=sum C_i C_(n-i) $\n$C_n = 1, 1, 2, 5, 14, 42, 132, 429, 1430, 4862, 16796, 58786, dots$\n- sub-diagonal monotone paths in an $n times n$ grid.\n- strings with $n$ pairs of parenthesis, correctly nested.\n- binary trees with with $n+1$ leaves (0 or 2 children).\n- ordered trees with $n+1$ vertices.\n- ways a convex polygon with $n+2$ sides can be cut into triangles by connecting vertices with straight lines.\n- permutations of $[n]$ with no 3-term increasing subseq.",
-      "source": "Combinatorial",
-      "length": 3637,
-      "id": 120
-    },
-    {
       "text": "template <class F, class G, class T>\nvoid rec(int from, int to, F& f, G& g, int& i, T& p, T q) {\n\tif (p == q) return;\n\tif (from == to) {\n\t\tg(i, to, p);\n\t\ti = to; p = q;\n\t} else {\n\t\tint mid = (from + to) >> 1;\n\t\trec(from, mid, f, g, i, p, f(mid));\n\t\trec(mid+1, to, f, g, i, p, q);\n\t}\n}\ntemplate <class F, class G>\nvoid constantIntervals(int from, int to, F f, G g) {\n\tif (to <= from) return;\n\tint i = from; auto p = f(i), q = f(to-1);\n\trec(from, to-1, f, g, i, p, q);\n\tg(i, to, q);\n}",
       "source": "Constant Intervals",
       "length": 482,
-      "id": 121
+      "id": 120
     },
     {
       "text": "struct DP {\n\tint lo(int ind) { return 0; }\n\tint hi(int ind) { return ind; }\n\tll f(int ind, int k) { return dp[ind][k]; }\n\tvoid store(int ind, int k, ll v) { res[ind] = pii{k, v}; }\n\tvoid rec(int L, int R, int LO, int HI) {\n\t\tif (L >= R) return;\n\t\tint mid = (L + R) >> 1;\n\t\tpair<ll, int> best(LLONG_MAX, LO);\n\t\trep(k, max(LO,lo(mid)), min(HI,hi(mid)))\n\t\t\tbest = min(best, make_pair(f(mid, k), k));\n\t\tstore(mid, best.second, best.first);\n\t\trec(L, mid, LO, best.second+1);\n\t\trec(mid+1, R, best.second, HI);\n\t}\n\tvoid solve(int L, int R) { rec(L, R, INT_MIN, INT_MAX); }\n};",
       "source": "Divide and Conquer DP",
       "length": 568,
-      "id": 122
+      "id": 121
     },
     {
       "text": "int knapsack(vi w, int t) {\n\tint a = 0, b = 0, x;\n\twhile (b < sz(w) && a + w[b] <= t) a += w[b++];\n\tif (b == sz(w)) return a;\n\tint m = *max_element(all(w));\n\tvi u, v(2*m, -1);\n\tv[a+m-t] = b;\n\trep(i,b,sz(w)) {\n\t\tu = v;\n\t\trep(x,0,m) v[x+w[i]] = max(v[x+w[i]], u[x]);\n\t\tfor (x = 2*m; --x > m;) rep(j, max(0,u[x]), v[x])\n\t\t\tv[x-w[j]] = max(v[x-w[j]], j);\n\t}\n\tfor (a = t; v[a+m-t] < 0; a--) ;\n\treturn a;\n}",
       "source": "Fast Knapsack",
       "length": 400,
-      "id": 123
+      "id": 122
     },
     {
       "text": "set<pii>::iterator addInterval(set<pii>& is, int L, int R) {\n\tif (L == R) return is.end();\n\tauto it = is.lower_bound({L, R}), before = it;\n\twhile (it != is.end() && (*it)[0] <= R) {\n\t\tR = max(R, (*it)[1]);\n\t\tbefore = it = is.erase(it);\n\t}\n\tif (it != is.begin() && (*--it)[1] >= L) {\n\t\tL = min(L, (*it)[0]);\n\t\tR = max(R, (*it)[1]);\n\t\tis.erase(it);\n\t}\n\treturn is.insert(before, {L,R});\n}\nvoid removeInterval(set<pii>& is, int L, int R) {\n\tif (L == R) return;\n\tauto it = addInterval(is, L, R);\n\tauto r2 = (*it)[1];\n\tif ((*it)[0] == L) is.erase(it);\n\telse (int&)(*it)[1] = L;\n\tif (R != r2) is.insert({R, r2});\n}",
       "source": "Interval Container",
       "length": 607,
-      "id": 124
+      "id": 123
     },
     {
       "text": "template <class T>\nvi cover(pair<T, T> G, vec<pair<T, T>> I) {\n\tvi S(sz(I)), R;\n\tiota(all(S), 0);\n\tsort(all(S), [&](int a, int b) { return I[a] < I[b]; });\n\tT cur = G.first;\n\tint at = 0;\n\twhile (cur < G.second) {\n\t\tpair<T, int> mx = make_pair(cur, -1);\n\t\twhile (at < sz(I) && I[S[at]].first <= cur) {\n\t\t\tmx = max(mx, make_pair(I[S[at]].second, S[at]));\n\t\t\tat++;\n\t\t}\n\t\tif (mx.second == -1) return {};\n\t\tcur = mx.first;\n\t\tR.push_back(mx.second);\n\t}\n\treturn R;\n}",
       "source": "Interval Cover",
       "length": 459,
-      "id": 125
+      "id": 124
     },
     {
       "text": "template <class I>\nvi lis(const vec<I>& S) {\n\tif (S.empty()) return {};\n\tvi prev(sz(S));\n\tusing p = pair<I, int>;\n\tvec<p> res;\n\trep(i,0,sz(S)) {\n\t\tauto it = lower_bound(all(res), p{S[i], 0});\n\t\tif (it == res.end()) res.emplace_back(), it = res.end()-1;\n\t\t*it = {S[i], i};\n\t\tprev[i] = it == res.begin() ? 0 : (it-1)->second;\n\t}\n\tint L = sz(res), cur = res.back().second;\n\tvi ans(L);\n\twhile (L--) ans[L] = cur, cur = prev[cur];\n\treturn ans;\n}",
       "source": "Longest Increasing Subsequence",
       "length": 440,
-      "id": 126
-    },
-    {
-      "text": "== Pythagorean Triples\nThe Pythagorean triples are uniquely generated by\n$ a=k dot (m^2-n^2), quad b=k dot (2m n), quad c=k dot (m^2+n^2), $\nwith $m > n > 0$, $k > 0$, $m perp n$, and either $m$ or $n$ even.\n\n== Primes\n$p=962592769$ is such that $2^21 divides p-1$, which may be useful. For hashing\nuse 970592641 (31-bit number), 31443539979727 (45-bit), 3006703054056749\n(52-bit). There are 78498 primes less than $1 thin 000 thin 000$.\n\nPrimitive roots exist modulo any prime power $p^a$, except for $p = 2, a > 2$, and there are $phi.alt(phi.alt(p^a))$ many.\nFor $p = 2, a > 2$, the group $ZZ_(2^a)^times$ is instead isomorphic to $ZZ_2 times ZZ_(2^(a-2))$.\n\n== Estimates\n$sum_(d divides n) d = O(n log log n)$.\n\nThe number of divisors of $n$ is at most around 100 for $n < 5\"e\"4$, 500 for $n < 1\"e\"7$, 2000 for $n < 1\"e\"10$, 200000 for $n < 1\"e\"19$.\n\n== Mobius Function\n$ mu(n) = cases(\n\t0 quad& n \"is not square free\",\n\t1 quad& n \"has even number of prime factors\",\n\t-1 quad& n \"has odd number of prime factors\",\n) $\nMobius Inversion:\n$ g(n) = sum_(d divides n) f(d) arrow.l.r.double f(n) = sum_(d divides n) mu(d)g(n\\/d) $\nOther useful formulas/forms:\n\n$sum_(d divides n) mu(d) = [n = 1]$ (very useful)\n\n$g(n) = sum_(n divides d) f(d) arrow.l.r.double f(n) = sum_(n divides d) mu(d\\/n)g(d)$\n\n$g(n) = sum_(1 <= m <= n) f(floor(n/m)) arrow.l.r.double f(n) = sum_(1 <= m <= n) mu(m)g(floor(n/m))$",
-      "source": "Number Theory",
-      "length": 1399,
-      "id": 127
+      "id": 125
     },
     {
       "text": "template <class F>\nint ternSearch(int a, int b, F f) {\n\tassert(a <= b);\n\twhile (b - a >= 5) {\n\t\tint mid = (a + b) / 2;\n\t\tif (f(mid) < f(mid+1)) a = mid;\n\t\telse b = mid+1;\n\t}\n\trep(i,a+1,b+1) if (f(a) < f(i)) a = i;\n\treturn a;\n}",
       "source": "Ternary Search",
       "length": 226,
-      "id": 128
+      "id": 126
     }
   ]
 }
