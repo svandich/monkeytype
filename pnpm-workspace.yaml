@@ -7,7 +7,7 @@ packages:
 allowBuilds:
   "@fortawesome/fontawesome-free": true
   "@parcel/watcher": true
-  "@sentry/cli": true
+  "@sentry/cli": set this to true or false
   bcrypt: true
   core-js: true
   cpu-features: true

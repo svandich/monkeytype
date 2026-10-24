@@ -16,7 +16,6 @@ import {
   reauthenticateWithPassword,
   signInWithNicknameAndPassword,
 } from "./progcomp-auth";
-import * as Sentry from "./sentry";
 import { getUserId, isAuthenticated, setUserId } from "./states/core";
 import {
   showErrorNotification,
@@ -85,8 +84,6 @@ async function getDataAndInit(): Promise<boolean> {
       );
     }
 
-    void Sentry.setUser(snapshot.uid, snapshot.name);
-
     await updateConfigFromServer();
     return true;
   } catch (error) {
@@ -140,10 +137,6 @@ export async function onAuthStateChanged(
       setUserId(null);
       DB.setSnapshot(undefined);
     }
-  }
-
-  if (!authInitialisedAndConnected || !user) {
-    void Sentry.clearUser();
   }
 
   authEvent.dispatch({

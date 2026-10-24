@@ -27,7 +27,6 @@ export type ModalId =
   | "PbTables"
   | "PractiseWords"
   | "MiniResultChartModal"
-  | "Cookies"
   | "AddPresetModal"
   | "EditPresetModal"
   | "EditProfile"

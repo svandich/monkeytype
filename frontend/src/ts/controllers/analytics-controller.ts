@@ -7,7 +7,3 @@ export async function log(
 ): Promise<void> {
   //
 }
-
-export function activateAnalytics(): void {
-  //
-}

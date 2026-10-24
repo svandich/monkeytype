@@ -3,7 +3,6 @@ import { JSXElement } from "solid-js";
 import { ViewApeKeyModal } from "./account-settings/ViewApeKeyModal";
 import { CommandlineModal } from "./CommandlineModal";
 import { ContactModal } from "./ContactModal";
-import { CookiesModal } from "./CookiesModal";
 import { CustomTestDurationModal } from "./CustomTestDurationModal";
 import { CustomTextModal } from "./CustomTextModal";
 import { CustomWordAmountModal } from "./CustomWordAmountModal";
@@ -43,7 +42,6 @@ export function Modals(): JSXElement {
       <PractiseWordsModal />
       <ShareTestSettings />
       <MobileTestConfigModal />
-      <CookiesModal />
       <AddPresetModal />
       <EditPresetModal />
       <ViewApeKeyModal />

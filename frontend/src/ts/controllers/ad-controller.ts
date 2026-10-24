@@ -17,10 +17,6 @@ export function updateFooterAndVerticalAds(_visible: boolean): void {
   //
 }
 
-export function showConsentPopup(): void {
-  //
-}
-
 export function destroyResult(): void {
   //
 }

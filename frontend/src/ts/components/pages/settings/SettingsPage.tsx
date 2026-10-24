@@ -187,24 +187,6 @@ export function SettingsPage(): JSXElement {
           <Section title="danger zone">
             <ImportExport />
             <SearchableSetting
-              key="cookies"
-              title="update cookie preferences"
-              description="If you changed your mind about which cookies you consent to, you can change your preferences here."
-              fa={{
-                icon: "fa-cookie-bite",
-              }}
-              inputs={
-                <Button
-                  class="w-full"
-                  onClick={() => {
-                    showModal("Cookies");
-                  }}
-                >
-                  open
-                </Button>
-              }
-            />
-            <SearchableSetting
               key="theRest"
               title="the rest"
               description="Niche settings that only affect minor functionality. Most people will never need to touch these."

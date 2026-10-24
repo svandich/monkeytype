@@ -54,8 +54,7 @@
         "BACKEND_URL",
         "PROGCOMP_API_URL",
         "PROGCOMP_SITE_URL",
-        "REQUIRE_LOGIN",
-        "SENTRY"
+        "REQUIRE_LOGIN"
       ],
       "outputs": ["dist/**"]
     },

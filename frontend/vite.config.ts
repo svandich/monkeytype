@@ -22,7 +22,6 @@ import { injectPreload } from "./vite-plugins/inject-preload";
 import Inspect from "vite-plugin-inspect";
 import { ViteMinifyPlugin } from "vite-plugin-minify";
 import { VitePWA } from "vite-plugin-pwa";
-import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { KnownFontName } from "@monkeytype/schemas/fonts";
 import solidPlugin from "vite-plugin-solid";
 import devtools from "solid-devtools/vite";
@@ -88,11 +87,9 @@ function sassList(values) {
 function getPlugins({
   isDevelopment,
   env,
-  useSentry,
 }: {
   isDevelopment: boolean;
   env: Record<string, string>;
-  useSentry: boolean;
 }): PluginOption[] {
   const clientVersion = getClientVersion(isDevelopment);
 
@@ -176,17 +173,6 @@ function getPlugins({
         ],
       },
     }),
-    useSentry
-      ? sentryVitePlugin({
-          authToken: env["SENTRY_AUTH_TOKEN"],
-          org: "monkeytype",
-          project: "frontend",
-          release: {
-            name: clientVersion,
-          },
-          applicationKey: "monkeytype-frontend",
-        })
-      : null,
     injectPreload(),
     minifyJson(),
   ];
@@ -240,10 +226,6 @@ function getBuildOptions({
         entryFileNames: "js/[name].[hash].js",
         codeSplitting: {
           groups: [
-            {
-              name: "vendor-sentry",
-              test: /node_modules\/@sentry\//,
-            },
             {
               name: "vendor-tanstack",
               test: /node_modules\/@tanstack\//,
@@ -321,18 +303,11 @@ function getCssOptions({
 
 export default defineConfig(({ mode }): UserConfig => {
   const env = loadEnv(mode, process.cwd(), "");
-  const useSentry = env["SENTRY"] !== undefined;
   const isDevelopment = mode !== "production";
 
-  if (!isDevelopment) {
-    if (useSentry && env["SENTRY_AUTH_TOKEN"] === undefined) {
-      throw new Error(`${mode}: SENTRY_AUTH_TOKEN is not defined`);
-    }
-  }
-
   return {
-    plugins: getPlugins({ isDevelopment, useSentry: useSentry, env }),
-    build: getBuildOptions({ enableSourceMaps: useSentry }),
+    plugins: getPlugins({ isDevelopment, env }),
+    build: getBuildOptions({ enableSourceMaps: false }),
     css: getCssOptions({ isDevelopment }),
     server: {
       open: env["SERVER_OPEN"] !== "false",

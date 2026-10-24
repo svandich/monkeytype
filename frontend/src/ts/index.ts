@@ -22,8 +22,6 @@ import "./legacy-states/connection";
 import { addToGlobal } from "./utils/misc";
 import * as Focus from "./test/focus";
 import { fetchLatestVersion } from "./utils/version";
-import * as Sentry from "./sentry";
-import * as Cookies from "./cookies";
 import "./elements/psa";
 import "./controllers/url-handler";
 import { applyEngineSettings } from "./anim";
@@ -34,7 +32,6 @@ import { setVersion } from "./states/core";
 import { loadFromLocalStorage } from "./config/lifecycle";
 
 import "./input/hotkeys";
-import { showModal } from "./states/modals";
 import { getLastEventLog } from "./states/test";
 import { buildEventLog } from "./test/events/data";
 
@@ -68,15 +65,7 @@ void fetchLatestVersion().then((data) => {
 });
 
 Focus.set(true, true);
-const accepted = Cookies.getAcceptedCookies();
-if (accepted === null) {
-  showModal("Cookies");
-}
-void init(onAuthStateChanged).then(() => {
-  if (accepted !== null) {
-    Cookies.activateWhatsAccepted();
-  }
-});
+void init(onAuthStateChanged);
 
 addToGlobal({
   snapshot: DB.getSnapshot,
@@ -89,7 +78,6 @@ addToGlobal({
   toggleSmoothedBurst,
   egVideoListener: egVideoListener,
   toggleDebugLogs: Logger.toggleDebugLogs,
-  toggleSentryDebug: Sentry.toggleDebug,
   qs: qs,
   qsa: qsa,
   qsr: qsr,
