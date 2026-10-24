@@ -18,6 +18,10 @@
           "maxStreakDays": 10,
           "maxStreakMultiplier": 0.5
         }
+      },
+      "inbox": {
+        "enabled": true,
+        "maxMail": 100
       }
     },
     "dailyLeaderboards": {
