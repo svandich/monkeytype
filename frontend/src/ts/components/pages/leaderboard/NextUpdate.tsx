@@ -29,12 +29,11 @@ export function NextUpdate(props: {
     if (props.type === "daily") {
       const diff = differenceInSeconds(endOfDay(new UTCDateMini()), now);
       return `Next reset in: ${secondsToString(diff, true)}`;
-    } else if (props.type === "allTime" || props.type === "universities") {
-      const minutesToNextUpdate = 14 - (now.getMinutes() % 15);
-      const secondsToNextUpdate = 60 - now.getSeconds();
-      const totalSeconds = minutesToNextUpdate * 60 + secondsToNextUpdate;
-      return `Next update in: ${secondsToString(totalSeconds, true)}`;
-    } else if (props.type === "quotes") {
+    } else if (
+      props.type === "allTime" ||
+      props.type === "universities" ||
+      props.type === "quotes"
+    ) {
       return "Updates every minute";
     } else if (props.type === "weekly") {
       const nextWeekTimestamp = endOfWeek(new UTCDateMini(), {

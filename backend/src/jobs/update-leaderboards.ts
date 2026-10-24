@@ -5,7 +5,7 @@ import { getCachedConfiguration } from "../init/configuration";
 import { ALL_TIME_LEADERBOARD_LANGUAGES } from "@monkeytype/schemas/leaderboards";
 import { Language } from "@monkeytype/schemas/languages";
 
-const CRON_SCHEDULE = "30 14/15 * * * *";
+const CRON_SCHEDULE = "30 * * * * *";
 const RECENT_AGE_MINUTES = 10;
 const RECENT_AGE_MILLISECONDS = RECENT_AGE_MINUTES * 60 * 1000;
 
@@ -60,15 +60,23 @@ async function updateLeaderboardAndNotifyChanges(
   }
 }
 
+let isUpdating = false;
+
 async function updateLeaderboards(): Promise<void> {
   const { maintenance } = await getCachedConfiguration();
-  if (maintenance) {
+  if (maintenance || isUpdating) {
     return;
   }
 
-  for (const language of ALL_TIME_LEADERBOARD_LANGUAGES) {
-    await updateLeaderboardAndNotifyChanges("60", language);
-    await updateLeaderboardAndNotifyChanges("15", language);
+  //skip this tick if the previous run is still going
+  isUpdating = true;
+  try {
+    for (const language of ALL_TIME_LEADERBOARD_LANGUAGES) {
+      await updateLeaderboardAndNotifyChanges("60", language);
+      await updateLeaderboardAndNotifyChanges("15", language);
+    }
+  } finally {
+    isUpdating = false;
   }
 }
 
