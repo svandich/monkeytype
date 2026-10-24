@@ -29,6 +29,8 @@ export type DecodedToken = {
   nickname?: string;
   /** ProgCompJOliva organization short name, only set for Bearer tokens */
   org?: string;
+  /** has the Admin role on ProgCompJOliva, only set for Bearer tokens */
+  isAdmin?: boolean;
 };
 
 const DEFAULT_OPTIONS: RequestAuthenticationOptions = {
@@ -193,6 +195,7 @@ async function authenticateWithBearerToken(
     email: decodedToken.email,
     nickname: decodedToken.nickname,
     org: decodedToken.org,
+    isAdmin: decodedToken.isAdmin,
   };
 }
 

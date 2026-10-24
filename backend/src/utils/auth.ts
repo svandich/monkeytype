@@ -19,6 +19,8 @@ export type DecodedIdToken = {
   nickname: string;
   /** organization (university) short name, empty when the user has none */
   org: string;
+  /** has the Admin role on ProgCompJOliva */
+  isAdmin: boolean;
   iat: number;
   exp: number;
 };
@@ -29,6 +31,12 @@ type Jwk = crypto.JsonWebKey & { kid?: string; alg?: string; use?: string };
 
 const DEFAULT_ISSUER = "ProgCompJOlivaApi";
 const DEFAULT_AUDIENCE = "ProgCompJOlivaClient";
+const ADMIN_ROLE = "Admin";
+// the API writes ClaimTypes.Role unmapped, accept the short name as well
+const ROLE_CLAIMS = [
+  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
+  "role",
+];
 const CLOCK_SKEW_SECONDS = 60;
 // refetch the key set periodically so a rotated-out key stops being accepted
 const JWKS_MAX_AGE_MS = 60 * 60 * 1000;
@@ -211,12 +219,15 @@ async function decodeAndVerify(idToken: string): Promise<DecodedIdToken> {
   const email = payload["email"];
   const nickname = payload["unique_name"];
   const org = payload["org"];
+  // a single role is a string, several are an array
+  const roles = ROLE_CLAIMS.flatMap((claim) => [payload[claim] ?? []].flat());
 
   return {
     uid,
     email: typeof email === "string" ? email.toLowerCase() : "",
     nickname: typeof nickname === "string" ? nickname : "",
     org: typeof org === "string" ? org : "",
+    isAdmin: roles.includes(ADMIN_ROLE),
     iat: Number(payload["iat"] ?? nbf),
     exp,
   };

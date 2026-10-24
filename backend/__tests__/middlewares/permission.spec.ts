@@ -119,6 +119,39 @@ describe("permission middleware", () => {
       );
       expect(isAdminMock).toHaveBeenCalledWith(uid);
     });
+    it("should pass with the ProgCompJOliva admin role", async () => {
+      //GIVEN
+      const req = givenRequest(requireAdminPermission, {
+        uid,
+        type: "Bearer",
+        isAdmin: true,
+      });
+
+      //WHEN
+      await handler(req, res, next);
+
+      //THEN
+      expect(next).toHaveBeenCalledWith();
+      expect(isAdminMock).not.toHaveBeenCalled();
+    });
+    it("should ignore the admin flag on ape keys", async () => {
+      //GIVEN
+      const req = givenRequest(requireAdminPermission, {
+        uid,
+        type: "ApeKey",
+        isAdmin: true,
+      });
+
+      //WHEN
+      await handler(req, res, next);
+
+      //THEN
+      expect(next).toHaveBeenCalledWith(
+        expect.toMatchMonkeyError(
+          new MonkeyError(403, "You don't have permission to do this."),
+        ),
+      );
+    });
   });
   describe("user checks", () => {
     it("should fetch user only once", async () => {

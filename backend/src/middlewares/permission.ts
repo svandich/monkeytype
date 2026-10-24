@@ -151,6 +151,10 @@ async function checkIfUserIsAdmin(
 ): Promise<boolean> {
   if (decodedToken === undefined) return false;
   if (options?.isPublicOnDev && isDevEnvironment()) return true;
+  // ProgCompJOliva admins, the admin-uids collection still works for others
+  if (decodedToken.type === "Bearer" && decodedToken.isAdmin === true) {
+    return true;
+  }
 
   return await isAdmin(decodedToken.uid);
 }
