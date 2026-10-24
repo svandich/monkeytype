@@ -22,6 +22,14 @@ export async function getReports(reportIds: string[]): Promise<DBReport[]> {
   return await db.collection<DBReport>(COLLECTION_NAME).find(query).toArray();
 }
 
+export async function getAllReports(): Promise<DBReport[]> {
+  return await db
+    .collection<DBReport>(COLLECTION_NAME)
+    .find()
+    .sort({ timestamp: -1 })
+    .toArray();
+}
+
 export async function deleteReports(reportIds: string[]): Promise<void> {
   const query = { id: { $in: reportIds } };
   await db.collection(COLLECTION_NAME).deleteMany(query);

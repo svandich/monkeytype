@@ -174,6 +174,20 @@ const routes: Route[] = [
       await PageController.change("friends", options);
     },
   },
+  {
+    path: "/admin",
+    load: async (_params, options) => {
+      if (!isAuthAvailable()) {
+        await navigate("/", options);
+        return;
+      }
+      if (!isAuthenticated()) {
+        await navigateToLogin(options);
+        return;
+      }
+      await PageController.change("admin", options);
+    },
+  },
 ];
 
 export async function navigate(

@@ -30,6 +30,9 @@
         "expirationTimeInDays": 15,
         "xpRewardBrackets": []
       }
+    },
+    "admin": {
+      "endpointsEnabled": true
     }
   }
 }

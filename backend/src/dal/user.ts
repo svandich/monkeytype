@@ -299,6 +299,40 @@ export async function findByName(name: string): Promise<DBUser | undefined> {
   return found ?? undefined;
 }
 
+/**
+ * Finds a user by uid, monkeytype name or ProgCompJOliva nickname (both case
+ * insensitive), in that order.
+ */
+export async function findForAdmin(
+  search: string,
+): Promise<DBUser | undefined> {
+  const byUid = await getUsersCollection().findOne({ uid: search });
+  if (byUid !== null) return byUid;
+
+  const byName = await findByName(search);
+  if (byName !== undefined) return byName;
+
+  const byNickname = await getUsersCollection().findOne(
+    { "progcomp.nickname": search },
+    { collation: { locale: "en", strength: 1 } },
+  );
+  return byNickname ?? undefined;
+}
+
+export async function getNamesByUids(
+  uids: string[],
+): Promise<Map<string, string>> {
+  const users = await getUsersCollection()
+    .find(
+      { uid: { $in: uids } },
+      { projection: { uid: 1, name: 1, progcomp: 1 } },
+    )
+    .toArray();
+  return new Map(
+    users.map((user) => [user.uid, user.progcomp?.nickname ?? user.name]),
+  );
+}
+
 export async function isNameAvailable(
   name: string,
   uid: string,

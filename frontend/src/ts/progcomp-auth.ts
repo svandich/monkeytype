@@ -18,6 +18,8 @@ export type AuthUser = {
   nickname: string;
   email: string;
   emailVerified: boolean;
+  /** has the Admin role on ProgCompJOliva, the backend checks it again */
+  isAdmin: boolean;
 };
 
 type StoredSession = {
@@ -32,6 +34,9 @@ type LoginResponse = StoredSession & { roles: string[] };
 type ReadyCallback = (success: boolean, user: AuthUser | null) => Promise<void>;
 
 const STORAGE_KEY = "progcompAuth";
+// the API writes ClaimTypes.Role unmapped
+const ROLE_CLAIM =
+  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
 // refresh the access token a bit before it actually expires
 const ACCESS_TOKEN_REFRESH_MARGIN_MS = 60 * 1000;
 
@@ -239,6 +244,9 @@ function userFromToken(accessToken: string): AuthUser {
     email: claim("email"),
     // email ownership is handled by ProgCompJOliva
     emailVerified: true,
+    isAdmin: [ROLE_CLAIM, "role"]
+      .flatMap((name) => [payload[name] ?? []].flat())
+      .includes("Admin"),
   };
 }
 

@@ -2,6 +2,8 @@ import { JSXElement, Show } from "solid-js";
 
 import { get as getServerConfiguration } from "../../../ape/server-configuration";
 import { signOut } from "../../../auth";
+import { getAuthenticatedUser } from "../../../progcomp-auth";
+import { isAuthenticated } from "../../../states/core";
 import { getSnapshot } from "../../../states/snapshot";
 import { Button } from "../../common/Button";
 import { NotificationBubble } from "../../common/NotificationBubble";
@@ -72,6 +74,18 @@ export function AccountMenu(props: Props): JSXElement {
           href="/account-settings"
           router-link
         />
+        <Show when={isAuthenticated() && getAuthenticatedUser()?.isAdmin}>
+          <Button
+            text="Admin"
+            class={buttonClass}
+            fa={{
+              icon: "fa-user-shield",
+              fixedWidth: true,
+            }}
+            href="/admin"
+            router-link
+          />
+        </Show>
         <Button
           text="Sign out"
           class={buttonClass}

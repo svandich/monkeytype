@@ -147,6 +147,7 @@ const pages = {
       readAccountSettingsGetParameters(options.urlParams);
     },
   }),
+  admin: solidPage("admin"),
   leaderboards: solidPage("leaderboards", {
     urlParamsSchema: LeaderboardUrlParamsSchema,
     loadingOptions: {

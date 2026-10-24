@@ -67,6 +67,51 @@ export type SendForgotPasswordEmailRequest = z.infer<
   typeof SendForgotPasswordEmailRequestSchema
 >;
 
+export const AdminReportSchema = z.object({
+  id: z.string(),
+  type: z.enum(["quote", "user"]),
+  timestamp: z.number().int().nonnegative(),
+  uid: z.string(),
+  reporterName: z.string().optional(),
+  contentId: z.string(),
+  /** name of the reported user, only for user reports */
+  contentName: z.string().optional(),
+  reason: z.string(),
+  comment: z.string(),
+});
+export type AdminReport = z.infer<typeof AdminReportSchema>;
+
+export const GetReportsResponseSchema = responseWithData(
+  z.array(AdminReportSchema),
+);
+export type GetReportsResponse = z.infer<typeof GetReportsResponseSchema>;
+
+export const FindUserQuerySchema = z
+  .object({
+    search: z.string().trim().min(1).max(100),
+  })
+  .strict();
+export type FindUserQuery = z.infer<typeof FindUserQuerySchema>;
+
+export const AdminUserSchema = z.object({
+  uid: z.string(),
+  name: z.string(),
+  nickname: z.string().optional(),
+  organization: z.string().optional(),
+  email: z.string(),
+  addedAt: z.number().int().nonnegative(),
+  banned: z.boolean(),
+  completedTests: z.number().int().nonnegative().optional(),
+  timeTyping: z.number().nonnegative().optional(),
+  streakHourOffset: z.number().optional(),
+});
+export type AdminUser = z.infer<typeof AdminUserSchema>;
+
+export const FindUserResponseSchema = responseWithData(
+  AdminUserSchema.nullable(),
+);
+export type FindUserResponse = z.infer<typeof FindUserResponseSchema>;
+
 const c = initContract();
 export const adminContract = c.router(
   {
@@ -77,6 +122,17 @@ export const adminContract = c.router(
       path: "",
       responses: {
         200: MonkeyResponseSchema,
+      },
+    },
+    findUser: {
+      summary: "find user",
+      description:
+        "Find a user by uid, monkeytype name or ProgCompJOliva nickname.",
+      method: "GET",
+      path: "/user",
+      query: FindUserQuerySchema,
+      responses: {
+        200: FindUserResponseSchema,
       },
     },
     toggleBan: {
@@ -108,6 +164,15 @@ export const adminContract = c.router(
       body: DeleteUserRequestSchema,
       responses: {
         200: MonkeyResponseSchema,
+      },
+    },
+    getReports: {
+      summary: "get reports",
+      description: "Get all open quote and user reports, newest first",
+      method: "GET",
+      path: "/report",
+      responses: {
+        200: GetReportsResponseSchema,
       },
     },
     acceptReports: {

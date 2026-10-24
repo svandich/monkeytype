@@ -8,6 +8,9 @@ import {
   AcceptReportsRequest,
   ClearStreakHourOffsetRequest,
   DeleteUserRequest,
+  FindUserQuery,
+  FindUserResponse,
+  GetReportsResponse,
   RejectReportsRequest,
   SendForgotPasswordEmailRequest,
   ToggleBanRequest,
@@ -23,6 +26,26 @@ import { deleteUserAccount } from "../../services/user-deletion";
 
 export async function test(_req: MonkeyRequest): Promise<MonkeyResponse> {
   return new MonkeyResponse("OK", null);
+}
+
+export async function findUser(
+  req: MonkeyRequest<FindUserQuery>,
+): Promise<FindUserResponse> {
+  const user = await UserDAL.findForAdmin(req.query.search);
+  if (user === undefined) return new MonkeyResponse("User not found", null);
+
+  return new MonkeyResponse("User retrieved", {
+    uid: user.uid,
+    name: user.name,
+    nickname: user.progcomp?.nickname,
+    organization: user.progcomp?.organization,
+    email: user.email,
+    addedAt: user.addedAt,
+    banned: user.banned === true,
+    completedTests: user.completedTests,
+    timeTyping: user.timeTyping,
+    streakHourOffset: user.streak?.hourOffset,
+  });
 }
 
 export async function toggleBan(
@@ -94,6 +117,35 @@ export async function deleteUser(
   );
 
   return new MonkeyResponse("User deleted", null);
+}
+
+export async function getReports(
+  _req: MonkeyRequest,
+): Promise<GetReportsResponse> {
+  const reports = await ReportDAL.getAllReports();
+  const names = await UserDAL.getNamesByUids([
+    ...new Set(
+      reports.flatMap((it) =>
+        it.type === "user" ? [it.uid, it.contentId] : [it.uid],
+      ),
+    ),
+  ]);
+
+  return new MonkeyResponse(
+    "Reports retrieved",
+    reports.map((report) => ({
+      id: report.id,
+      type: report.type,
+      timestamp: report.timestamp,
+      uid: report.uid,
+      reporterName: names.get(report.uid),
+      contentId: report.contentId,
+      contentName:
+        report.type === "user" ? names.get(report.contentId) : undefined,
+      reason: report.reason,
+      comment: report.comment,
+    })),
+  );
 }
 
 export async function acceptReports(

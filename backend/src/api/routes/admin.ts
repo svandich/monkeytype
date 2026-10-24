@@ -10,6 +10,9 @@ export default s.router(adminContract, {
   test: {
     handler: async (r) => callController(AdminController.test)(r),
   },
+  findUser: {
+    handler: async (r) => callController(AdminController.findUser)(r),
+  },
   toggleBan: {
     handler: async (r) => callController(AdminController.toggleBan)(r),
   },
@@ -19,6 +22,9 @@ export default s.router(adminContract, {
   },
   deleteUser: {
     handler: async (r) => callController(AdminController.deleteUser)(r),
+  },
+  getReports: {
+    handler: async (r) => callController(AdminController.getReports)(r),
   },
   acceptReports: {
     handler: async (r) => callController(AdminController.acceptReports)(r),

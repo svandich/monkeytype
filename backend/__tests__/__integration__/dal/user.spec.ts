@@ -1138,6 +1138,61 @@ describe("UserDal", () => {
     });
   });
 
+  describe("findForAdmin", () => {
+    it("should find by uid, name or ProgCompJOliva nickname", async () => {
+      //GIVEN
+      const name = `user${new ObjectId().toHexString()}`;
+      const nickname = `nick${new ObjectId().toHexString()}`;
+      const user = await UserTestData.createUser({
+        name,
+        progcomp: { nickname },
+      });
+      await UserTestData.createUser();
+
+      //WHEN / THEN
+      await expect(UserDAL.findForAdmin(user.uid)).resolves.toMatchObject({
+        uid: user.uid,
+      });
+      await expect(
+        UserDAL.findForAdmin(name.toUpperCase()),
+      ).resolves.toMatchObject({ uid: user.uid });
+      await expect(
+        UserDAL.findForAdmin(nickname.toUpperCase()),
+      ).resolves.toMatchObject({ uid: user.uid });
+    });
+    it("should return undefined for unknown users", async () => {
+      await expect(
+        UserDAL.findForAdmin(`unknown${new ObjectId().toHexString()}`),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe("getNamesByUids", () => {
+    it("should prefer the ProgCompJOliva nickname", async () => {
+      //GIVEN
+      const name = `user${new ObjectId().toHexString()}`;
+      const withNickname = await UserTestData.createUser({
+        progcomp: { nickname: "Nick" },
+      });
+      const withoutNickname = await UserTestData.createUser({ name });
+
+      //WHEN
+      const names = await UserDAL.getNamesByUids([
+        withNickname.uid,
+        withoutNickname.uid,
+        "unknown",
+      ]);
+
+      //THEN
+      expect(names).toEqual(
+        new Map([
+          [withNickname.uid, "Nick"],
+          [withoutNickname.uid, name],
+        ]),
+      );
+    });
+  });
+
   describe("getUserByName", () => {
     it("should get with missing personalBests", async () => {
       //GIVEN

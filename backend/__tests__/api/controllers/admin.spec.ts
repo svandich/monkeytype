@@ -60,7 +60,177 @@ describe("AdminController", () => {
     it("should be rate limited", async () => {
       await expect(
         mockApp.get("/admin").set("Authorization", `Bearer ${uid}`),
-      ).toBeRateLimited({ max: 1, windowMs: 5000 });
+      ).toBeRateLimited({ max: 60, windowMs: 60000 });
+    });
+  });
+
+  describe("find user", () => {
+    const findForAdminMock = vi.spyOn(UserDal, "findForAdmin");
+
+    beforeEach(() => {
+      findForAdminMock.mockClear();
+    });
+
+    it("should find a user", async () => {
+      //GIVEN
+      findForAdminMock.mockResolvedValue({
+        uid: "abc",
+        name: "bob",
+        email: "bob@example.com",
+        addedAt: 1000,
+        banned: true,
+        completedTests: 5,
+        timeTyping: 60,
+        streak: { hourOffset: -3 },
+        progcomp: { nickname: "Bob", organization: "UCH" },
+      } as any);
+
+      //WHEN
+      const { body } = await mockApp
+        .get("/admin/user")
+        .query({ search: " Bob " })
+        .set("Authorization", `Bearer ${uid}`)
+        .expect(200);
+
+      //THEN
+      expect(body).toEqual({
+        message: "User retrieved",
+        data: {
+          uid: "abc",
+          name: "bob",
+          nickname: "Bob",
+          organization: "UCH",
+          email: "bob@example.com",
+          addedAt: 1000,
+          banned: true,
+          completedTests: 5,
+          timeTyping: 60,
+          streakHourOffset: -3,
+        },
+      });
+      expect(findForAdminMock).toHaveBeenCalledWith("Bob");
+    });
+    it("should return null if the user does not exist", async () => {
+      //GIVEN
+      findForAdminMock.mockResolvedValue(undefined);
+
+      //WHEN
+      const { body } = await mockApp
+        .get("/admin/user")
+        .query({ search: "nobody" })
+        .set("Authorization", `Bearer ${uid}`)
+        .expect(200);
+
+      //THEN
+      expect(body).toEqual({ message: "User not found", data: null });
+    });
+    it("should fail without search", async () => {
+      const { body } = await mockApp
+        .get("/admin/user")
+        .set("Authorization", `Bearer ${uid}`)
+        .expect(422);
+
+      expect(body.message).toEqual("Invalid query schema");
+    });
+    it("should fail if user is no admin", async () => {
+      await expectFailForNonAdmin(
+        mockApp
+          .get("/admin/user")
+          .query({ search: "bob" })
+          .set("Authorization", `Bearer ${uid}`),
+      );
+    });
+    it("should fail if admin endpoints are disabled", async () => {
+      await expectFailForDisabledEndpoint(
+        mockApp
+          .get("/admin/user")
+          .query({ search: "bob" })
+          .set("Authorization", `Bearer ${uid}`),
+      );
+    });
+  });
+
+  describe("get reports", () => {
+    const getAllReportsMock = vi.spyOn(ReportDal, "getAllReports");
+    const getNamesByUidsMock = vi.spyOn(UserDal, "getNamesByUids");
+
+    beforeEach(() => {
+      getAllReportsMock.mockClear();
+      getNamesByUidsMock.mockClear();
+    });
+
+    it("should return reports with user names", async () => {
+      //GIVEN
+      getAllReportsMock.mockResolvedValue([
+        {
+          _id: new ObjectId(),
+          id: "1",
+          type: "user",
+          timestamp: 2000,
+          uid: "reporter",
+          contentId: "reported",
+          reason: "Inappropriate name",
+          comment: "rude",
+        },
+        {
+          _id: new ObjectId(),
+          id: "2",
+          type: "quote",
+          timestamp: 1000,
+          uid: "reporter",
+          contentId: "english-42",
+          reason: "Grammatical error",
+          comment: "",
+        },
+      ]);
+      getNamesByUidsMock.mockResolvedValue(
+        new Map([
+          ["reporter", "Alice"],
+          ["reported", "Bob"],
+        ]),
+      );
+
+      //WHEN
+      const { body } = await mockApp
+        .get("/admin/report")
+        .set("Authorization", `Bearer ${uid}`)
+        .expect(200);
+
+      //THEN
+      expect(body.data).toEqual([
+        {
+          id: "1",
+          type: "user",
+          timestamp: 2000,
+          uid: "reporter",
+          reporterName: "Alice",
+          contentId: "reported",
+          contentName: "Bob",
+          reason: "Inappropriate name",
+          comment: "rude",
+        },
+        {
+          id: "2",
+          type: "quote",
+          timestamp: 1000,
+          uid: "reporter",
+          reporterName: "Alice",
+          contentId: "english-42",
+          reason: "Grammatical error",
+          comment: "",
+        },
+      ]);
+      expect(getNamesByUidsMock).toHaveBeenCalledWith(["reporter", "reported"]);
+    });
+    it("should fail if user is no admin", async () => {
+      await expectFailForNonAdmin(
+        mockApp.get("/admin/report").set("Authorization", `Bearer ${uid}`),
+      );
+    });
+    it("should fail if admin endpoints are disabled", async () => {
+      await expectFailForDisabledEndpoint(
+        mockApp.get("/admin/report").set("Authorization", `Bearer ${uid}`),
+      );
     });
   });
 
@@ -218,7 +388,7 @@ describe("AdminController", () => {
           .post("/admin/toggleBan")
           .send({ uid: victimUid })
           .set("Authorization", `Bearer ${uid}`),
-      ).toBeRateLimited({ max: 1, windowMs: 5000 });
+      ).toBeRateLimited({ max: 60, windowMs: 60000 });
     });
   });
 
@@ -307,7 +477,7 @@ describe("AdminController", () => {
           .post("/admin/clearStreakHourOffset")
           .send({ uid: victimUid })
           .set("Authorization", `Bearer ${uid}`),
-      ).toBeRateLimited({ max: 1, windowMs: 5000 });
+      ).toBeRateLimited({ max: 60, windowMs: 60000 });
     });
   });
 
@@ -423,7 +593,7 @@ describe("AdminController", () => {
           .post("/admin/report/accept")
           .send({ reports: [{ reportId: "1" }] })
           .set("Authorization", `Bearer ${uid}`),
-      ).toBeRateLimited({ max: 1, windowMs: 5000 });
+      ).toBeRateLimited({ max: 60, windowMs: 60000 });
     });
   });
   describe("reject reports", () => {
@@ -541,7 +711,7 @@ describe("AdminController", () => {
           .post("/admin/report/reject")
           .send({ reports: [{ reportId: "1" }] })
           .set("Authorization", `Bearer ${uid}`),
-      ).toBeRateLimited({ max: 1, windowMs: 5000 });
+      ).toBeRateLimited({ max: 60, windowMs: 60000 });
     });
   });
   describe("delete user", () => {
@@ -633,7 +803,7 @@ describe("AdminController", () => {
           .post("/admin/deleteUser")
           .send({ uid: new ObjectId().toHexString() })
           .set("Authorization", `Bearer ${uid}`),
-      ).toBeRateLimited({ max: 1, windowMs: 5000 });
+      ).toBeRateLimited({ max: 60, windowMs: 60000 });
     });
   });
 

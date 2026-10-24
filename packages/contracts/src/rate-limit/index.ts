@@ -12,9 +12,10 @@ export const limits = {
     max: 30,
   },
 
+  // shared by all admin and configuration endpoints, the admin page loads several at once
   adminLimit: {
-    window: 5000, // 5 seconds
-    max: 1,
+    window: "minute",
+    max: 60,
   },
 
   // Config Routing

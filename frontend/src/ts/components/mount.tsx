@@ -16,6 +16,7 @@ import { AboutPage } from "./pages/AboutPage";
 import { AccountSettingsPage } from "./pages/account-settings/AccountSettingsPage";
 import { AccountPage } from "./pages/account/AccountPage";
 import { MyProfile } from "./pages/account/MyProfile";
+import { AdminPage } from "./pages/admin/AdminPage";
 import { FriendsPage } from "./pages/connections/FriendsPage";
 import { LeaderboardPage } from "./pages/leaderboard/LeaderboardPage";
 import { LoadingPage } from "./pages/LoadingPage";
@@ -50,6 +51,7 @@ const components: Record<string, () => JSXElement> = {
   friendspage: () => <FriendsPage />,
   notfoundpage: () => <NotFoundPage />,
   accountsettingspage: () => <AccountSettingsPage />,
+  adminpage: () => <AdminPage />,
   bartimerprogress: () => <BarTimerProgress />,
 };
 
