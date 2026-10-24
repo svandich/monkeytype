@@ -2344,6 +2344,18 @@ export const themes: Record<ThemeName, Theme> = {
     colorfulError: "#b29a91",
     colorfulErrorExtra: "#b29a91",
   },
+  cobalt2: {
+    bg: "#193549",
+    caret: "#ffc600",
+    main: "#ffc600",
+    sub: "#0088ff",
+    subAlt: "#15232d",
+    text: "#ffffff",
+    error: "#ff628c",
+    errorExtra: "#ff0088",
+    colorfulError: "#ff628c",
+    colorfulErrorExtra: "#ff0088",
+  },
 };
 
 export type ThemeWithName = Theme & { name: ThemeName };
