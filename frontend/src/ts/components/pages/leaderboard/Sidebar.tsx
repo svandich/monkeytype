@@ -28,6 +28,8 @@ export function Sidebar(props: {
   onSelect: (selection: Selection) => void;
   validModeRules: ValidModeRule[];
   connectionsEnabled: boolean;
+  weeklyXpEnabled: boolean;
+  dailyEnabled: boolean;
   /** organizations (short names) to offer as a filter */
   organizations: string[];
   /** quotes of the selected quote leaderboard language */
@@ -95,17 +97,23 @@ export function Sidebar(props: {
       <Group
         selected={props.selection().type}
         onSelect={selectType}
-        items={[
-          {
-            id: "allTime",
-            text: "all-time",
-            icon: "fa-globe-americas",
-          },
-          { id: "universities", text: "universities", icon: "fa-university" },
-          { id: "quotes", text: "quotes", icon: "fa-quote-left" },
-          { id: "weekly", text: "weekly xp", icon: "fa-calendar-day" },
-          { id: "daily", text: "daily", icon: "fa-sun" },
-        ]}
+        items={(
+          [
+            {
+              id: "allTime",
+              text: "all-time",
+              icon: "fa-globe-americas",
+            },
+            { id: "universities", text: "universities", icon: "fa-university" },
+            { id: "quotes", text: "quotes", icon: "fa-quote-left" },
+            { id: "weekly", text: "weekly xp", icon: "fa-calendar-day" },
+            { id: "daily", text: "daily", icon: "fa-sun" },
+          ] as GroupItem<Selection["type"]>[]
+        ).filter(
+          (item) =>
+            (item.id !== "weekly" || props.weeklyXpEnabled) &&
+            (item.id !== "daily" || props.dailyEnabled),
+        )}
       />
       <Show
         when={

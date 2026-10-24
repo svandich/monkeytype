@@ -55,6 +55,38 @@ export function LeaderboardPage(): JSXElement {
 
   const [scrollToUser, setScrollToUser] = createSignal(false);
 
+  const serverConfigurationQuery = useQuery(() => ({
+    ...getServerConfigurationQueryOptions(),
+    enabled: isOpen(),
+  }));
+
+  //weekly and daily leaderboards can be disabled in the server configuration
+  const isTypeEnabled = (type: Selection["type"]): boolean => {
+    const config = serverConfigurationQuery.data;
+    if (type === "weekly") {
+      return config?.leaderboards.weeklyXp.enabled ?? false;
+    }
+    if (type === "daily") {
+      return config?.dailyLeaderboards.enabled ?? false;
+    }
+    return true;
+  };
+  const isSelectionEnabled = () => isTypeEnabled(getSelection().type);
+
+  //fall back to all-time if the selected leaderboard is disabled
+  createEffect(() => {
+    if (serverConfigurationQuery.isSuccess && !isSelectionEnabled()) {
+      onSelectionChange({
+        type: "allTime",
+        mode: "time",
+        mode2: "15",
+        language: ALL_TIME_LEADERBOARD_LANGUAGES[0],
+        friendsOnly: getSelection().friendsOnly,
+        previous: false,
+      });
+    }
+  });
+
   //invalidate cache for daily and weekly lb on close
   createEffectOn(isOpen, (open) => {
     if (!open) {
@@ -69,7 +101,7 @@ export function LeaderboardPage(): JSXElement {
 
   //prefetch next page
   createEffect(() => {
-    if (isOpen() && !isUniversities()) {
+    if (isOpen() && !isUniversities() && isSelectionEnabled()) {
       void queryClient.prefetchQuery(
         getLeaderboardQueryOptions({
           ...getSelection(),
@@ -113,12 +145,16 @@ export function LeaderboardPage(): JSXElement {
       ...getSelection(),
       page: getPage() ?? 0,
     }),
-    enabled: isOpen() && !isUniversities(),
+    enabled: isOpen() && !isUniversities() && isSelectionEnabled(),
   }));
 
   const rankQuery = useQuery(() => ({
     ...getRankQueryOptions(getSelection()),
-    enabled: isAuthenticated() && isOpen() && !isUniversities(),
+    enabled:
+      isAuthenticated() &&
+      isOpen() &&
+      !isUniversities() &&
+      isSelectionEnabled(),
   }));
 
   // universities of the selected all-time leaderboard, for the universities
@@ -161,11 +197,6 @@ export function LeaderboardPage(): JSXElement {
       ? quotesQuery.data?.find((it) => it.id === quoteId)
       : undefined;
   };
-
-  const serverConfigurationQuery = useQuery(() => ({
-    ...getServerConfigurationQueryOptions(),
-    enabled: isOpen(),
-  }));
 
   const onSelectionChange = (newSelection: Selection) => {
     setSelection(newSelection);
@@ -245,6 +276,8 @@ export function LeaderboardPage(): JSXElement {
                 connectionsEnabled={
                   serverConfigurationQueryData().connections.enabled
                 }
+                weeklyXpEnabled={isTypeEnabled("weekly")}
+                dailyEnabled={isTypeEnabled("daily")}
                 organizations={
                   organizationsQuery.data?.map((it) => it.organization) ?? []
                 }

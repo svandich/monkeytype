@@ -24,7 +24,12 @@
       "enabled": false
     },
     "leaderboards": {
-      "minTimeTyping": 0
+      "minTimeTyping": 0,
+      "weeklyXp": {
+        "enabled": true,
+        "expirationTimeInDays": 15,
+        "xpRewardBrackets": []
+      }
     }
   }
 }

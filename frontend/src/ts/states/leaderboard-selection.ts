@@ -105,7 +105,14 @@ export function readLeaderboardGetParameters(
       params.type === "allTime" ? params.organization : undefined;
   }
 
-  setSelection({ ...getSelection(), ...newSelection } as Selection);
+  //weekly selections must not carry over mode, mode2, language or organization
+  const { mode, mode2, language, organization, ...base } = getSelection();
+  const current =
+    params.type === "weekly"
+      ? base
+      : { ...base, mode, mode2, language, organization };
+
+  setSelection({ ...current, ...newSelection } as Selection);
 
   if (params.goToUserPage === true) {
     setGoToUserPage(true);
