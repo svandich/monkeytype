@@ -430,3 +430,84 @@ describe("onInsertText - delete on error", () => {
     expect(incorrect).toHaveLength(1);
   });
 });
+
+describe("onInsertText - optional spaces", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetTestEvents();
+    TestWords.reset();
+    mockState.activeWordIndex = 0;
+    mockState.correctShiftUsed = true;
+    setInput("");
+    replaceConfig({
+      mode: "quote",
+      language: "ariasctl",
+      deleteOnError: "off",
+      stopOnError: "off",
+      difficulty: "normal",
+      strictSpace: false,
+      oppositeShiftMode: "off",
+      keymapMode: "off",
+      blindMode: false,
+    });
+  });
+
+  async function typeAll(text: string): Promise<void> {
+    for (const char of text) await type(char);
+  }
+
+  /** The insert events only, as `[data, correct, automatic]` triples. */
+  function insertsForWord(
+    wordIndex: number,
+  ): [string, boolean, true | undefined][] {
+    return inputEventsForWord(wordIndex).flatMap((e) =>
+      "data" in e.data ? [[e.data.data, e.data.correct, e.data.automatic]] : [],
+    );
+  }
+
+  it("inserts a space the code doesn't need", async () => {
+    pushWords("a", "=", "b;");
+    await typeAll("a=b");
+
+    expect(mockState.activeWordIndex).toBe(2);
+    expect(getInput()).toBe("b");
+    expect(insertsForWord(0)).toEqual([
+      ["a", true, undefined],
+      [" ", true, true],
+    ]);
+  });
+
+  it("keeps a space the code needs", async () => {
+    pushWords("int", "x;");
+    await typeAll("intx");
+
+    expect(mockState.activeWordIndex).toBe(0);
+    expect(getInput()).toBe("intx");
+    expect(insertsForWord(0).at(-1)).toEqual(["x", false, undefined]);
+  });
+
+  it("keeps spaces in other languages", async () => {
+    replaceConfig({ language: "english" });
+    pushWords("a", "=", "b;");
+    await typeAll("a=");
+
+    expect(mockState.activeWordIndex).toBe(0);
+    expect(getInput()).toBe("a=");
+  });
+
+  it("only skips to the first char of the next word", async () => {
+    pushWords("a", "=", "b;");
+    await typeAll("a+");
+
+    expect(mockState.activeWordIndex).toBe(0);
+    expect(getInput()).toBe("a+");
+  });
+
+  it("does not skip a space before the word is typed", async () => {
+    pushWords("ab", "=", "b;");
+    await typeAll("a=");
+
+    expect(mockState.activeWordIndex).toBe(0);
+    expect(getInput()).toBe("a=");
+  });
+});

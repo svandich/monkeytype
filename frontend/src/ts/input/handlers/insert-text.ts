@@ -31,6 +31,7 @@ import { getCommitCharacterType, normalizeData } from "../helpers/util";
 import { areAllWordsGenerated } from "../../test/words-generator";
 import { getActiveWordIndex, isTestActive } from "../../states/test";
 import { DeleteInputType } from "../helpers/input-type";
+import { isSkippedOptionalSpace } from "../helpers/optional-spaces";
 
 const charOverrides = new Map<string, string>([
   ["…", "..."],
@@ -188,6 +189,17 @@ export async function onInsertText(options: OnInsertTextParams): Promise<void> {
         return;
       }
     }
+  }
+
+  // code languages - insert the space the code doesn't need, then the char
+  if (
+    automatic !== true &&
+    isSkippedOptionalSpace(options.data, getCurrentInput())
+  ) {
+    setInputElementValue(inputValue.slice(0, -options.data.length));
+    await emulateInsertText({ now, data: " ", automatic: true });
+    await emulateInsertText(options);
+    return;
   }
 
   // input and target word

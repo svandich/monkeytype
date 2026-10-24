@@ -13,6 +13,10 @@ import { shouldGoToNextWord } from "../helpers/validation";
 import { getCommitCharacterType, normalizeData } from "../helpers/util";
 import { getCurrentInput } from "../../test/events/data";
 import { isSpace } from "../../utils/strings";
+import {
+  isIgnoredExtraSpace,
+  isSkippedOptionalSpace,
+} from "../helpers/optional-spaces";
 
 /**
  * Handles logic before inserting text into the input element.
@@ -52,6 +56,11 @@ export function onBeforeInsertText(data: string): boolean {
     targetWord: currentWordTextWithCommit,
   });
 
+  //code languages - spaces the code doesn't need are ignored
+  if (isIgnoredExtraSpace(data, getCurrentInput())) {
+    return true;
+  }
+
   //prevent separator from being inserted if input is empty
   //some conditions may override this
   //the hard delete on error variants need the separator to reach onInsertText
@@ -86,8 +95,13 @@ export function onBeforeInsertText(data: string): boolean {
   const inputIsLongerThanOrEqualToWord =
     getCurrentInput().length >= currentWordTextDisplay.length;
 
+  //code languages - the first char of the next word, onInsertText inserts the
+  //skipped space before it
+  const skippedOptionalSpace = isSkippedOptionalSpace(data, getCurrentInput());
+
   if (
     !SlowTimer.get() && // don't do this check if slow timer is active
+    !skippedOptionalSpace &&
     dataIsNotFalsy &&
     !Config.blindMode &&
     !Config.hideExtraLetters &&
