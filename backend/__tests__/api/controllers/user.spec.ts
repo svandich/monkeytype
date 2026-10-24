@@ -2602,10 +2602,12 @@ describe("user controller test", () => {
             time: {
               "15": {
                 ariasctl: { count: 100, rank: 24 },
+                "handbook-usm": { count: 100, rank: 24 },
                 english: { count: 100, rank: 24 },
               },
               "60": {
                 ariasctl: { count: 100, rank: 24 },
+                "handbook-usm": { count: 100, rank: 24 },
                 english: { count: 100, rank: 24 },
               },
             },

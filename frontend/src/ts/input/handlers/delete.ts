@@ -3,6 +3,7 @@ import * as TestWords from "../../test/test-words";
 import { getInputElementValue, setInputElementValue } from "../input-element";
 
 import { Config } from "../../config/store";
+import { isCodeLanguage } from "../../constants/languages";
 import { goToPreviousWord } from "../helpers/word-navigation";
 import { DeleteInputType } from "../helpers/input-type";
 import { getCurrentInput, logTestEvent } from "../../test/events/data";
@@ -23,7 +24,7 @@ export function onDelete(inputType: DeleteInputType, now: number): void {
 
   //special check for code languages
   if (
-    (Config.language.startsWith("code") || Config.language === "ariasctl") &&
+    isCodeLanguage(Config.language) &&
     Config.codeUnindentOnBackspace &&
     inputBeforeDelete.length > 0 &&
     beforeDeleteOnlyTabs &&

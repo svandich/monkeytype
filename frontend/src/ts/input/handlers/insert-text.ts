@@ -14,6 +14,7 @@ import {
 import { removeLanguageSize } from "../../utils/strings";
 import * as TestLogic from "../../test/test-logic";
 import { Config } from "../../config/store";
+import { isCodeLanguage } from "../../constants/languages";
 import { flash } from "../../events/keymap";
 import * as CompositionState from "../../legacy-states/composition";
 import {
@@ -338,7 +339,7 @@ export async function onInsertText(options: OnInsertTextParams): Promise<void> {
 
   //code mode - auto insert tabs
   if (
-    (Config.language.startsWith("code") || Config.language === "ariasctl") &&
+    isCodeLanguage(Config.language) &&
     correct &&
     doesNextWordHaveTab &&
     isCurrentCharTab

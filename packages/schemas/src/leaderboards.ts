@@ -7,6 +7,7 @@ import { Language } from "./languages";
  */
 export const ALL_TIME_LEADERBOARD_LANGUAGES = [
   "ariasctl",
+  "handbook-usm",
   "english",
 ] as const satisfies Language[];
 
@@ -22,6 +23,7 @@ export function isAllTimeLeaderboardLanguage(language: string): boolean {
  */
 export const QUOTE_LEADERBOARD_LANGUAGES = [
   "ariasctl",
+  "handbook-usm",
 ] as const satisfies Language[];
 
 export function isQuoteLeaderboardLanguage(language: string): boolean {

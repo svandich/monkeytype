@@ -77,6 +77,12 @@ describe("optional spaces", () => {
       expect(isIgnoredExtraSpace(" ", "x")).toBe(false);
     });
 
+    it("ignores spaces in handbook-usm", () => {
+      replaceConfig({ language: "handbook-usm" });
+      setText("a=b;");
+      expect(isIgnoredExtraSpace(" ", "a")).toBe(true);
+    });
+
     it("keeps spaces in other languages", () => {
       replaceConfig({ language: "english" });
       setText("a=b;");

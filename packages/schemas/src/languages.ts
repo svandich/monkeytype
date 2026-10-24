@@ -29,6 +29,7 @@ export const LanguageSchema = z.enum(
     "code_java",
     "english_legal",
     "ariasctl",
+    "handbook-usm",
   ],
   {
     errorMap: customEnumErrorHandler("Must be a supported language"),

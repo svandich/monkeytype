@@ -242,6 +242,18 @@ describe("Loaderboard Controller", () => {
         { mode: "time", mode2: "60", language: "english", expectStatus: 200 },
         { mode: "time", mode2: "15", language: "ariasctl", expectStatus: 200 },
         { mode: "time", mode2: "60", language: "ariasctl", expectStatus: 200 },
+        {
+          mode: "time",
+          mode2: "15",
+          language: "handbook-usm",
+          expectStatus: 200,
+        },
+        {
+          mode: "time",
+          mode2: "60",
+          language: "handbook-usm",
+          expectStatus: 200,
+        },
         { mode: "time", mode2: "30", language: "english", expectStatus: 404 },
         { mode: "words", mode2: "15", language: "english", expectStatus: 404 },
         { mode: "time", mode2: "15", language: "spanish", expectStatus: 404 },
@@ -698,6 +710,20 @@ describe("Loaderboard Controller", () => {
         undefined,
         { uids: undefined, organization: "UCH" },
       );
+    });
+
+    it("should get for handbook-usm", async () => {
+      //WHEN
+      await mockApp
+        .get("/leaderboards/quotes")
+        .query({ language: "handbook-usm", quoteId: 3 })
+        .expect(200);
+
+      //THEN
+      expect(getQuoteLeaderboardMock).toHaveBeenCalledWith("handbook-usm", 3, {
+        uids: undefined,
+        organization: undefined,
+      });
     });
 
     it("fails for a language without quote leaderboard", async () => {

@@ -9,7 +9,7 @@ import { shouldGoToNextWord } from "./validation";
  * Languages made of C++ code. Spaces in them are only enforced where the code
  * needs them to compile, add new C++ languages here.
  */
-const CPP_LANGUAGES = new Set(["ariasctl", "code_c++"]);
+const CPP_LANGUAGES = new Set(["ariasctl", "handbook-usm", "code_c++"]);
 
 // how far to look for the start of the line, in words
 const MAX_LINE_WORDS = 200;

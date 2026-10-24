@@ -1,0 +1,989 @@
+{
+  "language": "handbook-usm",
+  "groups": [
+    [0, 100],
+    [101, 300],
+    [301, 600],
+    [601, 9999]
+  ],
+  "quotes": [
+    {
+      "text": "#include<bits/stdc++.h>\nusing namespace std;\nusing ll = long long;\nusing ld = long double;\nconst ll mod = 1e9 + 7;\nconst ll inf = 1e12;\nconst ld pi = acos(-1);\nint main() {\n\tios::sync_with_stdio(0); cin.tie(0);\n\tcout << fixed << setprecision(9);\n\treturn 0;\n}",
+      "source": "Template",
+      "length": 258,
+      "id": 1
+    },
+    {
+      "text": "template<class T>\nstruct rolling_hashing {\n\tint base, mod;\n\tvector<long long> p, H;\n\tint n;\n\trolling_hashing(const T &s, int b, int m): base(b), mod(m), n(s.size()) {\n\t\tp.assign(n+1, 1);\n\t\tH.assign(n+1, 0);\n\t\tfor (int i = 0; i < n; ++i) {\n\t\t\tH[i+1] = (H[i] * base + s[i]) % mod;\n\t\t\tp[i+1] = (p[i] * base) % mod;\n\t\t}\n\t}\n\tint get(int l, int r) {\n\t\tint res = (H[r+1] - H[l]*p[r-l+1]) % mod;\n\t\tif (res < 0) res += mod;\n\t\treturn res;\n\t}\n};",
+      "source": "Rolling Hashing",
+      "length": 434,
+      "id": 2
+    },
+    {
+      "text": "template<class T>\nstruct rolling_hashing {\n\tvector<ll> base, mod; int n, k;\n\tvector<vector<ll>> p, H;\n\trolling_hashing(T s, vector<ll> b, vector<ll> m): base(b), mod(m), n(s.size()), k(b.size()) {\n\t\tp.resize(k); H.resize(k);\n\t\tfor (int j = 0; j < k; j++) {\n\t\t\tp[j].assign(n + 1, 1);\n\t\t\tH[j].assign(n + 1, 0);\n\t\t\tfor (int i = 0; i < n; i++) {\n\t\t\t\tH[j][i + 1] = (H[j][i] * b[j] + s[i]) % mod[j];\n\t\t\t\tp[j][i + 1] = (p[j][i] * b[j]) % mod[j];\n\t\t\t}\n\t\t}\n\t}\n\tvector<ll> get(int l, int r) {\n\t\tvector<ll> res(k);\n\t\tfor (int j = 0; j < k; j++) {\n\t\t\tres[j] = (H[j][r + 1] - H[j][l] * p[j][r - l + 1] % mod[j] + mod[j]) % mod[j];\n\t\t}\n\t\treturn res;\n\t}\n};",
+      "source": "K Rolling Hashing",
+      "length": 641,
+      "id": 3
+    },
+    {
+      "text": "template<class T> struct KMP {\n\tT pattern; vector<int> lps;\n\tKMP(T &pat): pattern(pat) {\n\t\tlps.resize(pat.size(), 0);\n\t\tint len = 0, i = 1;\n\t\twhile (i < pattern.size()) {\n\t\t\tif (pattern[i] == pattern[len])\n\t\t\t\tlps[i++] = ++len;\n\t\t\telse {\n\t\t\t\tif (len != 0) len = lps[len - 1];\n\t\t\t\telse lps[i++] = 0;\n\t\t\t}\n\t\t}\n\t}\n\tvector<int> search(T &text) {\n\t\tvector<int> matches;\n\t\tint i = 0, j = 0;\n\t\twhile (i < text.size()) {\n\t\t\tif (pattern[j] == text[i]) {\n\t\t\t\ti++, j++;\n\t\t\t\tif (j == pattern.size()) {\n\t\t\t\t\tmatches.push_back(i - j);\n\t\t\t\t\tj = lps[j - 1];\n\t\t\t\t}\n\t\t\t} else {\n\t\t\t\tif (j != 0) j = lps[j - 1];\n\t\t\t\telse i++;\n\t\t\t}\n\t\t}\n\t\treturn matches;\n\t}\n};\ntemplate<class T>\nvector<int> prefix(T &S) {\n\tvector<int> P(S.size());\n\tP[0] = 0;\n\tfor(int i = 1; i < S.size(); ++ i) {\n\t\tP[i] = P[i - 1];\n\t\twhile(P[i] > 0 && S[P[i]] != S[i])\n\t\t\tP[i] = P[P[i] - 1];\n\t\tif(S[P[i]] == S[i])\n\t\t\t++ P[i];\n\t}\n\treturn P;\n}",
+      "source": "KMP",
+      "length": 887,
+      "id": 4
+    },
+    {
+      "text": "struct Z {\n\tint n, m;\n\tvector<int> z;\n\tZ(string s) {\n\t\tn = s.size();\n\t\tz.assign(n, 0);\n\t\tint l = 0, r = 0;\n\t\tfor (int i = 1; i < n; i++) {\n\t\t\tif (i <= r)\n\t\t\t\tz[i] = min(r - i + 1, z[i - l]);\n\t\t\twhile (i + z[i] < n && s[z[i]] == s[i + z[i]])\n\t\t\t\t++z[i];\n\t\t\tif (i + z[i] - 1 > r)\n\t\t\t\tl = i, r = i + z[i] - 1;\n\t\t}\n\t}\n\tZ(string p, string t) {\n\t\tstring s = p + \"#\" + t;\n\t\tn = p.size();\n\t\tm = t.size();\n\t\tz.assign(n + m + 1, 0);\n\t\tint l = 0, r = 0;\n\t\tfor (int i = 1; i < n + m + 1; i++) {\n\t\t\tif (i <= r)\n\t\t\t\tz[i] = min(r - i + 1, z[i - l]);\n\t\t\twhile (i + z[i] < n + m + 1 && s[z[i]] == s[i + z[i]])\n\t\t\t\t++z[i];\n\t\t\tif (i + z[i] - 1 > r)\n\t\t\t\tl = i, r = i + z[i] - 1;\n\t\t}\n\t}\n\tvoid p_in_t(vector<int>& ans) {\n\t\tfor (int i = n + 1; i < n + m + 1; i++) {\n\t\t\tif (z[i] == n)\n\t\t\t\tans.push_back(i - n - 1);\n\t\t}\n\t}\n};",
+      "source": "Z Function",
+      "length": 800,
+      "id": 5
+    },
+    {
+      "text": "struct AhoCorasick {\n\tenum {\n\t\talpha = 26, first = 'a'\n\t};\n\tstruct Node {\n\t\tint back, next[alpha], start = -1, end = -1, nmatches = 0;\n\t\tNode(int v) {\n\t\t\tmemset(next, v, sizeof(next));\n\t\t}\n\t};\n\tvector < Node > N;\n\tvi backp;\n\tvoid insert(string & s, int j) {\n\t\tassert(!s.empty());\n\t\tint n = 0;\n\t\tfor (char c: s) {\n\t\t\tint & m = N[n].next[c - first];\n\t\t\tif (m == -1) {\n\t\t\t\tn = m = sz(N);\n\t\t\t\tN.emplace_back(-1);\n\t\t\t} else n = m;\n\t\t}\n\t\tif (N[n].end == -1) N[n].start = j;\n\t\tbackp.push_back(N[n].end);\n\t\tN[n].end = j;\n\t\tN[n].nmatches++;\n\t}\n\tAhoCorasick(vector < string > & pat): N(1, -1) {\n\t\trep(i, 0, sz(pat)) insert(pat[i], i);\n\t\tN[0].back = sz(N);\n\t\tN.emplace_back(0);\n\t\tqueue < int > q;\n\t\tfor (q.push(0); !q.empty(); q.pop()) {\n\t\t\tint n = q.front(), prev = N[n].back;\n\t\t\trep(i, 0, alpha) {\n\t\t\t\tint & ed = N[n].next[i], y = N[prev].next[i];\n\t\t\t\tif (ed == -1) ed = y;\n\t\t\t\telse {\n\t\t\t\t\tN[ed].back = y;\n\t\t\t\t\t(N[ed].end == -1 ? N[ed].end : backp[N[ed].start]) = N[y].end;\n\t\t\t\t\tN[ed].nmatches += N[y].nmatches;\n\t\t\t\t\tq.push(ed);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\tvi find(string word) {\n\t\tint n = 0;\n\t\tvi res;\n\t\tfor (char c: word) {\n\t\t\tn = N[n].next[c - first];\n\t\t\tres.push_back(N[n].end);\n\t\t}\n\t\treturn res;\n\t}\n\tvector < vi > findAll(vector < string > & pat, string word) {\n\t\tvi r = find(word);\n\t\tvector < vi > res(sz(word));\n\t\trep(i, 0, sz(word)) {\n\t\t\tint ind = r[i];\n\t\t\twhile (ind != -1) {\n\t\t\t\tres[i - sz(pat[ind]) + 1].push_back(ind);\n\t\t\t\tind = backp[ind];\n\t\t\t}\n\t\t}\n\t\treturn res;\n\t}\n};",
+      "source": "Aho Corasick",
+      "length": 1463,
+      "id": 6
+    },
+    {
+      "text": "template<class T>\nstruct manacher {\n\tvector<int> odd, even;\n\tT s; int n;\n\tmanacher(T &s): s(s), n(s.size()) {\n\t\todd.resize(n);\n\t\teven.resize(n);\n\t\tfor (int i = 0, l = 0, r = -1; i < n; i++) {\n\t\t\tint k = (i > r) ? 1 : min(odd[l+r-i], r-i+1);\n\t\t\twhile (0 <= i-k and i+k < n and s[i-k] == s[i+k]) k++;\n\t\t\todd[i] = k--;\n\t\t\tif (i+k > r) l = i-k, r = i+k;\n\t\t}\n\t\tfor (int i = 0, l = 0, r = -1; i < n; i++) {\n\t\t\tint k = (i > r) ? 0 : min(even[l + r - i + 1], r - i + 1);\n\t\t\twhile (0 <= i - k - 1 and i + k < n && s[i - k - 1] == s[i + k]) k++;\n\t\t\teven[i] = k--;\n\t\t\tif (i + k > r) l = i - k - 1, r = i + k;\n\t\t}\n\t}\n\tpair<int, int> get(int i) {\n\t\tint o = 2 * odd[i] - 1;\n\t\tint e = 2 * even[i];\n\t\tif (o >= e)\n\t\t\treturn {i - odd[i] + 1, i + odd[i] - 1};\n\t\treturn {i - even[i], i + even[i] - 1};\n\t}\n};",
+      "source": "Manacher",
+      "length": 787,
+      "id": 7
+    },
+    {
+      "text": "struct trie {\n\tvector <vector<ll>> tree;\n\tvector<ll> counts;\n\ttrie() {\n\t\ttree.push_back(vector<ll>(26, -1));\n\t\tcounts.push_back(0);\n\t};\n\tvoid insert(string &s) {\n\t\tll i = 0, u = 0;\n\t\twhile(i < s.size()){\n\t\t\t\tchar c = s[i];\n\t\t\t\tif (tree[u][c - 'a'] == -1){\n\t\t\t\t\t\tll pos = tree.size();\n\t\t\t\t\t\ttree.push_back(vector<ll>(26, -1));\n\t\t\t\t\t\tcounts.push_back(0);\n\t\t\t\t\t\ttree[u][c - 'a'] = pos;\n\t\t\t\t}\n\t\t\t\ti++;\n\t\t\t\tu = tree[u][c - 'a'];\n\t\t}\n\t\tcounts[u]++;\n\t}\n\tll search(string &s){\n\t\tll i = 0,u = 0;\n\t\tll count_ends = 0;\n\t\twhile(i < s.size()){\n\t\t\t\tchar c = s[i];\n\t\t\t\tif (tree[u][c - 'a'] != -1){\n\t\t\t\t\t\tu = tree[u][c - 'a'];\n\t\t\t\t\t\ti++;\n\t\t\t\t}else break;\n\t\t}\n\t\tif(i == s.size()) count_ends += counts[u];\n\t\treturn count_ends;\n\t}\n};",
+      "source": "Trie",
+      "length": 714,
+      "id": 8
+    },
+    {
+      "text": "using ll = long long;\nstruct SA {\n\tint n;\n\tvector<int> C, R, R_, sa, sa_, lcp;\n\tinline int gr(int i) { return i < n ? R[i] : 0; }\n\tvoid csort(int maxv, int k) {\n\t\tC.assign(maxv + 1, 0);\n\t\tfor (int i = 0; i < n; i++) C[gr(i + k)]++;\n\t\tfor (int i = 1; i < maxv + 1; i++) C[i] += C[i - 1];\n\t\tfor (int i = n - 1; i >= 0; i--) sa_[--C[gr(sa[i] + k)]] = sa[i];\n\t\tsa.swap(sa_);\n\t}\n\tvoid getSA(vector<int>& s) {\n\t\tR = R_ = sa = sa_ = vector<int>(n);\n\t\tfor (ll i = 0; i < n; i++) sa[i] = i;\n\t\tsort(sa.begin(), sa.end(), [&s](int i, int j) { return s[i] < s[j]; });\n\t\tint r = R[sa[0]] = 1;\n\t\tfor (ll i = 1; i < n; i++) R[sa[i]] = (s[sa[i]] != s[sa[i - 1]]) ? ++r : r;\n\t\tfor (int h = 1; h < n && r < n; h <<= 1) {\n\t\t\tcsort(r, h);\n\t\t\tcsort(r, 0);\n\t\t\tr = R_[sa[0]] = 1;\n\t\t\tfor (int i = 1; i < n; i++) {\n\t\t\t\tif (R[sa[i]] != R[sa[i - 1]] || gr(sa[i] + h) != gr(sa[i - 1] + h)) r++;\n\t\t\t\tR_[sa[i]] = r;\n\t\t\t}\n\t\t\tR.swap(R_);\n\t\t}\n\t}\n\tvoid getLCP(vector<int> &s) {\n\t\tlcp.assign(n, 0);\n\t\tint k = 0;\n\t\tfor (ll i = 0; i < n; i++) {\n\t\t\tint r = R[i] - 1;\n\t\t\tif (r == n - 1) {\n\t\t\t\tk = 0;\n\t\t\t\tcontinue;\n\t\t\t}\n\t\t\tint j = sa[r + 1];\n\t\t\twhile (i + k < n && j + k < n && s[i + k] == s[j + k]) k++;\n\t\t\tlcp[r] = k;\n\t\t\tif (k) k--;\n\t\t}\n\t}\n\tSA(vector<int> &s) {\n\t\tn = s.size();\n\t\tgetSA(s);\n\t\tgetLCP(s);\n\t}\n};",
+      "source": "Suffix Array",
+      "length": 1270,
+      "id": 9
+    },
+    {
+      "text": "struct SuffixAutomaton {\n\tstruct state {\n\t\tint len, link;\n\t\tint next[26];\n\t\tstate(int _len = 0, int _link = -1) : len(_len), link(_link) {\n\t\t\tmemset(next, -1, sizeof(next));\n\t\t}\n\t};\n\tvector<state> st;\n\tint last;\n\tSuffixAutomaton() {}\n\tSuffixAutomaton(const string &s) { init(s); }\n\tinline int State(int len = 0, int link = -1) {\n\t\tst.emplace_back(len, link);\n\t\treturn st.size() - 1;\n\t}\n\tvoid init(const string &s) {\n\t\tst.reserve(2 * s.size());\n\t\tlast = State();\n\t\tfor (char c : s)\n\t\t\textend(c);\n\t}\n\tvoid extend(char _c) {\n\t\tint c = _c - 'a', cur = State(st[last].len + 1), P = last;\n\t\twhile ((P != -1) && (st[P].next[c] == -1)) {\n\t\t\tst[P].next[c] = cur;\n\t\t\tP = st[P].link;\n\t\t}\n\t\tif (P == -1)\n\t\t\tst[cur].link = 0;\n\t\telse {\n\t\t\tint Q = st[P].next[c];\n\t\t\tif (st[P].len + 1 == st[Q].len)\n\t\t\t\tst[cur].link = Q;\n\t\t\telse {\n\t\t\t\tint C = State(st[P].len + 1, st[Q].link);\n\t\t\t\tcopy(st[Q].next, st[Q].next + 26, st[C].next);\n\t\t\t\twhile ((P != -1) && (st[P].next[c] == Q)) {\n\t\t\t\t\tst[P].next[c] = C;\n\t\t\t\t\tP = st[P].link;\n\t\t\t\t}\n\t\t\t\tst[Q].link = st[cur].link = C;\n\t\t\t}\n\t\t}\n\t\tlast = cur;\n\t}\n};",
+      "source": "Suffix Automaton",
+      "length": 1074,
+      "id": 10
+    },
+    {
+      "text": "string minRotation(string &s) {\n\tint a = 0, N = s.size();\n\tstring res = s; s += s;\n\tfor (int b = 0; b < N; b++) {\n\t\tfor (int k = 0; k < N; k++) {\n\t\t\tif (a + k == b || s[a + k] < s[b + k]) {\n\t\t\t\tb += max(0, k - 1); break;\n\t\t\t}\n\t\t\tif (s[a + k] > s[b + k]) {\n\t\t\t\ta = b; break;\n\t\t\t}\n\t\t}\n\t}\n\trotate(res.begin(), res.begin() + a, res.end());\n\treturn res;\n}",
+      "source": "Minimum Rotation",
+      "length": 350,
+      "id": 11
+    },
+    {
+      "text": "template <typename T>\nstruct min_queue {\n\tmin_stack<T> in, out;\n\tvoid push(T x) { in.push(x); }\n\tbool empty() { return in.empty() and out.empty(); }\n\tint size() { return in.size() + out.size(); }\n\tvoid pop() {\n\t\tif (out.empty())\n\t\tfor (;in.size(); in.pop()) out.push(in.top());\n\t\tout.pop();\n\t}\n\tT front() {\n\t\tif (!out.empty()) return out.top();\n\t\tfor (;in.size(); in.pop()) out.push(in.top());\n\t\treturn out.top();\n\t}\n\tT getmin() {\n\t\tif (in.empty()) return out.getmin();\n\t\tif (out.empty()) return in.getmin();\n\t\treturn min(in.getmin(), out.getmin());\n\t}\n};",
+      "source": "Min Queue",
+      "length": 555,
+      "id": 12
+    },
+    {
+      "text": "template <typename T>\nstruct min_stack {\n\tvector<pair<T, T>> S;\n\tvoid push(T x) {\n\t\tT new_min = S.empty() ? x : min(x, S.back().second);\n\t\tS.push_back({x, new_min});\n\t}\n\tbool empty() { return S.empty(); }\n\tint size() { return S.size(); }\n\tvoid pop() { S.pop_back(); }\n\tT top() { return S.back().first; }\n\tT getmin() { return S.back().second; }\n\tvoid swap(min_stack & other) noexcept { S.swap(other.S); }\n};",
+      "source": "Min Stack",
+      "length": 406,
+      "id": 13
+    },
+    {
+      "text": "template<typename T>\nstruct min_deque {\n\tmin_stack<T> l, r, t;\n\tvoid rebalance() {\n\t\tbool f = false;\n\t\tif (r.empty()) {f = true; l.swap(r);}\n\t\tint sz = r.size() / 2;\n\t\twhile (sz--) {t.push(r.top()); r.pop();}\n\t\twhile (!r.empty()) {l.push(r.top()); r.pop();}\n\t\twhile (!t.empty()) {r.push(t.top()); t.pop();}\n\t\tif (f) l.swap(r);\n\t}\n\tint getmin() {\n\t\tif (l.empty()) return r.getmin();\n\t\tif (r.empty()) return l.getmin();\n\t\treturn min(l.getmin(), r.getmin());\n\t}\n\tbool empty() {return l.empty() and r.empty();}\n\tint size() {return l.size() + r.size();}\n\tvoid push_front(int x) {l.push(x);}\n\tvoid push_back(int x) {r.push(x);}\n\tvoid pop_front() {if (l.empty()) rebalance(); l.pop();}\n\tvoid pop_back() {if (r.empty()) rebalance(); r.pop();}\n\tint front() {if (l.empty()) rebalance(); return l.top();}\n\tint back() {if (r.empty()) rebalance(); return r.top();}\n\tvoid swap(min_deque &x) {l.swap(x.l); r.swap(x.r);}\n};",
+      "source": "Min Deque",
+      "length": 907,
+      "id": 14
+    },
+    {
+      "text": "template<typename T, int MAXLOG>\nstruct wavelet_tree {\n\tstruct node {\n\t\tsuccinct_indexable_dictionary sid;\n\t\tnode *ch[2];\n\t\tnode() = default;\n\t\tnode(size_t len) : sid(len + 1), ch{nullptr} {}\n\t};\n\tnode *root;\n\tnode *build(vector<T> &v, vector<T> &rbuff, int bit, int l, int r) {\n\t\tif (l >= r or bit == -1) return nullptr;\n\t\tnode *_node = new node(r-l);\n\t\tll left = 0, right = 0;\n\t\tfor (ll k = l; k < r; k++) {\n\t\t\tif ((v[k] >> bit) & 1)\n\t\t\t\trbuff[right++] = v[k], _node->sid.set(k - l);\n\t\t\telse v[l + left++] = v[k];\n\t\t}\n\t\tfor (int k = 0; k < right; k++) v[l + left + k] = rbuff[k];\n\t\t_node->sid.build();\n\t\t_node->ch[0] = build(v, rbuff, bit - 1, l, l + left);\n\t\t_node->ch[1] = build(v, rbuff, bit - 1, l + left, r);\n\t\treturn _node;\n\t}\n\twavelet_tree() = default;\n\twavelet_tree(vector<T> &v) {\n\t\tvector<T> rbuff(v.size());\n\t\troot = build(v, rbuff, MAXLOG - 1, 0, v.size());\n\t}\n\tint rank(node *t, int l, int r, const T&x, int level) {\n\t\tif (l >= r or t == nullptr) return 0;\n\t\tif (level == -1) return r-l;\n\t\tbool f = (x >> level) & 1;\n\t\tl = t->sid.rank(f, l), r = t->sid.rank(f, r);\n\t\treturn rank(t->ch[f], l, r, x, level-1);\n\t}\n\tint rank(const T &x, int r) { return rank(root, 0, r, x, MAXLOG-1); }\n\tT kth(node *t, int l, int r, int k, int level) {\n\t\tif (l >= r || t == nullptr) return 0;\n\t\tint cnt = t->sid.rank(false, r) - t->sid.rank(false, l);\n\t\tbool f = cnt <= k;\n\t\tl = t->sid.rank(f, l), r = t->sid.rank(f, r);\n\t\tif (f) return kth(t->ch[f], l, r, k - cnt, level - 1) | (T(1) << level);\n\t\treturn kth(t->ch[f], l, r, k, level - 1);\n\t}\n\tT kth_smallest(int l, int r, int k) {\n\t\treturn kth(root, l, r+1, k, MAXLOG - 1);\n\t}\n\tT kth_largest(int l, int r, int k) {\n\t\treturn kth(l, r, r - l - k);\n\t}\n\tint range_freq(node *t, int l, int r, T upper, int level) {\n\t\tif (t == nullptr || l >= r) return 0;\n\t\tbool f = ((upper >> level) & 1);\n\t\tint ret = 0;\n\t\tif (f) ret += t->sid.rank(false, r) - t->sid.rank(false, l);\n\t\tl = t->sid.rank(f, l), r = t->sid.rank(f, r);\n\t\treturn range_freq(t->ch[f], l, r, upper, level - 1) + ret;\n\t}\n\tint range_freq(int l, int r, T upper) {\n\t\treturn range_freq(root, l, r, upper, MAXLOG - 1);\n\t}\n};",
+      "source": "Wavelet Tree",
+      "length": 2118,
+      "id": 15
+    },
+    {
+      "text": "struct succinct_indexable_dictionary {\n\tsize_t len, blocks;\n\tvector<unsigned> bit, sum;\n\tsuccinct_indexable_dictionary() = default;\n\tsuccinct_indexable_dictionary(size_t len) : len(len), blocks((len + 31)>>5) {\n\t\tbit.assign(blocks, 0U);\n\t\tsum.assign(blocks, 0U);\n\t}\n\tvoid set(int k) { bit[k >> 5] |= 1U << (k & 31); }\n\tvoid build() {\n\t\tsum[0] = 0U;\n\t\tfor (int i = 1; i < blocks; i++)\n\t\t\tsum[i] = sum[i - 1] + __builtin_popcount(bit[i - 1]);\n\t}\n\tbool operator[](int k) { return (bool((bit[k >> 5] >> (k & 31)) & 1)); }\n\tint rank(int k) {\n\t\treturn (sum[k >> 5] + __builtin_popcount(bit[k >> 5] & ((1U << (k & 31)) - 1)));\n\t}\n\tint rank(bool val, int k) { return (val ? rank(k) : k - rank(k)); }\n};",
+      "source": "Succinct Indexable Dictionary",
+      "length": 694,
+      "id": 16
+    },
+    {
+      "text": "using pii = pair<int,int>;\nset<pii>::iterator addInterval(set<pii>& is,\n\t\tint L, int R) {\n\tif (L == R) return is.end();\n\tauto it = is.lower_bound({L, R}), before = it;\n\twhile (it != is.end() && it->first <= R) {\n\t\tR = max(R, it->second);\n\t\tbefore = it = is.erase(it);\n\t}\n\tif (it != is.begin() && (--it)->second >= L) {\n\t\tL = min(L, it->first);\n\t\tR = max(R, it->second);\n\t\tis.erase(it);\n\t}\n\treturn is.insert(before, {L, R});\n}\nvoid removeInterval(set<pii>& is, int L, int R) {\n\tif (L == R) return;\n\tauto it = addInterval(is, L, R);\n\tauto r2 = it->second;\n\tif (it->first == L) is.erase(it);\n\telse (int&)it->second = L;\n\tif (R != r2) is.emplace(R, r2);\n}",
+      "source": "Interval Container",
+      "length": 651,
+      "id": 17
+    },
+    {
+      "text": "struct bit_vector {\n\tuint64_t size;\n\tvector< uint64_t > bv;\n\tbit_vector() : size(0) {}\n\tuint64_t get(uint64_t i) const {\n\t\tuint64_t b = i / 64;\n\t\tuint64_t ib = i % 64;\n\t\treturn (bv[b] & (1ULL << ib)) >> ib;\n\t}\n\tvoid set(uint64_t i) {\n\t\tuint64_t b = i / 64;\n\t\tuint64_t ib = i % 64;\n\t\tbv[b] |= (1ULL << ib);\n\t}\n\tvoid push_back(uint64_t bit) {\n\t\tif(size % 64 == 0) bv.push_back(0);\n\t\tuint64_t b = size / 64;\n\t\tuint64_t ib = size++ % 64;\n\t\tbv[b] |= (bit << ib);\n\t}\n\tbit_vector operator~() {\n\t\tbit_vector bv = *this;\n\t\tfor(uint64_t i = 0; i < bv.bv.size(); i++)\n\t\t\tbv.bv[i] = ~bv.bv[i];\n\t\tif(size % 64)\n\t\t\tfor(uint64_t i = size % 64; i < 64; i++)\n\t\t\t\tbv.bv[bv.bv.size() - 1] &= (~(1ULL << i));\n\t\treturn bv;\n\t}\n\tfriend std::ostream& operator<<(std::ostream& os, const bit_vector& bv) {\n\t\tfor(uint64_t i = 0; i < bv.size; i++) {\n\t\t\tif(bv.bv[i / 64] < (1ULL << 32) && (i % 64) >= 32) cout << 0;\n\t\t\telse cout << ((bv.bv[i / 64] & (1ULL << (i % 64))) ? 1 : 0);\n\t\t}\n\t\treturn os;\n\t}\n\tbit_vector& operator=(const bit_vector& o) {\n\t\tif (this != &o)\n\t\t\tsize = o.size, bv = o.bv;\n\t\treturn *this;\n\t}\n\tbool operator==(const bit_vector& o) const {\n\t\tif(size != o.size) return false;\n\t\tfor(uint64_t i = 0; i < size; i++)\n\t\t\tif(get(i) != o.get(i)) return false;\n\t\treturn true;\n\t}\n\tbool operator<(const bit_vector& o) const {\n\t\tfor(uint64_t i = 0; i < size && i < o.size; i++)\n\t\t\tif(get(i) != o.get(i)) return get(i) < o.get(i);\n\t\treturn size < o.size;\n\t}\n\tbool operator>(const bit_vector& o) const {\n\t\tfor(uint64_t i = 0; i < size && i < o.size; i++)\n\t\t\tif(get(i) != o.get(i)) return get(i) > o.get(i);\n\t\treturn size > o.size;\n\t}\n\tbool operator<=(const bit_vector& o) const {\n\t\tfor(uint64_t i = 0; i < size && i < o.size; i++)\n\t\t\tif(get(i) != o.get(i)) return get(i) <= o.get(i);\n\t\treturn size <= o.size;\n\t}\n\tbool operator>=(const bit_vector& o) const {\n\t\tfor(uint64_t i = 0; i < size && i < o.size; i++)\n\t\t\tif(get(i) != o.get(i)) return get(i) >= o.get(i);\n\t\treturn size >= o.size;\n\t}\n};",
+      "source": "Bit Vector",
+      "length": 1967,
+      "id": 18
+    },
+    {
+      "text": "struct union_find {\n\tvector<int> e;\n\tunion_find(int n) { e.assign(n, -1); }\n\tint findSet (int x) {\n\t\treturn (e[x] < 0 ? x : e[x] = findSet(e[x]));\n\t}\n\tbool sameSet (int x, int y) { return findSet(x) == findSet(y); }\n\tint size (int x) { return -e[findSet(x)]; }\n\tbool unionSet (int x, int y) {\n\t\tx = findSet(x), y = findSet(y);\n\t\tif (x == y) return 0;\n\t\tif (e[x] > e[y]) swap(x, y);\n\t\te[x] += e[y], e[y] = x;\n\t\treturn 1;\n\t}\n};",
+      "source": "Union Find",
+      "length": 425,
+      "id": 19
+    },
+    {
+      "text": "struct op{\n\tint v,u;\n\tint v_value,u_value;\n\top(int _v,int _v_value,int _u,int _u_value): v(_v),v_value(_v_value),u(_u),u_value(_u_value) {}\n};\nstruct union_find_rb {\n\tvector<int> e;\n\tstack<op> ops;\n\tint comps;\n\tunion_find_rb(){}\n\tunion_find_rb(int n): comps(n) {e.assign(n, -1);}\n\tint findSet (int x) {\n\t\treturn (e[x] < 0 ? x : findSet(e[x]));\n\t}\n\tbool sameSet (int x, int y) { return findSet(x) == findSet(y); }\n\tint size (int x) { return -e[findSet(x)]; }\n\tbool unionSet (int x, int y) {\n\t\tx = findSet(x), y = findSet(y);\n\t\tif (x == y) return 0;\n\t\tif (e[x] > e[y]) swap(x, y);\n\t\tops.push(op(x,e[x],y,e[y])); comps--;\n\t\te[x] += e[y], e[y] = x;\n\t\treturn 1;\n\t}\n\tvoid rb(){\n\t\tif(ops.empty()) return;\n\t\top last = ops.top(); ops.pop();\n\t\te[last.v] = last.v_value;\n\t\te[last.u] = last.u_value;\n\t\tcomps++;\n\t}\n};",
+      "source": "Union Find with Rollback",
+      "length": 804,
+      "id": 20
+    },
+    {
+      "text": "template <typename T, T m_(T, T)>\nstruct sparse_table {\n\tint n;\n\tvector<vector<T>> table;\n\tsparse_table() {}\n\tsparse_table(vector<T> &arr) {\n\t\tn = arr.size();\n\t\tint k = log2_floor(n) + 1;\n\t\ttable.assign(n, vector<T>(k));\n\t\tfor (int i = 0; i < n; i++)\n\t\t\ttable[i][0] = arr[i];\n\t\tfor (int j = 1; j < k; j++)\n\t\t\tfor (int i = 0; i + (1 << j) <= n; i++)\n\t\t\t\ttable[i][j] = m_(table[i][j-1], table[i+(1<<(j-1))][j-1]);\n\t}\n\tT query(int l, int r) {\n\t\tint k = log2_floor(r - l + 1);\n\t\treturn m_(table[l][k], table[r-(1 << k)+1][k]);\n\t}\n\tint log2_floor(int n) { return n ? __builtin_clzll(1) - __builtin_clzll(n) : -1; }\n};",
+      "source": "Sparse Table",
+      "length": 612,
+      "id": 21
+    },
+    {
+      "text": "template <typename T, T (*m_)(T, T)>\nstruct disjoint_sparse_table{\n\tstatic const int MAXLOG = 20;\n\tvector<T> dp[MAXLOG]; vector<bool> has[MAXLOG];\n\tdisjoint_sparse_table() {}\n\tdisjoint_sparse_table(vector<T> &ar){\n\t\tint i, c, h, l, n = (int)ar.size();\n\t\tfor (h = 0; h <= __lg(n); h++){\n\t\t\tdp[h].resize(n + 1), has[h].resize(n+1);\n\t\t\tfor (c = l = 1 << h; c < n + l; c += (l << 1)){\n\t\t\t\tfor (i = c + 1; i <= min(n, c + l); i++) {\n\t\t\t\t\tif (!has[h][i-1]) dp[h][i] = ar[i-1];\n\t\t\t\t\telse dp[h][i] = m_(dp[h][i - 1], ar[i-1]);\n\t\t\t\t\thas[h][i] = 1;\n\t\t\t\t}\n\t\t\t\tfor (i = min(n, c) - 1; i >= c - l; i--) {\n\t\t\t\t\tif (!has[h][i+1]) dp[h][i] = ar[i];\n\t\t\t\t\telse dp[h][i] = m_(ar[i], dp[h][i+1]);\n\t\t\t\t\thas[h][i] = 1;\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\tT query(int l, int r){\n\t\tint h = __lg(l ^ (r + 1));\n\t\tif (!has[h][l]) return dp[h][r+1];\n\t\tif (!has[h][r+1]) return dp[h][l];\n\t\treturn m_(dp[h][l], dp[h][r + 1]);\n\t}\n};",
+      "source": "Disjoint Sparse Table",
+      "length": 884,
+      "id": 22
+    },
+    {
+      "text": "template<class T, T merge(T,T)>\nstruct range_query {\n\tint n,sz,ld,bl; vector<int> q;\n\tvector<vector<T>> st; vector<T> arr;\n\trange_query(vector<T> & a){\n\t\tn = a.size(); sz = log2(n);\n\t\tbl = (n+sz-1)/sz; ld = log2(bl); arr = a;\n\t\tst.assign(bl,vector<T>(ld+1)); q.resize(n);\n\t\tfor (int i = 0; i < n; i++){\n\t\t\tst[i/sz][0] = ((i%sz == 0)?a[i]:merge(st[i/sz][0],a[i]));\n\t\t\tint last = a[i]; q[i] = ((i > 0)?q[i-1]:0);\n\t\t\twhile (q[i] != 0 && merge(a[i-1-__builtin_ctz(q[i])],last) == last)\n\t\t\t\tq[i] ^= (1<<__builtin_ctz(q[i]));\n\t\t\tq[i] = (q[i]<<1|1); q[i] &= (1<<sz)-1;\n\t\t}\n\t\tfor (int i = 1; i <= ld; i++)\n\t\t\tfor (int j = 0; j < bl-(1<<(i-1)); j++)\n\t\t\t\tst[j][i] = merge(st[j][i-1],st[j+(1<<(i-1))][i-1]);\n\t}\n\tT spquery(int l, int r){\n\t\tint lsz = log2(r-l+1);\n\t\treturn merge(st[l][lsz],st[r-(1<<lsz)+1][lsz]);\n\t}\n\tT query(int l, int r){\n\t\tif (l/sz == r/sz)\n\t\t\treturn arr[r-(31-__builtin_clz(q[r]&((1<<(r-l+1))-1)))];\n\t\tT res; bool hasR = 0;\n\t\tint ql = (l+sz-1)/sz, qr = (r/sz)-1;\n\t\tif (ql <= qr) res = spquery(ql,qr), hasR = 1;\n\t\tint pl = ql*sz-1, pr = (qr+1)*sz;\n\t\tif (l <= pl){\n\t\t\tint vl = arr[pl-(31-__builtin_clz(q[pl]&((1<<(pl-l+1))-1)))];\n\t\t\tres = (hasR?merge(res,vl):vl), hasR = 1;\n\t\t}\n\t\tif (pr <= r){\n\t\t\tint vr = arr[r-(31-__builtin_clz(q[r]&((1<<(r-pr+1))-1)))];\n\t\t\tres = (hasR?merge(res,vr):vr), hasR = 1;\n\t\t}\n\t\treturn res;\n\t}\n};",
+      "source": "Constant Range Query",
+      "length": 1330,
+      "id": 23
+    },
+    {
+      "text": "template<class T, T m_(T, T)> struct segment_tree{\n\tint n; vector<T> ST;\n\tsegment_tree(){}\n\tsegment_tree(vector<T> &a){\n\t\tn = a.size(); ST.resize(n << 1);\n\t\tfor (int i=n;i<(n<<1);i++)ST[i]=a[i-n];\n\t\tfor (int i=n-1;i>0;i--)ST[i]=m_(ST[i<<1],ST[i<<1|1]);\n\t}\n\tvoid update(int pos, T val){\n\t\tST[pos += n] = val;\n\t\tfor (pos >>= 1; pos > 0; pos >>= 1)\n\t\t\tST[pos] = m_(ST[pos<<1], ST[pos<<1|1]);\n\t}\n\tT query(int l, int r){\n\t\tT ansL, ansR; bool hasL = 0, hasR = 0;\n\t\tfor (l += n, r += n + 1; l < r; l >>= 1, r >>= 1) {\n\t\t\tif (l & 1)\n\t\t\t\tansL=(hasL?m_(ansL,ST[l++]):ST[l++]),hasL=1;\n\t\t\tif (r & 1)\n\t\t\t\tansR=(hasR?m_(ST[--r],ansR):ST[--r]),hasR=1;\n\t\t}\n\t\tif (!hasL) return ansR; if (!hasR) return ansL;\n\t\treturn m_(ansL, ansR);\n\t}\n};",
+      "source": "Segment Tree",
+      "length": 721,
+      "id": 24
+    },
+    {
+      "text": "template<class T, T merge(T,T)>\nstruct segment_tree2d {\n\tint n,m; vector<vector<T>> st;\n\tsegment_tree2d(){}\n\tsegment_tree2d(vector<vector<T>> & a){\n\t\tn = a.size(), m = a[0].size(); st.assign(n<<1,vector<T>(m<<1));\n\t\tfor (int i = 0; i < n; i++) {\n\t\t\tfor (int j = 0; j < m; j++) st[i+n][j+m] = a[i][j];\n\t\t\tfor (int j = m-1; j > 0; j--) st[i+n][j] = merge(st[i+n][j<<1],st[i+n][j<<1|1]);\n\t\t}\n\t\tfor (int i = n-1; i > 0; i--){\n\t\t\tfor (int j = 0; j < m; j++) st[i][j+m] = merge(st[i<<1][j+m],st[i<<1|1][j+m]);\n\t\t\tfor (int j = m-1; j > 0; j--) st[i][j] = merge(st[i][j<<1],st[i][j<<1|1]);\n\t\t}\n\t}\n\tvoid update(int i, int j, T val){\n\t\tst[i += n][j += m] = val;\n\t\tfor (int jj = (j>>1); jj > 0; jj >>= 1)\n\t\tst[i][jj] = merge(st[i][jj<<1],st[i][jj<<1|1]);\n\t\tfor (i >>= 1; i > 0; i >>= 1){\n\t\t\tst[i][j] = merge(st[i<<1][j],st[i<<1|1][j]);\n\t\t\tfor (int jj = (j>>1); jj > 0; jj >>= 1)\n\t\t\tst[i][jj] = merge(st[i][jj<<1],st[i][jj<<1|1]);\n\t\t}\n\t}\n\tT query_help(int i, int l, int r){\n\t\tT ansL, ansR; bool hasL = 0, hasR = 0;\n\t\tfor (l += m, r += m+1; l < r; l >>= 1, r >>= 1){\n\t\t\tif (l&1) ansL = (hasL?merge(ansL,st[i][l++]):st[i][l++]), hasL = 1;\n\t\t\tif (r&1) ansR = (hasR?merge(st[i][--r],ansR):st[i][--r]), hasR = 1;\n\t\t}\n\t\tif (!hasL) return ansR; if (!hasR) return ansL;\n\t\treturn merge(ansL,ansR);\n\t}\n\tT query(int l1, int r1, int l2, int r2){\n\t\tT ansL, ansR; bool hasL = 0, hasR = 0;\n\t\tfor (l1 += n, r1 += n+1; l1 < r1; l1 >>= 1, r1 >>= 1){\n\t\t\tif (l1&1) ansL = (hasL?merge(ansL,query_help(l1++,l2,r2)):query_help(l1++,l2,r2)), hasL = 1;\n\t\t\tif (r1&1) ansR = (hasR?merge(query_help(--r1,l2,r2),ansR):query_help(--r1,l2,r2)), hasR = 1;\n\t\t}\n\t\tif (!hasL) return ansR; if (!hasR) return ansL;\n\t\treturn merge(ansL,ansR);\n\t}\n};",
+      "source": "Segment Tree 2D",
+      "length": 1698,
+      "id": 25
+    },
+    {
+      "text": "template<class T, T m_(T, T)> struct segment_tree_with_walk : segment_tree<T,m_> {\n\tint walk(int l, T k) {\n\t\tvector<int> L, R;\n\t\tint r = this->n - 1;\n\t\tfor (l += this->n, r += this->n + 1; l < r; l >>= 1, r >>= 1) {\n\t\t\tif (l & 1) L.push_back(l++);\n\t\t\tif (r & 1) R.push_back(--r);\n\t\t}\n\t\treverse(R.begin(), R.end());\n\t\tL.insert(L.end(), R.begin(), R.end());\n\t\tfor (int v : L) {\n\t\t\tif (this->ST[v] >= k) {\n\t\t\t\twhile (v < this->n) v = (this->ST[v << 1] >= k) ? (v << 1) : (v << 1 | 1);\n\t\t\t\treturn v - this->n;\n\t\t\t}\n\t\t}\n\t\treturn -1;\n\t}\n};",
+      "source": "Segment Tree with Walk",
+      "length": 533,
+      "id": 26
+    },
+    {
+      "text": "template<\n\tclass T1,\n\tclass T2,\n\tT1 merge(T1, T1),\n\tvoid pushUpd(T2& , T2& , int, int, int, int),\n\tvoid applyUpd(T2&, T1&, int, int)\n>\nstruct segment_tree_lazy{\n\tvector<T1> ST; vector<T2> lazy; vector<bool> upd;\n\tint n;\n\tvoid build(int i, int l, int r, vector<T1>&values){\n\t\tif (l == r){\n\t\t\tST[i] = values[l];\n\t\t\treturn;\n\t\t}\n\t\tbuild(i << 1, l, (l + r) >> 1, values);\n\t\tbuild(i << 1 | 1, (l + r) / 2 + 1, r, values);\n\t\tST[i] = merge(ST[i << 1], ST[i << 1 | 1]);\n\t}\n\tsegment_tree_lazy() {}\n\tsegment_tree_lazy(vector<T1>&values){\n\t\tn = values.size(); ST.resize(n << 2 | 3);\n\t\tlazy.resize(n << 2 | 3); upd.resize(n << 2 | 3, false);\n\t\tbuild(1, 0, n - 1, values);\n\t}\n\tvoid push(int i, int l, int r){\n\t\tif (upd[i]){\n\t\t\tapplyUpd(lazy[i], ST[i], l, r);\n\t\t\tif (l != r){\n\t\t\t\tpushUpd(lazy[i], lazy[i << 1], l, r, l, (l + r) / 2);\n\t\t\t\tpushUpd(lazy[i], lazy[i << 1 | 1], l, r, (l + r) / 2 + 1, r);\n\t\t\t\tupd[i << 1] = 1;\n\t\t\t\tupd[i << 1 | 1] = 1;\n\t\t\t}\n\t\t\tupd[i] = false;\n\t\t\tlazy[i] = T2();\n\t\t}\n\t}\n\tvoid update(int i, int l, int r, int a, int b, T2 &u){\n\t\tif (l >= a and r <= b){\n\t\t\tpushUpd(u, lazy[i], a, b, l, r);\n\t\t\tupd[i] = true;\n\t\t}\n\t\tpush(i, l, r);\n\t\tif (l > b or r < a) return;\n\t\tif (l >= a and r <= b) return;\n\t\tupdate(i << 1, l, (l + r) >> 1, a, b, u);\n\t\tupdate(i << 1 | 1, (l + r) / 2 + 1, r, a, b, u);\n\t\tST[i] = merge(ST[i << 1], ST[i << 1 | 1]);\n\t}\n\tvoid update(int a, int b, T2 u){\n\t\tif (a > b){\n\t\t\tupdate(0, b, u);\n\t\t\tupdate(a, n - 1, u);\n\t\t\treturn ;\n\t\t}\n\t\tupdate(1, 0, n - 1, a, b, u);\n\t}\n\tT1 query(int i, int l, int r, int a, int b){\n\t\tpush(i, l, r);\n\t\tif (a <= l and r <= b)\n\t\t\treturn ST[i];\n\t\tint mid = (l + r) >> 1;\n\t\tif (mid < a)\n\t\t\treturn query(i << 1 | 1, mid + 1, r, a, b);\n\t\tif (mid >= b)\n\t\t\treturn query(i << 1, l, mid, a, b);\n\t\treturn merge(query(i << 1, l, mid, a, b), query(i << 1 | 1, mid + 1, r, a, b));\n\t}\n\tT1 query(int a, int b){\n\t\tif (a > b) return merge(query(a, n - 1), query(0, b));\n\t\treturn query(1, 0, n - 1, a, b);\n\t}\n};",
+      "source": "Lazy Segment Tree",
+      "length": 1942,
+      "id": 27
+    },
+    {
+      "text": "template<class T1,class T2,T1 merge(T1&,T1&),void applyUpd(T1&,T2&,int), void pushUpd(T2&,T2&,int)>\nstruct segment_tree_lazy {\n\t\tint n,h; vector<T1> st; vector<T2> lazy;\n\t\tsegment_tree_lazy(vector<T1> & a){\n\t\t\t\tn = a.size(); h = sizeof(int)*8-__builtin_clz(n);\n\t\t\t\tst.resize(n<<1); lazy.resize(n);\n\t\t\t\tfor (int i = 0; i < n; i++) st[n+i] = a[i];\n\t\t\t\tfor (int i = n-1; i > 0; i--) st[i] = merge(st[i<<1],st[i<<1|1]);\n\t\t}\n\t\tvoid calc(int pos, int sz){\n\t\t\t\tst[pos] = merge(st[pos<<1],st[pos<<1|1]);\n\t\t\t\tif (lazy[pos].upd()) applyUpd(st[pos],lazy[pos],sz);\n\t\t}\n\t\tvoid apply(int pos, T2 val, int sz){\n\t\t\t\tapplyUpd(st[pos],val,sz);\n\t\t\t\tif (pos < n) pushUpd(val,lazy[pos],sz);\n\t\t}\n\t\tvoid push(int l, int r){\n\t\t\t\tint s = h, sz = 1<<(h-1);\n\t\t\t\tfor (l += n, r += n-1; s > 0; s--, sz >>= 1)\n\t\t\t\t\t\tfor (int i = l>>s; i <= r>>s; i++) if (lazy[i].upd()){\n\t\t\t\t\t\t\t\tapply(i<<1,lazy[i],sz);\n\t\t\t\t\t\t\t\tapply(i<<1|1,lazy[i],sz);\n\t\t\t\t\t\t\t\tlazy[i] = T2();\n\t\t\t\t\t\t}\n\t\t}\n\t\tvoid update(int l, int r, T2 val){\n\t\t\t\tpush(l,l+1); push(r,r+1);\n\t\t\t\tbool cl = 0, cr = 0; int sz = 1;\n\t\t\t\tfor (l += n, r += n+1; l < r; l >>= 1, r >>= 1, sz <<= 1){\n\t\t\t\t\t\tif (cl) calc(l-1,sz);\n\t\t\t\t\t\tif (cr) calc(r,sz);\n\t\t\t\t\t\tif (l&1) apply(l++,val,sz), cl = 1;\n\t\t\t\t\t\tif (r&1) apply(--r,val,sz), cr = 1;\n\t\t\t\t}\n\t\t\t\tfor (--l; r > 0; l >>= 1, r >>= 1, sz <<= 1){\n\t\t\t\t\t\tif (cl) calc(l,sz);\n\t\t\t\t\t\tif (cr && (!cl || l != r)) calc(r,sz);\n\t\t\t\t}\n\t\t}\n\t\tT1 query(int l, int r){\n\t\t\t\tpush(l,l+1); push(r,r+1);\n\t\t\t\tT1 ansL, ansR; bool hasL = 0,hasR = 0;\n\t\t\t\tfor (l += n, r += n+1; l < r; l >>= 1, r >>= 1){\n\t\t\t\t\t\tif (l&1) ansL = (hasL?merge(ansL,st[l++]):st[l++]), hasL = 1;\n\t\t\t\t\t\tif (r&1) ansR = (hasR?merge(st[--r],ansR):st[--r]), hasR = 1;\n\t\t\t\t}\n\t\t\t\tif (!hasL) return ansR; if (!hasR) return ansL;\n\t\t\t\treturn merge(ansL,ansR);\n\t\t}\n};\nstruct lz {\n\t\tll val;\n\t\tlz(){ val = 0; }\n\t\tbool upd(){ return (val != 0); }\n};\nll merge(ll & a, ll & b){\n\t\treturn a+b;\n}\nvoid applyUpd(ll & v, lz & u, int sz){\n\t\tv += u.val*((ll)sz);\n}\nvoid pushUpd(lz & u1, lz & u2, int sz){\n\t\tu2.val += u1.val;\n}",
+      "source": "Iterative Lazy Segment Tree",
+      "length": 2013,
+      "id": 28
+    },
+    {
+      "text": "template<class T, T _m(T, T)>\nstruct persistent_segment_tree {\n\tvector<T> ST;\n\tvector<int> L, R;\n\tint n, rt;\n\tpersistent_segment_tree(int n): ST(1, T()), L(1, 0), R(1, 0), n(n), rt(0) {}\n\tint new_node(T v, int l = 0, int r = 0) {\n\t\tint ks = ST.size();\n\t\tST.push_back(v); L.push_back(l); R.push_back(r);\n\t\treturn ks;\n\t}\n\tint update(int k, int l, int r, int p, T v) {\n\t\tint ks = new_node(ST[k], L[k], R[k]);\n\t\tif (l == r) {\n\t\t\tST[ks] = v; return ks;\n\t\t}\n\t\tint m = (l + r) / 2, ps;\n\t\tif (p <= m) {\n\t\t\tps = update(L[ks], l, m, p, v);\n\t\t\tL[ks] = ps;\n\t\t} else {\n\t\t\tps = update(R[ks], m + 1, r, p, v);\n\t\t\tR[ks] = ps;\n\t\t}\n\t\tST[ks] = _m(ST[L[ks]], ST[R[ks]]);\n\t\treturn ks;\n\t}\n\tT query(int k, int l, int r, int a, int b) {\n\t\tif (l >= a and r <= b)\n\t\t\treturn ST[k];\n\t\tint m = (l + r) / 2;\n\t\tif (b <= m)\n\t\t\treturn query(L[k], l, m, a, b);\n\t\tif (a > m)\n\t\t\treturn query(R[k], m + 1, r, a, b);\n\t\treturn _m(query(L[k], l, m, a, b), query(R[k], m + 1, r, a, b));\n\t}\n\tint update(int k, int p, T v) {\n\t\treturn rt = update(k, 0, n - 1, p, v);\n\t}\n\tint update(int p, T v) {\n\t\treturn update(rt, p, v);\n\t}\n\tT query(int k, int a, int b) {\n\t\treturn query(k, 0, n - 1, a, b);\n\t}\n};",
+      "source": "Persistent Segment Tree",
+      "length": 1154,
+      "id": 29
+    },
+    {
+      "text": "template <\n\t\tclass T,\n\t\tclass MAXi,\n\t\tT merge(T, T),\n\t\tT init(MAXi, MAXi)\n>\nstruct dynamic_segment_tree {\n\tvector<T> ST; vector<int>L, R;\n\tMAXi n; int n_count;\n\tdynamic_segment_tree (MAXi n, int r) :\n\t\tn(n),n_count(1),L(1),R(1),ST(1){\n\t\tST.reserve(r);\n\t\tL.reserve(r);\n\t\tR.reserve(r);\n\t\tST[0] = init(0, n - 1);\n\t}\n\tint addNode(MAXi l, MAXi r){\n\t\tL.push_back(0);\n\t\tR.push_back(0);\n\t\tST.push_back(init(l, r));\n\t\treturn n_count ++;\n\t}\n\tT query(int i, MAXi l, MAXi r, MAXi a, MAXi b) {\n\t\tif (a <= l and r <= b)\n\t\t\treturn ST[i];\n\t\tMAXi mid = ((l + r) >> 1LL);\n\t\tif (b <= mid)\n\t\t\treturn (L[i] != 0 ? query(L[i], l, mid, a, b) : init(l, mid));\n\t\telse if (a > mid)\n\t\t\treturn (R[i] != 0 ? query(R[i], mid + 1, r, a, b) : init(mid + 1, r));\n\t\tif (L[i] == 0) L[i] = addNode(l, mid);\n\t\tif (R[i] == 0) R[i] = addNode(mid + 1, r);\n\t\treturn merge(query(L[i], l, mid, a, b), query(R[i], mid + 1, r, a, b));\n\t}\n\tT query(MAXi a, MAXi b) {\n\t\treturn query(0, 0, n - 1, a, b);\n\t}\n\tvoid update(int i, MAXi l, MAXi r, MAXi p, T v) {\n\t\tif (l == r){\n\t\t\tST[i] = v; return;\n\t\t}\n\t\tMAXi mid = (l + r) / 2LL;\n\t\tif (p <= mid)\n\t\t\tupdate(L[i] != 0 ? L[i] : L[i] = addNode(l, mid), l, mid, p, v);\n\t\telse\n\t\t\tupdate(R[i] != 0 ? R[i] : R[i] = addNode(mid + 1, r), mid + 1, r, p, v);\n\t\tST[i] = merge(\n\t\t\t\tL[i] != 0 ? ST[L[i]] : init(l, mid),\n\t\t\t\tR[i] != 0 ? ST[R[i]] : init(mid + 1, r)\n\t\t\t);\n\t}\n\tvoid update(MAXi pos, T v) {\n\t\tupdate(0, 0, n - 1, pos, v);\n\t}\n};",
+      "source": "Dynamic Segment Tree",
+      "length": 1422,
+      "id": 30
+    },
+    {
+      "text": "template<class tree_node, class query_input, class query_output>\nstruct extended_segment_tree{\n\tvector<tree_node> ST;\n\tint n;\n\tvoid build(int i, int l, int r, vector<tree_node> &a){\n\t\tif (l == r) { ST[i] = a[l]; return; }\n\t\tint mid = (l + r) / 2;\n\t\tbuild(i << 1, l, mid, a);\n\t\tbuild(i << 1 | 1, mid + 1, r, a);\n\t\tST[i].build(&ST[i << 1], &ST[i << 1 | 1]);\n\t}\n\textended_segment_tree(vector<tree_node> &a){\n\t\tn = a.size(); ST.resize(n << 2 | 3);\n\t\tbuild(1, 0, n - 1, a);\n\t}\n\tquery_output query(int i, int l, int r, int a, int b, query_input &q){\n\t\tif (l >= a and r <= b) { return ST[i].query(q); }\n\t\tint mid = (l + r) / 2;\n\t\tif (b <= mid) return query(i << 1, l, mid, a, b, q);\n\t\telse if (a > mid) return query(i << 1 | 1, mid + 1, r, a, b, q);\n\t\tquery_output R = query(i << 1 | 1, mid + 1, r, a, b, q);\n\t\tquery_output L = query(i << 1, l, mid, a, b, q);\n\t\treturn L.merge(&R);\n\t}\n\tquery_output query(int l, int r, query_input &q){\n\t\treturn query(1, 0, n - 1, l, r, q);\n\t}\n\tvoid update(int i, int l, int r, int pos, tree_node &x){\n\t\tif (l == r){ ST[i] = x; return; }\n\t\tint mid = (l + r) / 2;\n\t\tif (l <= mid) update(i << 1, l, mid, pos, x);\n\t\tif (r > mid) update(i << 1 | 1, mid + 1, r, pos, x);\n\t\tST[i].update(pos - l, x);\n\t}\n\tvoid update(int pos, tree_node &x){\n\t\tupdate(1, 0, n - 1, pos, x);\n\t}\n};\nstruct query_output{\n\tint v;\n\tquery_output(int v) : v(v){}\n\tquery_output merge(query_output *r){\n\t\treturn query_output(v + r->v);\n\t}\n};\ntypedef int query_input;\nstruct tree_node{\n\tint n;\n\tvector<int> a;\n\ttree_node(){}\n\ttree_node(int x){\n\t\ta.resize(1, x);\n\t\tn = 1;\n\t}\n\tvoid update(int pos, tree_node &x) {\n\t\treturn;\n\t}\n\tquery_output query(int v){\n\t\tint left = 0, right = n - 1;\n\t\twhile(left < right){\n\t\t\tint mid = (left + right + 1) / 2;\n\t\t\tif (a[mid] <= v) left = mid;\n\t\t\telse right = mid - 1;\n\t\t}\n\t\tif (a[left] > v) left--;\n\t\treturn query_output(n - 1 - left);\n\t}\n\tvoid build(tree_node *l, tree_node *r){\n\t\tint nl = l->a.size(), nr = r->a.size();\n\t\tint pl = 0, pr = 0;\n\t\ta.reserve(nl + nr);\n\t\twhile(pl < nl || pr < nr){\n\t\t\tif (pl == nl || (pr < nr and l->a[pl] >= r->a[pr])){\n\t\t\t\ta.push_back(r->a[pr ++]);\n\t\t\t}\n\t\t\telse{\n\t\t\t\ta.push_back(l->a[pl ++]);\n\t\t\t}\n\t\t}\n\t\tn = a.size();\n\t}\n};\nextended_segment_tree<tree_node, query_output, query_input> EST(a);",
+      "source": "Extended Segment Tree",
+      "length": 2246,
+      "id": 31
+    },
+    {
+      "text": "struct query{\n\tint v,u;\n\tbool status;\n\tquery(int _v,int _u) : v(_v),u(_u) {};\n};\nstruct query_tree{\n\tvector<vector<query>> tree;\n\tint size;\n\tUnionFindRB uf;\n\tquery_tree(int _size,int n) : size(_size) {uf = UnionFindRB(n); tree.resize(4*_size + 4);}\n\tvoid addTree(int v,int l,int r,int ul,int ur, query& q){\n\t\tif(ul > ur) return;\n\t\tif(l == ul && ur == r){tree[v].push_back(q); return; }\n\t\tint mid = (l + r)/2;\n\t\taddTree(2*v,l,mid,ul,min(ur,mid),q);\n\t\taddTree(2*v + 1,mid + 1,r,max(ul,mid + 1),ur,q);\n\t}\n\tvoid add(query q,int l,int r){addTree(1,0,size - 1,l,r,q);}\n\tvoid dfs(int v,int l,int r,vector<int> &ans){\n\t\tfor(query &q: tree[v]) q.status = uf.unionSet(q.v,q.u);\n\t\tif(l == r) ans[l] = uf.comps;\n\t\telse{\n\t\t\tint mid = (l + r)/2;\n\t\t\tdfs(2*v,l,mid,ans);\n\t\t\tdfs(2*v + 1,mid + 1,r,ans);\n\t\t}\n\t\tfor(query q: tree[v]) if(q.status) uf.rb();\n\t}\n\tvector<int> getAns(){\n\t\tvector<int> ans(size);\n\t\tdfs(1,0,size - 1,ans);\n\t\treturn ans;\n\t}\n};",
+      "source": "Query Tree",
+      "length": 931,
+      "id": 32
+    },
+    {
+      "text": "template <class T, T merge(T,T)>\nstruct sqrt_decomp {\n\tint n,sq;\n\tvector<T> st,bl;\n\tsqrt_decomp(vector<T> & a){\n\t\tn = a.size(); st.resize(n);\n\t\tsq = sqrtl(n); bl.resize((n+sq-1)/sq);\n\t\tfor (int i = 0; i < n; i++){\n\t\t\tst[i] = a[i];\n\t\t\tbl[i/sq] = ((i%sq == 0)?st[i]:merge(bl[i/sq],st[i]));\n\t\t}\n\t}\n\tvoid update(int pos, T val) {\n\t\tst[pos] = val;\n\t\tint block = pos/sq, lb = block*sq, rb = min(block*sq+sq-1,n-1);\n\t\tT vl;\n\t\tfor (int i = lb; i <= rb; i++)\n\t\t\tvl = ((i == lb)?st[i]:merge(vl,st[i]));\n\t\tbl[block] = vl;\n\t}\n\tT query(int l, int r){\n\t\tT res; bool hasR = 0;\n\t\tfor (int i = l/sq; i <= r/sq; i++){\n\t\t\tint lb = i*sq, rb = i*sq+sq-1;\n\t\t\tif (l <= lb && rb <= r){\n\t\t\t\tres = (hasR?merge(res,bl[i]):bl[i]), hasR = 1;\n\t\t\t\tcontinue;\n\t\t\t}\n\t\t\tfor (int j = max(l,lb); j <= min(rb,r); j++)\n\t\t\t\tres = (hasR?merge(res,st[j]):st[j]), hasR = 1;\n\t\t}\n\t\treturn res;\n\t}\n};",
+      "source": "Sqrt Decomposition",
+      "length": 854,
+      "id": 33
+    },
+    {
+      "text": "template <typename T>\nstruct merge_sort_tree {\n\tint N; vector<vector<T>> ST;\n\tmerge_sort_tree(){}\n\tmerge_sort_tree(vector<T> &vs) {\n\t\tN = vs.size(); ST.resize(2 * N);\n\t\tfor (int i = 0; i < N; i++) ST[i + N] = {vs[i]};\n\t\tfor (int i = N - 1; i > 0; i--)\n\t\t\tmerge(ST[i<<1].begin(), ST[i<<1].end(), ST[i<<1|1].begin(), ST[i<<1|1].end(), back_inserter(ST[i]));\n\t}\n\tint query(int i, int j, int k) {\n\t\tint res = 0;\n\t\tfor (i += N, j += N + 1; i < j; i >>= 1, j >>= 1) {\n\t\t\tif (i & 1) res += ST[i].size() - (upper_bound(ST[i].begin(), ST[i].end(), k) - ST[i].begin()), i++;\n\t\t\tif (j & 1) --j, res += ST[j].size() - (upper_bound(ST[j].begin(), ST[j].end(), k) - ST[j].begin());\n\t\t}\n\t\treturn res;\n\t}\n};",
+      "source": "Merge Sort Tree",
+      "length": 691,
+      "id": 34
+    },
+    {
+      "text": "struct fenwick_tree {\n\tvector<ll> bit; int n;\n\tfenwick_tree(int n): n(n) { bit.assign(n, 0); }\n\tfenwick_tree(vector<ll> &a): fenwick_tree(a.size()) {\n\t\tfor (size_t i = 0; i < a.size(); i++) {\n\t\t\tbit[i]+=a[i];\n\t\t\tif ((i|(i + 1)) < a.size()) bit[i|(i + 1)]+=bit[i];\n\t\t}\n\t}\n\tll sum(int r) {\n\t\tll ret = 0;\n\t\tfor (; r >= 0; r = (r & (r + 1)) - 1)\n\t\t\tret += bit[r];\n\t\treturn ret;\n\t}\n\tll sum(int l, int r) {\n\t\treturn sum(r) - sum(l - 1);\n\t}\n\tvoid add(int idx, ll delta) {\n\t\tfor (; idx < n; idx = idx | (idx + 1))\n\t\t\tbit[idx] += delta;\n\t}\n};",
+      "source": "Fenwick Tree",
+      "length": 533,
+      "id": 35
+    },
+    {
+      "text": "struct fenwick_tree_with_walk : fenwick_tree {\n\tll walk(ll k) {\n\t\tif (k <= 0 || k > sum(n-1)) return n;\n\t\tll i = -1, s = 1;\n\t\twhile ((s << 1) < n) s <<= 1;\n\t\twhile (s > 0) {\n\t\t\tll m = i + s;\n\t\t\tif (m < n && bit[m] < k) {\n\t\t\t\ti = m;\n\t\t\t\tk -= bit[m];\n\t\t\t}\n\t\t\ts >>= 1;\n\t\t}\n\t\treturn i + 1;\n\t}\n};",
+      "source": "Fenwick Tree with Walk",
+      "length": 291,
+      "id": 36
+    },
+    {
+      "text": "struct fenwick_tree_2d {\n\tint N, M;\n\tvector<vector<ll>> BIT;\n\tfenwick_tree_2d(int N, int M): N(N), M(M) {\n\t\tBIT.assign(N + 1, vector<ll>(M + 1, 0));\n\t}\n\tvoid update(int x, int y, ll v) {\n\t\tfor (int i = x; i <= N; i += (i & -i))\n\t\t\tfor (int j = y; j <= M; j += (j & -j))\n\t\t\t\tBIT[i][j] += v;\n\t}\n\tll sum(int x, int y) {\n\t\tll s = 0;\n\t\tfor (int i = x; i > 0; i -= (i & -i))\n\t\t\tfor (int j = y; j > 0; j -= (j & -j))\n\t\t\t\ts += BIT[i][j];\n\t\treturn s;\n\t}\n\tll query(int x1, int y1, int x2, int y2) {\n\t\treturn sum(x2, y2) - sum(x2, y1 - 1) - sum(x1 - 1, y2) + sum(x1 - 1, y1 - 1);\n\t}\n};",
+      "source": "Fenwick Tree 2D",
+      "length": 574,
+      "id": 37
+    },
+    {
+      "text": "const ll INF = 1e15;\nstruct Line {\n\tmutable ll a, b, c;\n\tbool operator<(Line r) const {\n\t\treturn a < r.a;\n\t}\n\tbool operator<(ll x) const {\n\t\treturn c < x;\n\t}\n};\nstruct LineContainer: multiset < Line, less < >> {\n\tll div(ll a, ll b) {\n\t\treturn a / b - ((a ^ b) < 0 && a % b);\n\t}\n\tbool isect(iterator x, iterator y) {\n\t\tif (y == end()) return x -> c = INF, 0;\n\t\tif (x -> a == y -> a) x -> c = x -> b > y -> b ? INF : -INF;\n\t\telse x -> c = div(y -> b - x -> b, x -> a - y -> a);\n\t\treturn x -> c >= y -> c;\n\t}\n\tvoid add(ll a, ll b) {\n\t\tauto z = insert({\n\t\t\ta,\n\t\t\tb,\n\t\t\t0\n\t\t}), y = z++, x = y;\n\t\twhile (isect(y, z)) z = erase(z);\n\t\tif (x != begin() && isect(--x, y)) isect(x, y = erase(y));\n\t\twhile ((y = x) != begin() && (--x) -> c >= y -> c) isect(x, erase(y));\n\t}\n\tll query(ll x) {\n\t\tif (empty()) return -INF;\n\t\tauto l = * lower_bound(x);\n\t\treturn l.a * x + l.b;\n\t}\n};",
+      "source": "Line Container",
+      "length": 866,
+      "id": 38
+    },
+    {
+      "text": "template<class T, int d>\nstruct pt {\n\t\tarray<T,d> p;\n\t\tbool operator!=(const pt &o) const { return p != o.p; }\n\t\tT dist(const pt &o) const {\n\t\t\t\tT res = 0;\n\t\t\t\tfor (int i = 0; i < d; i++)\n\t\t\t\t\t\tres += abs(p[i] - o.p[i]);\n\t\t\t\treturn res;\n\t\t}\n};\ntemplate<class pt, class T, int d>\nstruct kd_tree {\n\t\tstruct node {\n\t\t\t\tint ax; T val; pt p;\n\t\t\t\tnode *izq, *der;\n\t\t\t\tarray<T, d> mn, mx;\n\t\t};\n\t\tnode *root;\n\t\tT mn_dist(const pt &q, const array<T,d> & mnb, const array<T, d> &mxb) {\n\t\t\t\tT dist = 0;\n\t\t\t\tfor (int i = 0; i < d; i++) {\n\t\t\t\t\t\tif (q.p[i] < mnb[i]) dist += mnb[i]-q.p[i];\n\t\t\t\t\t\telse if (q.p[i] > mxb[i]) dist += q.p[i]-mxb[i];\n\t\t\t\t}\n\t\t\t\treturn dist;\n\t\t}\n\t\tnode *build_tree(vector<pt> &a, int l, int r) {\n\t\t\t\tif (l > r) return nullptr;\n\t\t\t\tnode *cur = new node();\n\t\t\t\tarray<T, d> minb, maxb;\n\t\t\t\tfor (int i = 0; i < d; i++) {\n\t\t\t\t\t\tminb[i] = a[l].p[i];\n\t\t\t\t\t\tmaxb[i] = a[l].p[i];\n\t\t\t\t}\n\t\t\t\tfor (int j = l + 1; j <= r; j++) {\n\t\t\t\t\t\tfor (int i = 0; i < d; i++) {\n\t\t\t\t\t\t\t\tif (a[j].p[i] < minb[i]) minb[i] = a[j].p[i];\n\t\t\t\t\t\t\t\tif (a[j].p[i] > maxb[i]) maxb[i] = a[j].p[i];\n\t\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\tcur->mn = minb; cur->mx = maxb; int ax = 0;\n\t\t\t\tT mxld = 0;\n\t\t\t\tfor (int i = 0; i < d; i++) {\n\t\t\t\t\t\tT ld = maxb[i]-minb[i];\n\t\t\t\t\t\tif (ld > mxld) {\n\t\t\t\t\t\t\t\tmxld = ld;\n\t\t\t\t\t\t\t\tax = i;\n\t\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\tcur->ax = ax; int mid = (l+r)/2;\n\t\t\t\tnth_element(a.begin() + l, a.begin() + mid, a.begin() + r + 1, [ax](const pt &x, const pt &y) {\n\t\t\t\t\t\treturn x.p[ax] < y.p[ax];\n\t\t\t\t});\n\t\t\t\tcur->p = a[mid]; cur->val = a[mid].p[ax];\n\t\t\t\tcur->izq = build_tree(a, l, mid - 1);\n\t\t\t\tcur->der = build_tree(a, mid + 1, r);\n\t\t\t\treturn cur;\n\t\t}\n\t\tkd_tree(vector<pt> &a) {\n\t\t\t\troot = build_tree(a, 0, a.size() - 1);\n\t\t}\n\t\tvoid query(node *cur, const pt &q, T &ans) {\n\t\t\t\tif (cur == nullptr) return;\n\t\t\t\tif (q != cur->p) {\n\t\t\t\t\t\tT d_here = q.dist(cur->p);\n\t\t\t\t\t\tif (d_here < ans)\n\t\t\t\t\t\t\t\tans = d_here;\n\t\t\t\t} else {\n\t\t\t\t\t\tans = min(ans, (T)0);\n\t\t\t\t}\n\t\t\t\tvector<pair<T, node *>> ch;\n\t\t\t\tif (cur->izq) {\n\t\t\t\t\t\tT d_izq = mn_dist(q, cur->izq->mn, cur->izq->mx);\n\t\t\t\t\t\tch.push_back({d_izq, cur->izq});\n\t\t\t\t}\n\t\t\t\tif (cur->der) {\n\t\t\t\t\t\tT d_der = mn_dist(q, cur->der->mn, cur->der->mx);\n\t\t\t\t\t\tch.push_back({d_der, cur->der});\n\t\t\t\t}\n\t\t\t\tsort(ch.begin(), ch.end(), [](const auto &a, const auto &b) {\n\t\t\t\t\t\treturn a.first < b.first;\n\t\t\t\t});\n\t\t\t\tfor (auto &[d_val, to] : ch)\n\t\t\t\t\t\tif (d_val < ans) query(to, q, ans);\n\t\t}\n\t\tT query(const pt &q) {\n\t\t\t\tT ans = numeric_limits<T>::max();\n\t\t\t\tquery(root, q, ans);\n\t\t\t\treturn ans;\n\t\t}\n};",
+      "source": "KD Tree",
+      "length": 2484,
+      "id": 39
+    },
+    {
+      "text": "struct query {\n\tll l, r, i;\n};\ntemplate<class T, typename U, class T2>\nstruct mo_algorithm {\n\tvector<U> ans;\n\ttemplate<typename... Args>\n\tmo_algorithm(vector<T> &v, vector<query> &queries, Args... args) {\n\t\tT2 ds(args...);\n\t\tll block_sz = sqrtl(v.size());\n\t\tans.assign(queries.size(), -1);\n\t\tsort(queries.begin(), queries.end(), [&](auto &a, auto &b) {\n\t\t\treturn a.l/block_sz != b.l/block_sz ? a.l/block_sz < b.l/block_sz : a.r < b.r;\n\t\t});\n\t\tll l = 0, r = -1;\n\t\tfor (query q : queries) {\n\t\t\twhile (l > q.l) ds.add(v[--l]);\n\t\t\twhile (r < q.r) ds.add(v[++r]);\n\t\t\twhile (l < q.l) ds.remove(v[l++]);\n\t\t\twhile (r > q.r) ds.remove(v[r--]);\n\t\t\tans[q.i] = ds.answer(q);\n\t\t}\n\t}\n};",
+      "source": "Mo Queries",
+      "length": 672,
+      "id": 40
+    },
+    {
+      "text": "struct query {\n\tll l, r, i;\n};\ntemplate<typename T, typename U, class T2>\nstruct rollback_mo_algorithm {\n\tvector<U> ans;\n\ttemplate<typename... Args>\n\trollback_mo_algorithm(vector<T> &v, vector<query> &queries, Args... args) {\n\t\tll block_sz = sqrtl(v.size());\n\t\tans.resize(queries.size());\n\t\tT2 ds(args...);\n\t\tsort(queries.begin(), queries.end(), [&](auto &a, auto &b) {\n\t\t\treturn a.l/block_sz != b.l/block_sz ? a.l/block_sz < b.l/block_sz : a.r < b.r;\n\t\t});\n\t\tll t = 0, last, border, last_block = -1, block;\n\t\tfor(ll i = 0; i < queries.size(); i++) {\n\t\t\tblock = queries[i].l / block_sz;\n\t\t\tif (block == queries[i].r/block_sz) {\n\t\t\t\tT2 tmp(args...);\n\t\t\t\tfor (ll k = queries[i].l; k <= queries[i].r; k++)\n\t\t\t\t\ttmp.add(v[k]);\n\t\t\t\tans[queries[i].i] = tmp.answer(queries[i]);\n\t\t\t\tcontinue;\n\t\t\t}\n\t\t\tif(last_block != block) {\n\t\t\t\tds = T2(args...);\n\t\t\t\tborder = block_sz * (block + 1);\n\t\t\t\tlast = border;\n\t\t\t}\n\t\t\tlast_block = block;\n\t\t\tfor(ll k = last + 1; k <= queries[i].r; k++) ds.add(v[k]);\n\t\t\tt = ds.snapshot();\n\t\t\tfor(ll k = queries[i].l; k <= border; k++) ds.add(v[k]);\n\t\t\tans[queries[i].i] = ds.answer(queries[i]);\n\t\t\tds.rollback(t);\n\t\t\tlast = queries[i].r;\n\t\t}\n\t}\n};",
+      "source": "Mo with Rollback",
+      "length": 1167,
+      "id": 41
+    },
+    {
+      "text": "struct query {\n\tint l,r,t,i;\n};\ntemplate<class T, typename U, class T2>\nstruct mo_update {\n\tvector<U> ans;\n\tmo_update(vector<T> &v, vector<query> &queries, vector<pair<int,T>> & updates, T2 & ds) {\n\t\tds.init(v,updates);\n\t\tint block_sz = cbrtl(2*v.size()*v.size());\n\t\tans.assign(queries.size(),-1);\n\t\tsort(queries.begin(), queries.end(), [&](auto a, auto b){\n\t\t\tif (a.l/block_sz == b.l/block_sz){\n\t\t\t\tif (a.r/block_sz == b.r/block_sz) return a.t < b.t;\n\t\t\t\treturn a.r/block_sz < b.r/block_sz;\n\t\t\t}\n\t\t\treturn a.l/block_sz < b.l/block_sz;\n\t\t});\n\t\tint l = 0, r = -1;\n\t\tfor (query q : queries) {\n\t\t\twhile (ds.t < q.t) ds.update(l,r);\n\t\t\twhile (ds.t > q.t) ds.rollback(l,r);\n\t\t\twhile (l > q.l) ds.add(--l);\n\t\t\twhile (r < q.r) ds.add(++r);\n\t\t\twhile (l < q.l) ds.remove(l++);\n\t\t\twhile (r > q.r) ds.remove(r--);\n\t\t\tans[q.i] = ds.answer(q);\n\t\t}\n\t}\n};",
+      "source": "Mo with Updates",
+      "length": 840,
+      "id": 42
+    },
+    {
+      "text": "#include <ext/pb_ds/assoc_container.hpp>\n#include <ext/pb_ds/tree_policy.hpp>\nusing namespace __gnu_pbds;\ntemplate <typename T> using oset = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;",
+      "source": "Ordered Set",
+      "length": 217,
+      "id": 43
+    },
+    {
+      "text": "const ll INF = 1e15;\nstruct treap {\n\tstatic mt19937_64 MT;\n\tstruct node {\n\t\tnode *left, *right; ll key, priority, value, max_value;\n\t\tnode(ll k, ll v = 0) {\n\t\t\tleft = right = NULL; key = k; priority = MT();\n\t\t\tmax_value = value = v;\n\t\t}\n\t};\n\tll value(node* T) { return T ? T->value : -INF; }\n\tll max_value(node* T) { return T ? T->max_value : -INF; }\n\tvoid update(node* T) {\n\t\tT->max_value = max({T->value, max_value(T->left), max_value(T->right)});}\n\tnode *root;\n\tvoid merge(node* &T, node* T1, node* T2) {\n\t\tif(T1 == NULL) { T = T2; return; }\n\t\tif(T2 == NULL) { T = T1; return; }\n\t\tif(T1->priority > T2->priority)\n\t\t\tmerge(T1->right, T1->right, T2), T = T1;\n\t\telse merge(T2->left, T1, T2->left), T = T2;\n\t\treturn update(T);\n\t}\n\tvoid merge(node* &T, node* T1, node* T2, node* T3) {\n\t\tmerge(T, T1, T2); merge(T, T, T3);\n\t}\n\tvoid split(node* T, ll x, node* &T1, node* &T2) {\n\t\tif(T == NULL) { T1 = T2 = NULL; return; }\n\t\tif(T->key <= x) { split(T->right, x, T->right, T2); T1 = T; }\n\t\telse { split(T->left, x, T1, T->left); T2 = T; }\n\t\treturn update(T);\n\t}\n\tvoid split(node* T, ll x, ll y, node* &T1, node* &T2, node* &T3) {\n\t\tsplit(T, x-1, T1, T2); split(T2, y, T2, T3);\n\t}\n\tbool search(node* T, ll x) {\n\t\tif(T == NULL) return false; if(T->key == x) return true;\n\t\tif(x < T->key) return search(T->left, x);\n\t\treturn search(T->right, x);\n\t}\n\tvoid insert(node* &T, node* n) {\n\t\tif(T == NULL) { T = n; return; }\n\t\tif(n->priority > T->priority) {\n\t\t\tsplit(T, n->key, n->left, n->right); T = n;\n\t\t} else if(n->key < T->key) insert(T->left, n);\n\t\telse insert(T->right, n);\n\t\treturn update(T);\n\t}\n\tvoid erase(node* &T, ll x) {\n\t\tif(T == NULL) return;\n\t\tif(T->key == x) { merge(T, T->left, T->right); }\n\t\telse if(x < T->key) erase(T->left, x);\n\t\telse erase(T->right, x);\n\t\treturn update(T);\n\t}\n\tbool set(node* T, ll k, ll v) {\n\t\tif(T == NULL) return false;\n\t\tbool found;\n\t\tif(T->key == k) T->value = k, found = true;\n\t\telse if(k < T->key) found = set(T->left, k, v);\n\t\telse found = set(T->right, k, v);\n\t\tif(found) update(T); return found;\n\t}\n\tnode* find(node* T, ll k) {\n\t\tif(T == NULL) return NULL;\n\t\tif(T->key == k) return T;\n\t\tif(k < T->key) return find(T->left, k);\n\t\treturn find(T->right, k);\n\t}\n\ttreap() {root = NULL;}\n\ttreap(ll x) {root = new node(x);}\n\ttreap &merge(treap &O) {merge(root, root, O.root); return *this; }\n\ttreap split(ll x) {treap ans; split(root, x, root, ans.root); return ans; }\n\tbool search(ll x) {return search(root, x); }\n\tvoid insert(ll x) {if(search(root, x)) return; return insert(root, new node(x));}\n\tvoid erase(ll x) {return erase(root, x); }\n\tvoid set(ll k, ll v) {if(set(root, k, v)) return; insert(root, new node(k, v));}\n\tll operator[](ll k) {\n\t\tnode* n = find(root, k);\n\t\tif(n == NULL) n = new node(k), insert(root, n); return n->value;\n\t}\n\tll query(ll a, ll b) {\n\t\tnode *T1, *T2, *T3; split(root, a, b, T1, T2, T3);\n\t\tll ans = max_value(T2); merge(root, T1, T2, T3);\n\t\treturn ans;\n\t}\n};\nmt19937_64 treap::MT(chrono::system_clock::now().time_since_epoch().count());",
+      "source": "Treap",
+      "length": 2998,
+      "id": 44
+    },
+    {
+      "text": "#include <ext/pb_ds/assoc_container.hpp>\nusing namespace __gnu_pbds;\nstruct implicit_treap {\n\tstatic mt19937_64 MT;\n\tstruct node{\n\t\tnode *l = nullptr, *r = nullptr, *par = nullptr;\n\t\tll sz = 1, p = MT(), v, sumv, lzsum = 0;\n\t\tbool lzflip = false;\n\t\tnode(ll x=0) { sumv=v=x; }\n\t} *root = nullptr;\n\tgp_hash_table<int, node*> mp;\n\timplicit_treap(){root=nullptr;}\n\timplicit_treap(ll x){root=new node(x);}\n\tll sz(node* T) { return T?T->sz:0; }\n\tll sumv(node* T) { return T?T->sumv:0;};\n\tvoid upd(node* T){\n\t\tif (T->l) T->l->par = T;\n\t\tif (T->r) T->r->par = T;\n\t\tT->sumv=T->v+sumv(T->l)+sumv(T->r);\n\t\tT->sz=1+sz(T->l)+sz(T->r);\n\t}\n\tvoid push(node* T){\n\t\tif(T->lzsum){\n\t\t\tT->v+=T->lzsum;\n\t\t\tT->sumv+=T->sz*T->lzsum;\n\t\t\tif(T->l)T->l->lzsum+=T->lzsum;\n\t\t\tif(T->r)T->r->lzsum+=T->lzsum;\n\t\t\tT->lzsum=0;\n\t\t}\n\t\tif(T->lzflip){\n\t\t\tswap(T->l,T->r);\n\t\t\tif(T->l)T->l->lzflip^=1;\n\t\t\tif(T->r)T->r->lzflip^=1;\n\t\t\tT->lzflip=0;\n\t\t}\n\t}\n\tvoid merge(node*& T,node* L,node* R){\n\t\tif(!L||!R){T=L?L:R;return;}\n\t\tpush(L);push(R);\n\t\tif(L->p>R->p) merge(L->r,L->r,R), T=L;\n\t\telse merge(R->l,L,R->l), T=R;\n\t\tupd(T);\n\t}\n\tvoid split(node* T,int k,node*& L,node*& R){\n\t\tif(!T){L=R=nullptr;return;}\n\t\tpush(T);\n\t\tint key=sz(T->l);\n\t\tif(key<=k) split(T->r,k-key-1,T->r,R), L=T;\n\t\telse split(T->l,k,L,T->l), R=T;\n\t\tupd(T);\n\t}\n\tvoid set(node* T,int k,ll x){\n\t\tpush(T);\n\t\tint key=sz(T->l);\n\t\tif(key==k)T->v=x;\n\t\telse if(k<key)set(T->l,k,x);\n\t\telse set(T->r,k-key-1,x);\n\t\tupd(T);\n\t}\n\tnode* find(node* T,int k){\n\t\tpush(T);\n\t\tint key=sz(T->l);\n\t\tif(key==k) return T;\n\t\tif(k<key) return find(T->l,k);\n\t\treturn find(T->r,k-key-1);\n\t}\n\tint size(){return sz(root);}\n\timplicit_treap& merge(implicit_treap& O){\n\t\tmerge(root,root,O.root);\n\t\treturn *this;\n\t}\n\timplicit_treap split(int k){\n\t\timplicit_treap ans;\n\t\tsplit(root,k,root,ans.root);\n\t\treturn ans;\n\t}\n\tvoid erase(int i,int j){\n\t\tnode *T1,*T2,*T3;\n\t\tsplit(root,i-1,T1,T2), split(T2,j-i,T2,T3);\n\t\tmerge(root,T1,T3);\n\t}\n\tvoid erase(int k){erase(k,k);}\n\tvoid set(int k,ll x){set(root,k,x);}\n\tll operator[](int k){return find(root,k)->v;}\n\tll query(int i,int j){\n\t\tnode *T1,*T2,*T3;\n\t\tsplit(root,i-1,T1,T2), split(T2,j-i,T2,T3);\n\t\tll ans=sumv(T2);\n\t\tmerge(T2,T2,T3), merge(root,T1,T2);\n\t\treturn ans;\n\t}\n\tvoid update(int i,int j,ll x){\n\t\tnode *T1,*T2,*T3;\n\t\tsplit(root,i-1,T1,T2), split(T2,j-i,T2,T3);\n\t\tT2->lzsum+=x;\n\t\tmerge(T2,T2,T3), merge(root,T1,T2);\n\t}\n\tvoid flip(int i,int j){\n\t\tnode *T1,*T2,*T3;\n\t\tsplit(root,i-1,T1,T2), split(T2,j-i,T2,T3);\n\t\tT2->lzflip^=1;\n\t\tmerge(T2,T2,T3), merge(root,T1,T2);\n\t}\n\tvoid insert(int i,ll x){\n\t\tnode *T1,*T2;\n\t\tsplit(root,i-1,T1,T2);\n\t\tmerge(T1,T1,new node(x)), merge(root,T1,T2);\n\t}\n\tvoid push_back(ll x){auto nn = new node(x); merge(root,root, nn); mp[x] = nn;}\n\tint order_of(int x) {\n\t\tnode* t = mp[x];\n\t\tvector<node*> path;\n\t\tfor (node* cur = t; cur; cur = cur->par)\n\t\t\tpath.push_back(cur);\n\t\treverse(path.begin(), path.end());\n\t\tfor (node* n : path) push(n), upd(n);\n\t\tint idx = sz(t->l);\n\t\tnode* cur = t;\n\t\twhile (cur->par) {\n\t\t\tif (cur == cur->par->r)\n\t\t\t\tidx += sz(cur->par->l) + 1;\n\t\t\tcur = cur->par;\n\t\t}\n\t\treturn idx;\n\t}\n};\nmt19937_64 implicit_treap::MT(chrono::system_clock::now().time_since_epoch().count());",
+      "source": "Implicit Treap",
+      "length": 3160,
+      "id": 45
+    },
+    {
+      "text": "struct Node {\n\tNode *p = 0, *pp = 0, *c[2];\n\tbool flip = 0;\n\tNode() { c[0] = c[1] = 0; fix(); }\n\tvoid fix() {\n\t\tif (c[0]) c[0]->p = this;\n\t\tif (c[1]) c[1]->p = this;\n\t}\n\tvoid pushFlip() {\n\t\tif (!flip) return;\n\t\tflip = 0; swap(c[0], c[1]);\n\t\tif (c[0]) c[0]->flip ^= 1;\n\t\tif (c[1]) c[1]->flip ^= 1;\n\t}\n\tint up() { return p ? p->c[1] == this : -1; }\n\tvoid rot(int i, int b) {\n\t\tint h = i ^ b;\n\t\tNode *x = c[i], *y = b == 2 ? x : x->c[h], *z = b ? y : x;\n\t\tif ((y->p = p)) p->c[up()] = y;\n\t\tc[i] = z->c[i ^ 1];\n\t\tif (b < 2) {\n\t\t\tx->c[h] = y->c[h ^ 1];\n\t\t\tz->c[h ^ 1] = b ? x : this;\n\t\t}\n\t\ty->c[i ^ 1] = b ? this : x;\n\t\tfix(); x->fix(); y->fix();\n\t\tif (p) p->fix(); swap(pp, y->pp);\n\t}\n\tvoid splay() {\n\t\tfor (pushFlip(); p;) {\n\t\t\tif (p->p) p->p->pushFlip();\n\t\t\tp->pushFlip(); pushFlip();\n\t\t\tint c1 = up(), c2 = p->up();\n\t\t\tif (c2 == -1) p->rot(c1, 2);\n\t\t\telse p->p->rot(c2, c1 != c2);\n\t\t}\n\t}\n\tNode *first() {\n\t\tpushFlip();\n\t\treturn c[0] ? c[0]->first() : (splay(), this);\n\t}\n};\nstruct link_cut {\n\tvector<Node> node;\n\tlink_cut(int N) : node(N) {}\n\tvoid link(int u, int v) {\n\t\tmakeRoot(&node[u]);\n\t\tnode[u].pp = &node[v];\n\t}\n\tvoid cut(int u, int v) {\n\t\tNode *x = &node[u], *top = &node[v];\n\t\tmakeRoot(top);\n\t\tx->splay();\n\t\tassert(top == (x->pp ?: x->c[0]));\n\t\tif (x->pp) x->pp = 0;\n\t\telse {\n\t\t\tx->c[0] = top->p = 0;\n\t\t\tx->fix();\n\t\t}\n\t}\n\tbool connected(int u, int v) {\n\t\tNode *nu = access(&node[u])->first();\n\t\treturn nu == access(&node[v])->first();\n\t}\n\tvoid makeRoot(Node *u) {\n\t\taccess(u); u->splay();\n\t\tif (u->c[0]) {\n\t\t\tu->c[0]->p = 0; u->c[0]->flip ^= 1;\n\t\t\tu->c[0]->pp = u; u->c[0] = 0;\n\t\t\tu->fix();\n\t\t}\n\t}\n\tNode *access(Node *u) {\n\t\tu->splay();\n\t\twhile (Node *pp = u->pp) {\n\t\t\tpp->splay(); u->pp = 0;\n\t\t\tif (pp->c[1]) {\n\t\t\t\tpp->c[1]->p = 0;\n\t\t\t\tpp->c[1]->pp = pp;\n\t\t\t}\n\t\t\tpp->c[1] = u;\n\t\t\tpp->fix(); u = pp;\n\t\t}\n\t\treturn u;\n\t}\n};",
+      "source": "Link Cut Tree",
+      "length": 1829,
+      "id": 46
+    },
+    {
+      "text": "struct GCD_type { ll x, y, d; };\nGCD_type ex_GCD(ll a, ll b){\n\tif (b == 0) return {1, 0, a};\n\tGCD_type pom = ex_GCD(b, a % b);\n\treturn {pom.y, pom.x - a / b * pom.y, pom.d};\n}",
+      "source": "Extended GCD",
+      "length": 175,
+      "id": 47
+    },
+    {
+      "text": "using lll = __int128_t;\nll crt(vector<ll> a, vector<ll> m) {\n\tint n = a.size();\n\tfor (int i = 0; i < n; i++) {\n\t\ta[i] %= m[i];\n\t\ta[i] = a[i] < 0 ? a[i] + m[i] : a[i];\n\t}\n\tlll ans = a[0];\n\tlll M = m[0];\n\tfor (int i = 1; i < n; i++) {\n\t\tauto pom = ex_GCD(M, m[i]);\n\t\tlll x1 = pom.x;\n\t\tlll d = pom.d;\n\t\tif ((a[i] - ans) % d != 0)\n\t\t\treturn -1;\n\t\tans = ans + x1 * (a[i] - ans) / d % (m[i] / d) * M;\n\t\tM = M * m[i] / d;\n\t\tans %= M;\n\t\tans = ans < 0 ? ans + M : ans;\n\t\tM = M / (lll)__gcd((ll)M, (ll)m[i]) * m[i];\n\t}\n\treturn ans;\n}",
+      "source": "Chinese Remainder Theorem",
+      "length": 523,
+      "id": 48
+    },
+    {
+      "text": "vector<ll> primeFactors(ll n) {\n\tvector<ll> factors;\n\tfor (ll i = 2; (i*i) <= n; i++) {\n\t\twhile (n % i == 0) {\n\t\t\tfactors.push_back(i);\n\t\t\tn /= i;\n\t\t}\n\t}\n\tif (n > 1) factors.push_back(n);\n\treturn factors;\n}",
+      "source": "Prime Factors",
+      "length": 206,
+      "id": 49
+    },
+    {
+      "text": "const int MX_P = 1e6 + 1;\neratosthenes_sieve sieve(MX_P);\nll counting_divisors(ll n) {\n\tll ret = 1;\n\tfor (ll p : sieve.primes) {\n\t\tif (p*p*p > n) break;\n\t\tll count = 1;\n\t\twhile (n % p == 0)\n\t\t\tn /= p, count++;\n\t\tret *= count;\n\t}\n\tll isqrt = sqrtl(n);\n\tif (miller_rabin(n)) ret *= 2;\n\telse if (isqrt*isqrt == n and miller_rabin(isqrt)) ret *= 3;\n\telse if (n != 1) ret *= 4;\n\treturn ret;\n}",
+      "source": "Counting Divisors",
+      "length": 387,
+      "id": 50
+    },
+    {
+      "text": "vector<ll> get_divisors(ll n) {\n\tvector<ll> left, right;\n\tfor (ll i = 1; i * i <= n; i++)\n\t\tif (n % i == 0) {\n\t\t\tleft.push_back(i);\n\t\t\tif (i != n / i)\n\t\t\t\tright.push_back(n / i);\n\t\t}\n\treverse(begin(right), end(right));\n\tfor (ll x : right) left.push_back(x);\n\treturn left;\n}",
+      "source": "Divisors",
+      "length": 273,
+      "id": 51
+    },
+    {
+      "text": "ll discrete_log(ll a,ll b,ll m) {\n\ta%=m, b%=m;\n\tif(b == 1) return 0;\n\tll cnt=0, tmp=1;\n\tfor(ll g=__gcd(a,m);g!=1;g=__gcd(a,m)) {\n\t\tif(b%g) return -1;\n\t\tm/=g, b/=g;\n\t\ttmp = (__int128)tmp*a/g%m;\n\t\t++cnt;\n\t\tif(b == tmp) return cnt;\n\t}\n\tmap<ll,ll> w;\n\tll s = ceil(sqrtl(m)), base = b;\n\tfor (ll i = 0; i < s; i++)\n\t\tw[base] = i, base=(__int128)base*a%m;\n\tbase=binpow(a,s,m);\n\tll key=tmp;\n\tfor(ll i = 1; i < s+2; i++) {\n\t\tkey=(__int128)base*key%m;\n\t\tif(w.count(key)) return i*s-w[key]+cnt;\n\t}\n\treturn -1;\n}",
+      "source": "Discrete Logarithm",
+      "length": 500,
+      "id": 52
+    },
+    {
+      "text": "struct eratosthenes_sieve {\n\tvector<ll> primes;\n\tvector<bool> isPrime;\n\teratosthenes_sieve(ll n) {\n\t\tisPrime.resize(n + 1, true);\n\t\tisPrime[0] = isPrime[1] = false;\n\t\tfor (ll i = 2; i <= n; i++) {\n\t\t\tif (isPrime[i]) {\n\t\t\t\tprimes.push_back(i);\n\t\t\t\tfor (ll j = i*i; j <= n; j += i)\n\t\t\t\t\tisPrime[j] = false;\n\t\t\t}\n\t\t}\n\t}\n};",
+      "source": "Sieve of Eratosthenes",
+      "length": 319,
+      "id": 53
+    },
+    {
+      "text": "vector<int> sieve(int N, int Q = 17, int L = 1 << 15) {\n\tstatic const int rs[] = {1, 7, 11, 13, 17, 19, 23, 29};\n\tstruct P {\n\t\tP(int p) : p(p) {}\n\t\tint p, pos[8];\n\t};\n\tauto prime_count = [](int N) -> int {\n\t\treturn N > 60184 ? N / (log(N) - 1.1) : max(1., N / (log(N) - 1.11)) + 1;\n\t};\n\tint v = sqrt(N), vv = sqrt(v);\n\tvector<bool> isp(v + 1, true);\n\tfor (int i = 2; i <= vv; i++)\n\t\tif (isp[i])\n\t\t\tfor (int j = i * i; j <= v; j += i)\n\t\t\t\tisp[j] = false;\n\tint rsize = prime_count(N + 30);\n\tvector<int> primes = {2, 3, 5};\n\tint psize = 3;\n\tprimes.resize(rsize);\n\tvector<P> sprimes;\n\tsize_t pbeg = 0;\n\tint prod = 1;\n\tfor (int p = 7; p <= v; p++) {\n\t\tif (!isp[p])\n\t\t\tcontinue;\n\t\tif (p <= Q)\n\t\t\tprod *= p, pbeg++, primes[psize++] = p;\n\t\tauto pp = P(p);\n\t\tfor (int t = 0; t < 8; t++) {\n\t\t\tint j = (p <= Q) ? p : p * p;\n\t\t\twhile (j % 30 != rs[t])\n\t\t\t\tj += p << 1;\n\t\t\tpp.pos[t] = j / 30;\n\t\t}\n\t\tsprimes.push_back(pp);\n\t}\n\tvector<unsigned char> pre(prod, 0xFF);\n\tfor (size_t pi = 0; pi < pbeg; pi++) {\n\t\tauto pp = sprimes[pi];\n\t\tint p = pp.p;\n\t\tfor (int t = 0; t < 8; t++) {\n\t\t\tunsigned char m = ~(1 << t);\n\t\t\tfor (int i = pp.pos[t]; i < prod; i += p)\n\t\t\t\tpre[i] &= m;\n\t\t}\n\t}\n\tint block_size = (L + prod - 1) / prod * prod;\n\tvector<unsigned char> block(block_size);\n\tunsigned char *pblock = block.data();\n\tint M = (N + 29) / 30;\n\tfor (int beg = 0; beg < M; beg += block_size, pblock -= block_size) {\n\t\tint end = min(M, beg + block_size);\n\t\tfor (int i = beg; i < end; i += prod)\n\t\t\tcopy(pre.begin(), pre.end(), pblock + i);\n\t\tif (beg == 0)\n\t\t\tpblock[0] &= 0xFE;\n\t\tfor (size_t pi = pbeg; pi < sprimes.size(); pi++) {\n\t\t\tauto &pp = sprimes[pi];\n\t\t\tint p = pp.p;\n\t\t\tfor (int t = 0; t < 8; t++) {\n\t\t\t\tint i = pp.pos[t];\n\t\t\t\tunsigned char m = ~(1 << t);\n\t\t\t\tfor (; i < end; i += p)\n\t\t\t\t\tpblock[i] &= m;\n\t\t\t\tpp.pos[t] = i;\n\t\t\t}\n\t\t}\n\t\tfor (int i = beg; i < end; i++)\n\t\t\tfor (int m = pblock[i]; m > 0; m &= m - 1)\n\t\t\t\tprimes[psize++] = i * 30 + rs[__builtin_ctz(m)];\n\t}\n\tassert(psize <= rsize);\n\twhile (psize > 0 && primes[psize - 1] > N)\n\t\tpsize--;\n\tprimes.resize(psize);\n\treturn primes;\n}",
+      "source": "Fast Sieve",
+      "length": 2071,
+      "id": 54
+    },
+    {
+      "text": "ll phi(ll n) {\n\tll result = n;\n\tfor (ll i = 2; i*i <= n; i++) {\n\t\tif (n % i == 0) {\n\t\t\twhile (n % i == 0) n /= i;\n\t\t\t\tresult -= result / i;\n\t\t}\n\t}\n\tif (n > 1)\n\t\tresult -= result / n;\n\treturn result;\n}",
+      "source": "Euler Phi",
+      "length": 200,
+      "id": 55
+    },
+    {
+      "text": "struct euler_phi {\n\tvector<int> phi;\n\teuler_phi(int n) {\n\t\tphi.resize(n + 1);\n\t\tfor (int i = 1; i <= n; i++)\n\t\t\tphi[i] = i;\n\t\tfor (int i = 2; i <= n; i++) {\n\t\t\tif (phi[i] == i)\n\t\t\t\tfor (int j = i; j <= n; j += i)\n\t\t\t\t\tphi[j] = phi[j] / i * (i - 1);\n\t\t}\n\t}\n};",
+      "source": "Euler Phi Sieve",
+      "length": 258,
+      "id": 56
+    },
+    {
+      "text": "vector<int> mobius_sieve(int mxn){\n\tvector<int> mob(mxn+1);\n\tmob[1] = 1;\n\tfor (int i = 2; i <= mxn; i++){\n\t\tmob[i]--;\n\t\tfor (int j = 2*i; j <= mxn; j += i)\n\t\t\tmob[j] -= mob[i];\n\t}\n\treturn mob;\n}",
+      "source": "Mobius Sieve",
+      "length": 194,
+      "id": 57
+    },
+    {
+      "text": "bool miller_rabin(uint64_t n) {\n\tif (n <= 1) return false;\n\tauto check = [](uint64_t n, uint64_t a, uint64_t d, uint64_t s) {\n\t\tuint64_t x = binpow(a, d, n);\n\t\tif (x == 1 or x == n-1) return false;\n\t\tfor (uint64_t r = 1; r < s; r++) {\n\t\t\tx = (__uint128_t)x*x % n;\n\t\t\tif (x == n-1) return false;\n\t\t}\n\t\treturn true;\n\t};\n\tuint64_t r = 0, d = n - 1;\n\twhile ((d & 1) == 0) d >>= 1, r++;\n\tfor (int x : {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37}) {\n\t\tif (x == n) return true;\n\t\tif (check(n, x, d, r)) return false;\n\t}\n\treturn true;\n}",
+      "source": "Miller Rabin",
+      "length": 528,
+      "id": 58
+    },
+    {
+      "text": "bool nd_miller_rabin(ll n) {\n\tif (n == 1) return false;\n\tauto is_prime_prob = [&](ll n, ll a){\n\t\tif (n == a) return true;\n\t\tll s = 0, d = n-1;\n\t\twhile (d%2==0) s++, d/=2;\n\t\tll x = binpow(a, d, n);\n\t\tif ( (x==1) or (x+1 == n)) return true;\n\t\tfor(ll i = 0; i < s-1; i++) {\n\t\t\tx = mulmod(x, x, n);\n\t\t\tif (x == 1) return false;\n\t\t\tif (x+1 == n) return true;\n\t\t}\n\t\treturn false;\n\t};\n\tint primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23};\n\tfor (ll i = 0; i < 9; i++)\n\t\tif (!is_prime_prob(n, primes[i]))\n\t\t\treturn false;\n\treturn true;\n}",
+      "source": "Non Deterministic Miller Rabin",
+      "length": 524,
+      "id": 59
+    },
+    {
+      "text": "ll pollard_rho(ll n) {\n\tif((n&1)^1) return 2;\n\tll x = 2, y=2, d=1;\n\tll c = rand()%n+1;\n\twhile(d==1) {\n\t\tx=(mulmod(x,x,n)+c)%n;\n\t\ty=(mulmod(y,y,n)+c)%n;\n\t\ty=(mulmod(y,y,n)+c)%n;\n\t\tif(x>=y)d=__gcd(x-y,n);\n\t\telse d=__gcd(y-x,n);\n\t}\n\treturn d==n? pollard_rho(n):d;\n}",
+      "source": "Pollard Rho",
+      "length": 262,
+      "id": 60
+    },
+    {
+      "text": "void fact(ll n, map<ll, int> &f) {\n\tif(n==1) return;\n\tif(nd_miller_rabin(n)) { f[n]++; return; }\n\tll q=pollard_rho(n); fact(q,f); fact(n/q,f);\n}",
+      "source": "Fast Prime Factorization",
+      "length": 144,
+      "id": 61
+    },
+    {
+      "text": "ll modpow(ll b, ll e, ll m) {\n\tll r = 1; for (b %= m; e > 0; e >>= 1, b = b*b%m)\n\t\tif (e & 1) r = r*b%m; return r;\n}\nll modSqrt(ll a, ll p) {\n\ta %= p; if (a < 0) a += p;\n\tif (a == 0) return 0;\n\tassert(modpow(a, (p-1)/2, p) == 1);\n\tif (p % 4 == 3) return modpow(a, (p+1)/4, p);\n\tll s = p-1, n = 2;\n\tint r = 0, m;\n\twhile (s % 2 == 0) ++r, s /= 2;\n\twhile (modpow(n, (p-1)/2, p) != p-1) ++n;\n\tll x = modpow(a, (s+1)/2, p);\n\tll b = modpow(a, s, p), g = modpow(n, s, p);\n\tfor (;; r = m) {\n\t\tll t = b;\n\t\tfor (m = 0; m < r && t != 1; ++m) t = t*t%p;\n\t\tif (m == 0) return x;\n\t\tll gs = modpow(g, 1LL << (r-m-1), p);\n\t\tg = gs*gs%p;\n\t\tx = x*gs%p;\n\t\tb = b*g%p;\n\t}\n}",
+      "source": "Modular Square Root",
+      "length": 652,
+      "id": 62
+    },
+    {
+      "text": "pair<ll,ll> approximate(ld x, ll N) {\n\tll LP = 0, LQ = 1, P = 1, Q = 0;\n\tll inf = LLONG_MAX;\n\tld y = x;\n\tfor (;;) {\n\t\tll lim = min(P ? (N-LP)/P : inf,\n\t\t\t\t\t\t\t\tQ ? (N-LQ)/Q : inf);\n\t\tll a = (ll)floor(y), b = min(a, lim);\n\t\tll NP = b*P+LP, NQ = b*Q+LQ;\n\t\tif (a > b) {\n\t\t\treturn (abs(x-(ld)NP/(ld)NQ) <\n\t\t\t\t\t\t\tabs(x-(ld)P/(ld)Q))\n\t\t\t\t? make_pair(NP, NQ) : make_pair(P, Q);\n\t\t}\n\t\tif (abs(y = 1/(y-(ld)a)) > 3*N)\n\t\t\treturn {NP, NQ};\n\t\tLP = P; P = NP;\n\t\tLQ = Q; Q = NQ;\n\t}\n}",
+      "source": "Continued Fractions",
+      "length": 468,
+      "id": 63
+    },
+    {
+      "text": "ll mulmod(ll a, ll b, ll m) {\n\tll r=a*b-(ll)((ld)a*b/m+.5)*m;\n\treturn r<0?r+m:r;\n}",
+      "source": "Mulmod",
+      "length": 82,
+      "id": 64
+    },
+    {
+      "text": "ll binpow(ll a, ll b, ll m) {\n\ta %= m;\n\tll res = 1;\n\twhile (b > 0) {\n\t\tif (b & 1)\n\t\t\tres = (res * a) % m;\n\t\ta = (a * a) % m;\n\t\tb >>= 1;\n\t}\n\treturn res;\n}",
+      "source": "Binary Pow",
+      "length": 153,
+      "id": 65
+    },
+    {
+      "text": "using u64 = uint64_t;\nusing u128 = __uint128_t;\nu64 binpow(u64 a, u64 b, u64 m) {\n\ta %= m;\n\tu64 res = 1;\n\twhile (b > 0) {\n\t\tif (b & 1)\n\t\t\tres = (u128)res * a % m;\n\t\ta = (u128)a * a % m;\n\t\tb >>= 1;\n\t}\n\treturn res;\n}",
+      "source": "Binary Pow 128 Bits",
+      "length": 214,
+      "id": 66
+    },
+    {
+      "text": "ll binpow(ll b, ll e, ll m){\n\tif(!e)return 1;\n\tll q=binpow(b,e/2,m);q=mulmod(q,q,m);\n\treturn e&1?mulmod(b,q,m):q;\n}",
+      "source": "Binary Pow with Mulmod",
+      "length": 115,
+      "id": 67
+    },
+    {
+      "text": "using ull = uint64_t;\nstruct montgomery {\n\t\tull n, nr;\n\t\tconstexpr montgomery(ull n) : n(n), nr(1) {\n\t\t\t\tfor (int i = 0; i < 6; i++)\n\t\t\t\t\t\tnr *= 2 - n * nr;\n\t\t}\n\t\tull reduce(__uint128_t x) const {\n\t\t\t\tull q = __uint128_t(x) * nr;\n\t\t\t\tull m = ((__uint128_t) q * n) >> 64;\n\t\t\t\tull res = (x >> 64) + n - m;\n\t\t\t\tif (res >= n)\n\t\t\t\t\t\tres -= n;\n\t\t\t\treturn res;\n\t\t}\n\t\tull multiply(ull x, ull y) const {\n\t\t\t\treturn reduce((__uint128_t) x * y);\n\t\t}\n\t\tull transform(ull x) const {\n\t\t\t\treturn (__uint128_t(x) << 64) % n;\n\t\t}\n};",
+      "source": "Montgomery Multiplication",
+      "length": 515,
+      "id": 68
+    },
+    {
+      "text": "const double EPS = 1e-18;\nconst int INF = 2;\nconst int MOD = 1e9+7;\nint gauss(vector<vector<ll>> a, vector<ll> & ans) {\n\tint n = (int) a.size();\n\tint m = (int) a[0].size() - 1;\n\tvector<int> where(m, -1);\n\tfor (int col = 0, row = 0; col < m && row < n; ++col) {\n\t\tint sel = row;\n\t\tfor (int i = row; i < n; ++i)\n\t\t\tif (abs(a[i][col]) > abs(a[sel][col]))\n\t\t\t\tsel = i;\n\t\tif (!a[sel][col])\n\t\t\tcontinue;\n\t\tfor (int i = col; i <= m; ++i)\n\t\t\tswap(a[sel][i], a[row][i]);\n\t\twhere[col] = row;\n\t\tfor (int i = 0; i < n; ++i)\n\t\t\tif (i != row) {\n\t\t\t\tll c = (a[i][col] * binpow(a[row][col], MOD - 2, MOD)) % MOD;\n\t\t\t\tfor (int j = col; j <= m; ++j)\n\t\t\t\t\ta[i][j] = ((a[i][j] - a[row][j] * c) % MOD + MOD) % MOD;\n\t\t\t}\n\t\t++row;\n\t}\n\tans.assign(m, 0);\n\tfor (int i = 0; i < m; ++i)\n\t\tif (where[i] != -1)\n\t\t\tans[i] = (a[where[i]][m] * binpow(a[where[i]][i], MOD - 2, MOD)) % MOD;\n\tfor (int i = 0; i < m; ++i)\n\t\tif (where[i] == -1)\n\t\t\treturn INF;\n\treturn 1;\n}",
+      "source": "Gaussian Elimination",
+      "length": 934,
+      "id": 69
+    },
+    {
+      "text": "struct xor_basis {\n\tint d, sz;\n\tvector<long long> basis;\n\txor_basis(int _d): d(_d), sz(0), basis(_d, 0) {}\n\tbool insert(long long mask) {\n\t\tfor (int i = d - 1; i >= 0; --i) {\n\t\t\tif ((mask & (1LL << i)) == 0) continue;\n\t\t\tif (!basis[i]) {\n\t\t\t\tbasis[i] = mask;\n\t\t\t\t++sz;\n\t\t\t\treturn true;\n\t\t\t}\n\t\t\tmask ^= basis[i];\n\t\t}\n\t\treturn false;\n\t}\n\tbool can_make(long long x){\n\t\tfor (int i = d - 1; i >= 0; --i) {\n\t\t\tif ((x & (1LL << i)) == 0) continue;\n\t\t\tif (!basis[i]) return false;\n\t\t\tx ^= basis[i];\n\t\t}\n\t\treturn x == 0;\n\t}\n\tlong long get_max(){\n\t\tlong long res = 0;\n\t\tfor (int i = d - 1; i >= 0; --i)\n\t\t\tif ((res ^ basis[i]) > res) res ^= basis[i];\n\t\treturn res;\n\t}\n\tvoid merge(const xor_basis &o) {\n\t\tfor (long long v : o.basis)\n\t\t\tif (v) insert(v);\n\t}\n};",
+      "source": "XOR Basis",
+      "length": 748,
+      "id": 70
+    },
+    {
+      "text": "template<class T>\nstruct lp_solver {\n\tT eps = 1e-8, inf = 1e18;\n\tint m, n;\n\tvector<int> N, B;\n\tvector<vector<T>> D;\n\tlp_solver(vector<vector<T>> A, vector<T> b, vector<T> c)\n\t\t\t: m(b.size()), n(c.size()),\n\t\t\t\tN(n + 1), B(m), D(m + 2, vector<T>(n + 2)) {\n\t\tfor (int i = 0; i < m; i++)\n\t\t\tfor (int j = 0; j < n; j++)\n\t\t\t\tD[i][j] = A[i][j];\n\t\tfor (int i = 0; i < m; i++)\n\t\t\tB[i] = n + i, D[i][n] = -1, D[i][n + 1] = b[i];\n\t\tiota(N.begin(), N.end() - 1, 0);\n\t\tfor (int j = 0; j < n; j++)\n\t\t\tD[m][j] = -c[j];\n\t\tN[n] = -1;\n\t\tD[m + 1][n] = 1;\n\t}\n\tvoid pivot(int r, int s) {\n\t\tT *a = D[r].data(), inv = 1 / a[s];\n\t\tfor (int i = 0; i < m + 2; i++) {\n\t\t\tif (i == r || abs(D[i][s]) <= eps) continue;\n\t\t\tT *b = D[i].data(), inv2 = b[s] * inv;\n\t\t\tfor (int j = 0; j < n + 2; j++)\n\t\t\t\tb[j] -= a[j] * inv2;\n\t\t\tb[s] = a[s] * inv2;\n\t\t}\n\t\tfor (int j = 0; j < n + 2; j++)\n\t\t\tif (j != s) D[r][j] *= inv;\n\t\tfor (int i = 0; i < m + 2; i++)\n\t\t\tif (i != r) D[i][s] *= -inv;\n\t\tD[r][s] = inv;\n\t\tswap(B[r], N[s]);\n\t}\n\tint sel(int lo, int hi, vector<T> &row, int phase = 0) {\n\t\tint s = -1;\n\t\tfor (int j = lo; j < hi; j++)\n\t\t\tif (N[j] != -phase)\n\t\t\t\tif (s == -1 || pair{row[j], N[j]} < pair{row[s], N[s]})\n\t\t\t\t\ts = j;\n\t\treturn s;\n\t}\n\tbool simplex(int phase) {\n\t\tint x = m + phase - 1;\n\t\tfor (;;) {\n\t\t\tint s = sel(0, n + 1, D[x], phase);\n\t\t\tif (D[x][s] >= -eps) return true;\n\t\t\tint r = -1;\n\t\t\tfor (int i = 0; i < m; i++) {\n\t\t\t\tif (D[i][s] <= eps) continue;\n\t\t\t\tif (r == -1 ||\n\t\t\t\t\t\tpair{D[i][n+1] / D[i][s], B[i]} <\n\t\t\t\t\t\tpair{D[r][n+1] / D[r][s], B[r]})\n\t\t\t\t\tr = i;\n\t\t\t}\n\t\t\tif (r == -1) return false;\n\t\t\tpivot(r, s);\n\t\t}\n\t}\n\tT solve(vector<T> &x) {\n\t\tint r = 0;\n\t\tfor (int i = 1; i < m; i++)\n\t\t\tif (D[i][n + 1] < D[r][n + 1]) r = i;\n\t\tif (D[r][n + 1] < -eps) {\n\t\t\tpivot(r, n);\n\t\t\tif (!simplex(2) || D[m + 1][n + 1] < -eps)\n\t\t\t\treturn -inf;\n\t\t\tfor (int i = 0; i < m; i++)\n\t\t\t\tif (B[i] == -1)\n\t\t\t\t\tpivot(i, sel(0, n + 1, D[i]));\n\t\t}\n\t\tbool ok = simplex(1);\n\t\tx.assign(n, 0);\n\t\tfor (int i = 0; i < m; i++)\n\t\t\tif (B[i] < n)\n\t\t\t\tx[B[i]] = D[i][n + 1];\n\t\treturn ok ? D[m][n + 1] : inf;\n\t}\n};",
+      "source": "Simplex",
+      "length": 2055,
+      "id": 71
+    },
+    {
+      "text": "template<class T>\nvector<vector<T>> multWithoutMOD(vector<vector<T>> &a, vector<vector<T>> &b){\n\t\tint n = a.size(),m = b[0].size(),l = a[0].size();\n\t\tvector<vector<T>> ans(n,vector<T>(m,0));\n\t\tfor(int i = 0; i < n; i++){\n\t\t\t\tfor(int j = 0; j < m; j++){\n\t\t\t\t\t\tfor(int k = 0; k < l; k++){\n\t\t\t\t\t\t\t\tans[i][j] += a[i][k]*b[k][j];\n\t\t\t\t\t\t}\n\t\t\t\t}\n\t\t}\n\t\treturn ans;\n}\ntemplate<class T>\nvector<vector<T>> mult(vector<vector<T>> a, vector<vector<T>> b, ll mod){\n\t\tint n = a.size(),m = b[0].size(),l = a[0].size();\n\t\tvector<vector<T>> ans(n,vector<T>(m,0));\n\t\tfor(int i = 0; i < n; i++){\n\t\t\t\tfor(int j = 0; j < m; j++){\n\t\t\t\t\t\tfor(int k = 0; k < l; k++){\n\t\t\t\t\t\t\t\tT temp = ((ll)a[i][k]*b[k][j]) % mod;\n\t\t\t\t\t\t\t\tans[i][j] = (ans[i][j] + temp) % mod;\n\t\t\t\t\t\t}\n\t\t\t\t}\n\t\t}\n\t\treturn ans;\n}\nvector<vector<ll>> binpow(vector<vector<ll>> v,ll n,long long mod){\n\t\tll dim = v.size(); vector<vector<ll>> ans(dim,vector<ll>(dim,0));\n\t\tfor(ll i = 0; i < dim; i++) ans[i][i] = 1;\n\t\twhile(n){\n\t\t\t\tif(n & 1) ans = mult(ans,v,mod);\n\t\t\t\tv = mult(v,v,mod);\n\t\t\t\tn = n >> 1;\n\t\t}\n\t\treturn ans;\n}",
+      "source": "Matrix",
+      "length": 1056,
+      "id": 72
+    },
+    {
+      "text": "struct FFT {\n\tconst long double PI = acos(-1);\n\ttypedef long double d;\n\tvoid fft(vector<complex<d>> &a) {\n\t\tint n = a.size(), L = 31 - __builtin_clz(n);\n\t\tvector<complex<d>> R(2, 1), rt(2, 1);\n\t\tfor (int k = 2; k < n; k *= 2) {\n\t\t\tR.resize(n); rt.resize(n);\n\t\t\tauto x = polar(1.0L, PI / k);\n\t\t\tfor(int i = k; i < 2*k; ++i) rt[i] = R[i] = i & 1 ? R[i / 2] * x : R[i / 2];\n\t\t}\n\t\tvector<int> rev(n);\n\t\tfor(int i = 0; i < n; ++i) rev[i] = (rev[i / 2] | (i & 1) << L) / 2;\n\t\tfor(int i = 0; i < n; ++i) if (i < rev[i]) swap(a[i], a[rev[i]]);\n\t\tfor (int k = 1; k < n; k *= 2)\n\t\tfor (int i = 0; i < n; i += 2 * k)\n\t\tfor(int j = 0; j < k; ++j) {\n\t\t\tauto x = (d*)&rt[j + k], y = (d*)&a[i + j + k];\n\t\t\tcomplex<d> z(x[0]*y[0] - x[1]*y[1], x[0]*y[1] + x[1]*y[0]);\n\t\t\ta[i + j + k] = a[i + j] - z, a[i + j] += z;\n\t\t}\n\t}\n\tvector<int> conv(vector<d> &a, vector<d> &b) {\n\t\tif (a.empty() || b.empty()) return {};\n\t\tvector<d> res(a.size() + b.size() - 1);\n\t\tint B = 32 - __builtin_clz(res.size()), n = 1 << B;\n\t\tvector<complex<d>> in(n), out(n);\n\t\tcopy(a.begin(), a.end(), in.begin());\n\t\tfor(int i = 0; i < b.size(); ++i) in[i].imag(b[i]);\n\t\tfft(in); for (auto &x : in) x *= x;\n\t\tfor(int i = 0; i < n; ++i) out[i] = in[-i & (n - 1)] - conj(in[i]);\n\t\tfft(out); for(int i = 0; i < res.size(); ++i) res[i] = imag(out[i]) / (4 * n);\n\t\tvector<int> resint(res.size());\n\t\tfor (int i = 0; i < res.size(); i++) resint[i] = round(res[i]);\n\t\treturn resint;\n\t}\n\tvector<ll> convMod(vector<ll> &a, vector<ll> &b, ll mod) {\n\t\tif (a.empty() || b.empty()) return {};\n\t\tvector<d> res(a.size() + b.size() - 1);\n\t\tint B = 32 - __builtin_clz(res.size()), n = 1 << B;\n\t\tll cut = (ll)sqrt(mod);\n\t\tvector<complex<d>> L(n), R(n), outs(n), outl(n);\n\t\tfor (int i = 0; i < (int)a.size(); i++) L[i] = complex<d>(a[i]/cut, a[i]%cut);\n\t\tfor (int i = 0; i < (int)b.size(); i++) R[i] = complex<d>(b[i]/cut, b[i]%cut);\n\t\tfft(L), fft(R);\n\t\tfor (int i = 0; i < n; i++) {\n\t\t\tint j = -i & (n-1);\n\t\t\toutl[j] = (L[i] + conj(L[j])) * R[i] / ((d)2.0 * n);\n\t\t\touts[j] = (L[i] - conj(L[j])) * R[i] / ((d)2.0 * n) / complex<d>(0, 1);\n\t\t}\n\t\tfft(outl), fft(outs);\n\t\tfor (int i = 0; i < (int)res.size(); i++) {\n\t\t\tll av = (ll)(real(outl[i])+.5), cv = (ll)(imag(outs[i])+.5);\n\t\t\tll bv = (ll)(imag(outl[i])+.5) + (ll)(real(outs[i])+.5);\n\t\t\tres[i] = ((av % mod * cut + bv) % mod * cut + cv) % mod;\n\t\t}\n\t\tvector<ll> resll(res.size());\n\t\tfor (int i = 0; i < (int)res.size(); i++) resll[i] = (ll)round(res[i]);\n\t\treturn resll;\n\t}\n};",
+      "source": "FFT",
+      "length": 2458,
+      "id": 73
+    },
+    {
+      "text": "template<int mod, int root>\nstruct NTT {\n\tvoid ntt(ll* x, ll* temp, ll* roots, int N, int skip) {\n\t\tif (N == 1) return;\n\t\tint n2 = N/2;\n\t\tntt(x, temp, roots, n2, skip*2);\n\t\tntt(x+skip, temp, roots, n2, skip*2);\n\t\tfor (int i = 0; i < N; i++) temp[i] = x[i*skip];\n\t\tfor (int i = 0; i < n2; i++) {\n\t\t\tll s = temp[2*i], t = temp[2*i+1] * roots[skip*i] % mod;\n\t\t\tx[skip*i] = (s + t) % mod;\n\t\t\tx[skip*(i+n2)] = ((s - t) % mod + mod) % mod;\n\t\t}\n\t}\n\tvoid ntt(vector<ll>& x, bool inv = false) {\n\t\tll e = binpow(root, (mod-1)/((int)x.size()), mod);\n\t\tif (inv) e = binpow(e, mod-2, mod);\n\t\tvector<ll> roots(x.size(), 1), temp = roots;\n\t\tfor (int i = 1; i < (int)x.size(); i++) roots[i] = roots[i-1] * e % mod;\n\t\tntt(&x[0], &temp[0], &roots[0], x.size(), 1);\n\t}\n\tvector<ll> conv(vector<ll> a, vector<ll> b) {\n\t\tint s = a.size()+b.size()-1;\n\t\tif (s <= 0) return {};\n\t\tint L = s > 1 ? 32 - __builtin_clz(s - 1) : 0, n = 1 << L;\n\t\ta.resize(n); ntt(a);\n\t\tb.resize(n); ntt(b);\n\t\tvector<ll> c(n); ll d = binpow(n, mod-2, mod);\n\t\tfor (int i = 0; i < n; i++) c[i] = a[i] * b[i] % mod * d % mod;\n\t\tntt(c, true); c.resize(s);\n\t\tfor (int i = 0; i < n; i++) if(c[i] < 0) c[i] += mod;\n\t\treturn c;\n\t}\n};",
+      "source": "NTT",
+      "length": 1177,
+      "id": 74
+    },
+    {
+      "text": "using ull = uint64_t;\ntemplate<ull mod, ull gen>\nstruct fast_ntt {\n\t\tfast_ntt() {};\n\t\tvector<int> bit_sort(int n) {\n\t\t\t\tint h = -1;\n\t\t\t\tvector<int> rev(n, 0);\n\t\t\t\tint skip = __lg(n) - 1;\n\t\t\t\tfor (int i = 1; i < n; ++i) {\n\t\t\t\t\t\tif (!(i & (i - 1)))\n\t\t\t\t\t\t\t\t++h;\n\t\t\t\t\t\trev[i] = rev[i ^ (1 << h)] | (1 << (skip - h));\n\t\t\t\t}\n\t\t\t\treturn rev;\n\t\t}\n\t\tvoid ntt(vector<ull>& a, vector<int>& rev, montgomery& red, ull inv_n, ull root, ull inv_root, bool invert) {\n\t\t\t\tint n = (int)a.size();\n\t\t\t\tfor (int i = 0; i < n; ++i)\n\t\t\t\t\t\tif (i < rev[i])\n\t\t\t\t\t\t\t\tswap(a[i], a[rev[i]]);\n\t\t\t\tull w = invert ? inv_root : root;\n\t\t\t\tvector<ull> W(n >> 1, red.transform(1));\n\t\t\t\tfor (int i = 1; i < (n >> 1); ++i)\n\t\t\t\t\t\tW[i] = red.multiply(W[i-1], w);\n\t\t\t\tint lim = __lg(n);\n\t\t\t\tfor (int i = 0; i < lim; ++i)\n\t\t\t\t\t\tfor (int j = 0; j < n; ++j)\n\t\t\t\t\t\t\t\tif (!(j & (1 << i))) {\n\t\t\t\t\t\t\t\t\t\tull t = red.multiply(a[j ^ (1 << i)], W[(j & ((1 << i) - 1)) * (n >> (i + 1))]);\n\t\t\t\t\t\t\t\t\t\ta[j ^ (1 << i)] = a[j] >= t ? a[j] - t : a[j] + mod - t;\n\t\t\t\t\t\t\t\t\t\ta[j] = a[j] + t < mod ? a[j] + t : a[j] + t - mod;\n\t\t\t\t\t\t\t\t}\n\t\t\t\tif (invert)\n\t\t\t\t\t\tfor (int i = 0; i < n; i++)\n\t\t\t\t\t\t\t\ta[i] = red.multiply(a[i], inv_n);\n\t\t}\n\t\tvector<ull> conv(vector<ull> a, vector<ull> b) {\n\t\t\t\tmontgomery red(mod);\n\t\t\t\tfor (auto& x : a)\n\t\t\t\t\t\tx = red.transform(x);\n\t\t\t\tfor (auto& x : b)\n\t\t\t\t\t\tx = red.transform(x);\n\t\t\t\tint n = 1;\n\t\t\t\twhile (n < a.size() || n < b.size())\n\t\t\t\t\t\tn <<= 1;\n\t\t\t\tn <<= 1;\n\t\t\t\ta.resize(n);\n\t\t\t\tb.resize(n);\n\t\t\t\tull inv_n = red.transform(bin_pow(n, mod-2, mod));\n\t\t\t\tull root = red.transform(bin_pow(gen, (mod-1)/n, mod));\n\t\t\t\tull inv_root = red.transform(bin_pow(red.reduce(root), mod-2, mod));\n\t\t\t\tauto rev = bit_sort(n);\n\t\t\t\tntt(a, rev, red, inv_n, root, inv_root, false);\n\t\t\t\tntt(b, rev, red, inv_n, root, inv_root, false);\n\t\t\t\tfor (int i = 0; i < n; i++)\n\t\t\t\t\t\ta[i] = red.multiply(a[i], b[i]);\n\t\t\t\tntt(a, rev, red, inv_n, root, inv_root, true);\n\t\t\t\tfor (auto& x : a)\n\t\t\t\t\t\tx = red.reduce(x);\n\t\t\t\treturn a;\n\t\t}\n};",
+      "source": "Fast NTT",
+      "length": 1974,
+      "id": 75
+    },
+    {
+      "text": "const int mod = 1e9+7, mxn = (1<<20), op = 2;\nconst int inv2 = (mod+1) >> 1;\nstruct fwht {\n\tint P1[mxn], P2[mxn];\n\tvoid wt(int *a, int n){\n\t\tif (n == 0) return;\n\t\tint m = n/2;\n\t\twt(a,m); wt(a+m,m);\n\t\tfor (int i = 0; i < m; i++){\n\t\t\tint x = a[i], y = a[i+m];\n\t\t\tif (op == 0) a[i] = x, a[i+m] = (x+y)%mod;\n\t\t\tif (op == 1) a[i] = (x+y)%mod, a[i+m] = y;\n\t\t\tif (op == 2) a[i] = (x+y)%mod, a[i+m] = (x-y+mod)%mod;\n\t\t}\n\t}\n\tvoid iwt(int* a, int n){\n\t\tif (n == 0) return;\n\t\tint m = n/2;\n\t\tiwt(a,m); iwt(a+m,m);\n\t\tfor (int i = 0; i < m; i++){\n\t\t\tint x = a[i], y = a[i+m];\n\t\t\tif (op == 0) a[i] = x, a[i+m] = (y-x+mod)%mod;\n\t\t\tif (op == 1) a[i] = (x-y+mod)%mod, a[i+m] = y;\n\t\t\tif (op == 2) a[i] = 1LL*(x+y)*inv2%mod, a[i+m] = 1LL*(x-y+mod)*inv2%mod;\n\t\t}\n\t}\n\tvector<int> conv(int n, vector<int> A, vector<int> B) {\n\t\tA.resize(n); B.resize(n);\n\t\tfor (int i = 0; i < n; i++) P1[i] = A[i];\n\t\tfor (int i = 0; i < n; i++) P2[i] = B[i];\n\t\twt(P1, n); wt(P2, n);\n\t\tfor (int i = 0; i < n; i++) P1[i] = 1LL*P1[i]*P2[i]%mod;\n\t\tiwt(P1, n);\n\t\treturn vector<int> (P1, P1 + n);\n\t}\n} FWHT;",
+      "source": "FWHT",
+      "length": 1060,
+      "id": 76
+    },
+    {
+      "text": "vector<ll> polyShift(vector<ll> &a, ll shift) {\n\tconst ll mod = 998244353;\n\tNTT<998244353, 3> ntt;\n\tint n = a.size() - 1;\n\tFactorial f(n, mod);\n\tvector<ll> x(n+1), y(n+1);\n\tll cur = 1;\n\tfor (int i = 0; i <= n; i++) {\n\t\tx[i] = cur * f.finv[i] % mod;\n\t\tcur = cur * shift % mod;\n\t\ty[i] = a[n - i] * f.f[n-i] % mod;\n\t}\n\tvector<ll> tmp = ntt.conv(x, y), res(n+1);\n\tfor (int i = 0; i <= n; i++)\n\t\tres[i] = tmp[n-i] * f.finv[i] % mod;\n\treturn res;\n}",
+      "source": "Polynomial Shift",
+      "length": 442,
+      "id": 77
+    },
+    {
+      "text": "using ull = uint64_t;\nconst ull mod = 998244353, pr = 3;\nvector<ull> sieveking_kung(vector<ull> a, int n) {\n\tvector<ull> ans = {bin_pow(a[0],mod-2,mod)};\n\tfast_ntt<mod, pr> pol;\n\tfor (int i = 1; i < n; i <<= 1) {\n\t\tvector<ull> a_trunc(a.begin(),a.begin()+min((int)a.size(),2*i));\n\t\tvector<ull> res = pol.conv(ans,a_trunc);\n\t\tres = pol.conv(res,ans); res.resize(2*i);\n\t\tfor (int j = 0; j < 2 * i; ++j)\n\t\t\tres[j] = ((j < (int)ans.size()?2*ans[j]:0ULL)+mod-res[j])%mod;\n\t\tans = res;\n\t}\n\tans.resize(n);\n\treturn ans;\n}",
+      "source": "Sieveking Kung",
+      "length": 513,
+      "id": 78
+    },
+    {
+      "text": "ll lagrange_point(vector<ll> & p, ll x, ll mod){\n\t\tint n = p.size();\n\t\tif (x < n) return p[x];\n\t\tvector<ll> pref(n+1,1), suff(n+1,1);\n\t\tfor (int i = 1; i <= n; i++) pref[i] = (pref[i-1]*(x-(i-1)))%mod;\n\t\tfor (int i = n-1; i >= 0; i--) suff[i] = (suff[i+1]*(x-i))%mod;\n\t\tvector<ll> ifact(n);\n\t\tll fact = 1;\n\t\tfor (ll i = 1; i < n; i++) fact = (fact*i)%mod;\n\t\tifact[n-1] = binpow(fact,mod-2);\n\t\tfor (ll i = n-2; i >= 0; i--) ifact[i] = (ifact[i+1]*(i+1))%mod;\n\t\tll res = 0;\n\t\tfor (int i = 1; i <= n; i++){\n\t\t\t\tll val = (pref[i-1]*suff[i])%mod;\n\t\t\t\tll temp = (((n-i)&1)?mod-1:1);\n\t\t\t\tval = (val*temp)%mod;\n\t\t\t\tval = (val*ifact[i-1])%mod;\n\t\t\t\tval = (val*ifact[n-i])%mod;\n\t\t\t\tval = (val*p[i-1])%mod;\n\t\t\t\tres = (res+val)%mod;\n\t\t}\n\t\tif (res < 0) res += mod;\n\t\treturn res;\n}",
+      "source": "Lagrange Interpolation",
+      "length": 766,
+      "id": 79
+    },
+    {
+      "text": "const ll mod = 998244353;\nll modpow(ll b, ll e, ll m = mod) {\n\tll r = 1; for (b %= m; e > 0; e >>= 1, b = b*b%m)\n\t\tif (e & 1) r = r*b%m; return r;\n}\nvector<ll> berlekampMassey(vector<ll> s) {\n\tint n = s.size(), L = 0, m = 0;\n\tvector<ll> C(n), B(n), T;\n\tC[0] = B[0] = 1;\n\tll b = 1;\n\tfor (int i = 0; i < n; i++) { ++m;\n\t\tll d = s[i] % mod;\n\t\tfor (int j = 1; j <= L; j++)\n\t\t\td = (d + C[j] * s[i-j]) % mod;\n\t\tif (!d) continue;\n\t\tT = C; ll coef = d * modpow(b, mod-2) % mod;\n\t\tfor (int j = m; j < n; j++)\n\t\t\tC[j] = (C[j] - coef * B[j-m]) % mod;\n\t\tif (2*L > i) continue;\n\t\tL = i+1-L; B = T; b = d; m = 0;\n\t}\n\tC.resize(L+1); C.erase(C.begin());\n\tfor (ll& x : C) x = (mod - x) % mod;\n\treturn C;\n}",
+      "source": "Berlekamp Massey",
+      "length": 688,
+      "id": 80
+    },
+    {
+      "text": "const ll mod = 998244353;\nusing Poly = vector<ll>;\nll linearRec(Poly S, Poly tr, ll k) {\n\tint n = tr.size();\n\tauto combine = [&](Poly a, Poly b) {\n\t\tPoly res(n*2+1);\n\t\tfor (int i = 0; i <= n; i++)\n\t\t\tfor (int j = 0; j <= n; j++)\n\t\t\t\tres[i+j] = (res[i+j] + a[i]*b[j]) % mod;\n\t\tfor (int i = 2*n; i > n; --i)\n\t\t\tfor (int j = 0; j < n; j++)\n\t\t\t\tres[i-1-j] = (res[i-1-j] + res[i]*tr[j]) % mod;\n\t\tres.resize(n+1);\n\t\treturn res;\n\t};\n\tPoly pol(n+1), e(pol);\n\tpol[0] = e[1] = 1;\n\tfor (++k; k; k /= 2) {\n\t\tif (k % 2) pol = combine(pol, e);\n\t\te = combine(e, e);\n\t}\n\tll res = 0;\n\tfor (int i = 0; i < n; i++)\n\t\tres = (res + pol[i+1] * S[i]) % mod;\n\treturn res;\n}",
+      "source": "Linear Recurrence",
+      "length": 649,
+      "id": 81
+    },
+    {
+      "text": "template<class F>\nld simpsonRec(F& f, ld a, ld b,\n\t\tld eps, ld S) {\n\tld c = (a+b)/2;\n\tld S1 = (f(a)+4*f((a+c)/2)+f(c))*(c-a)/6;\n\tld S2 = (f(c)+4*f((c+b)/2)+f(b))*(b-c)/6;\n\tld T = S1+S2;\n\tif (abs(T-S) <= 15*eps || b-a < 1e-10)\n\t\treturn T + (T-S)/15;\n\treturn simpsonRec(f, a, c, eps/2, S1)\n\t\t\t+ simpsonRec(f, c, b, eps/2, S2);\n}\ntemplate<class F>\nld integrate(ld a, ld b, F f,\n\t\tld eps = 1e-8) {\n\tld S = (f(a)+4*f((a+b)/2)+f(b))*(b-a)/6;\n\treturn simpsonRec(f, a, b, eps, S);\n}",
+      "source": "Adaptive Simpson",
+      "length": 474,
+      "id": 82
+    },
+    {
+      "text": "template <typename T = ll>\nstruct Fraction {\n\tT p, q;\n\tFraction() {}\n\tFraction(T p, T q): p(p), q(q) {\n\t\tif (q < 0) this->p = -p, this->q = -q;\n\t}\n\tbool operator<(const Fraction o) const {\n\t\treturn (ll)p*o.q < (ll)o.p*q;\n\t}\n\tFraction simplify(Fraction f){\n\t\tT g = __gcd(f.p, f.q);\n\t\treturn Fraction(f.p/g, f.q/g);\n\t}\n\tFraction add(Fraction f){\n\t\tT l = q / __gcd(q, f.q) * f.q;\n\t\tT np = p * (l/q) + f.p * (l/f.q);\n\t\treturn simplify(Fraction(np, l));\n\t}\n};",
+      "source": "Fraction",
+      "length": 454,
+      "id": 83
+    },
+    {
+      "text": "struct Factorial {\n\tvector<ll> f, finv, inv; ll mod;\n\tFactorial(ll n, ll mod): mod(mod) {\n\t\tf.assign(n+1, 1); inv.assign(n+1, 1); finv.assign(n+1, 1);\n\t\tfor(ll i = 2; i <= n; ++i)\n\t\t\tinv[i] = mod - (mod/i) * inv[mod%i] % mod;\n\t\tfor (ll i = 1; i <= n; ++i) {\n\t\t\tf[i] = (f[i-1] * i) % mod;\n\t\t\tfinv[i] = (finv[i-1] * inv[i]) % mod;\n\t\t}\n\t}\n};",
+      "source": "Factorials",
+      "length": 338,
+      "id": 84
+    },
+    {
+      "text": "map<ll, ll> memophi;\nll tetration(ll a, ll b, ll m) {\n\tif (m == 1) return 0;\n\tif (a == 0) return (b+1) % 2 % m;\n\tif (a == 1 or b == 0) return 1;\n\tif (b == 1) return a % m;\n\tif (a == 2 and b == 2) return 4 % m;\n\tif (a == 2 and b == 3) return 16 % m;\n\tif (a == 3 and b == 2) return 27 % m;\n\tif (memophi.find(m) == memophi.end())\n\t\tmemophi[m] = phi(m);\n\tll tot = memophi[m];\n\tll n = tetration(a, b-1, tot);\n\treturn binpow(a, (n < tot ? n + tot : n), m);\n}",
+      "source": "Tetration",
+      "length": 452,
+      "id": 85
+    },
+    {
+      "text": "struct Edge {\n\tint a; int b; ll w;\n\tEdge(int a_, int b_, ll w_) : a(a_), b(b_), w(w_) {}\n};\nbool c_edge(Edge &a, Edge &b) { return a.w < b.w; }\nll Kruskal() {\n\tint n = G.size();\n\tunion_find sets(n);\n\tvector<Edge> edges;\n\tfor(int i = 0; i < n; i++) {\n\t\tfor(auto eg : G[i]) {\n\t\t\tedges.emplace_back(i, eg.first, eg.second);\n\t\t}\n\t}\n\tsort(edges.begin(), edges.end(), c_edge);\n\tll min_cost = 0;\n\tfor(Edge e : edges) {\n\t\tif(sets.sameSet(e.a, e.b) != true) {\n\t\t\ttree.emplace_back(e.a, e.b, e.w);\n\t\t\tmin_cost += e.w;\n\t\t\tsets.unionSet(e.a, e.b);\n\t\t}\n\t}\n\treturn min_cost;\n}",
+      "source": "Kruskal",
+      "length": 562,
+      "id": 86
+    },
+    {
+      "text": "template<class T>\nstruct Dinic {\n\tstruct Edge { int to, rev; T f, c; bool r; };\n\tint n, t_; vector<vector<Edge>> G;\n\tvector<int> D, q, W;\n\tbool bfs(int s, int t) {\n\t\tW.assign(n, 0); D.assign(n, -1); D[s] = 0;\n\t\tint f = 0, l = 0; q[l++] = s;\n\t\twhile (f < l) {\n\t\t\tint u = q[f++];\n\t\t\tfor (const Edge &e : G[u]) if (D[e.to] == -1 && e.f < e.c)\n\t\t\tD[e.to] = D[u]+1, q[l++] = e.to;\n\t\t}\n\t\treturn D[t] != -1;\n\t}\n\tint dfs(int u, T f) {\n\t\tif (u == t_) return f;\n\t\tfor (int &i = W[u]; i < (int)G[u].size(); ++i) {\n\t\t\tEdge &e = G[u][i]; int v = e.to;\n\t\t\tif (e.c <= e.f || D[v] != D[u] + 1) continue;\n\t\t\tT df = dfs(v,min(f,e.c-e.f));\n\t\t\tif (df > 0) { e.f += df, G[v][e.rev].f -= df; return df; }\n\t\t}\n\t\treturn 0;\n\t}\n\tDinic(int N) : n(N), G(N), D(N), q(N) {}\n\tvoid add_edge(int u, int v, T cap) {\n\t\tG[u].push_back({v, (int)G[v].size(), 0, cap,0});\n\t\tG[v].push_back({u, (int)G[u].size()-1, 0, 0,1});\n\t}\n\tT max_flow(int s, int t) {\n\t\tt_ = t; T ans = 0;\n\t\twhile (bfs(s, t)) while (T dl = dfs(s, numeric_limits<T>::max())) ans += dl;\n\t\treturn ans;\n\t}\n};",
+      "source": "Dinic",
+      "length": 1034,
+      "id": 87
+    },
+    {
+      "text": "struct hopcroft_karp {\n\tconst int INF = 1e9;\n\tint n; vector<int> l, r, d, ptr, g_edges, g_start, q;\n\tint q_h, q_t;\n\thopcroft_karp(int _n, const vector<vector<int>>& adj) : n(_n) {\n\t\tl.assign(2*n+1, 0); r.assign(2*n+1, 0); d.assign(2*n+1, 0); ptr.assign(2*n+1, 0);\n\t\tg_start.resize(n+2); q.resize(n+10); q_h = q_t = 0;\n\t\tfor (int u = 1; u <= n; u++) {\n\t\t\tg_start[u] = g_edges.size();\n\t\t\tfor (int b : adj[u]) g_edges.push_back(b+n);\n\t\t}\n\t\tg_start[n+1] = g_edges.size();\n\t}\n\tbool bfs() {\n\t\tq_h = q_t = 0;\n\t\tfor (int u = 1; u <= n; u++) {\n\t\t\tif (!l[u]) { d[u] = 0; q[q_t++] = u; }\n\t\t\telse d[u] = INF;\n\t\t}\n\t\td[0] = INF;\n\t\twhile (q_h < q_t) {\n\t\t\tint u = q[q_h++];\n\t\t\tfor (int i = g_start[u]; i < g_start[u+1]; i++) {\n\t\t\t\tint v = g_edges[i], nxt = r[v];\n\t\t\t\tif (d[nxt] == INF) {\n\t\t\t\t\td[nxt] = d[u]+1;\n\t\t\t\t\tif (nxt) q[q_t++] = nxt;\n\t\t\t\t\telse d[0] = d[u]+1;\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\treturn d[0] != INF;\n\t}\n\tbool dfs(int u) {\n\t\tvector<pair<int,int>> st;\n\t\tint i = ptr[u];\n\t\tint u_start = g_start[u];\n\t\tint u_end = g_start[u+1];\n\t\twhile (true) {\n\t\t\tif (i < u_end-u_start) {\n\t\t\t\tint v = g_edges[u_start+i];\n\t\t\t\tint nxt = r[v];\n\t\t\t\tif (!nxt) {\n\t\t\t\t\tl[u] = v; r[v] = u; ptr[u] = i+1;\n\t\t\t\t\twhile (!st.empty()) {\n\t\t\t\t\t\tauto [pu, pi] = st.back(); st.pop_back();\n\t\t\t\t\t\tint pv = g_edges[g_start[pu]+pi];\n\t\t\t\t\t\tl[pu] = pv; r[pv] = pu; ptr[pu] = pi+1;\n\t\t\t\t\t}\n\t\t\t\t\treturn true;\n\t\t\t\t} else if (d[nxt] == d[u]+1) {\n\t\t\t\t\tst.push_back({u, i}); u = nxt; i = ptr[u];\n\t\t\t\t\tu_start = g_start[u]; u_end = g_start[u+1];\n\t\t\t\t} else i++;\n\t\t\t} else {\n\t\t\t\td[u] = INF;\n\t\t\t\tif (st.empty()) return false;\n\t\t\t\tauto [pu, pi] = st.back(); st.pop_back();\n\t\t\t\tu = pu; i = pi+1; ptr[u] = i;\n\t\t\t\tu_start = g_start[u]; u_end = g_start[u+1];\n\t\t\t}\n\t\t}\n\t}\n\tint maximum_matching(int want) {\n\t\tint match = 0;\n\t\tfor (int u = 1; u <= n && match < want; u++) {\n\t\t\tif (!l[u]) {\n\t\t\t\tfor (int i = g_start[u]; i < g_start[u+1]; i++) {\n\t\t\t\t\tint v = g_edges[i];\n\t\t\t\t\tif (!r[v]) { l[u] = v; r[v] = u; match++; break; }\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\twhile (match < want && bfs()) {\n\t\t\tfor (int u = 1; u <= n; u++) ptr[u] = 0;\n\t\t\tfor (int u = 1; u <= n && match < want; u++)\n\t\t\tif (!l[u] && dfs(u)) match++;\n\t\t}\n\t\treturn match;\n\t}\n};",
+      "source": "Hopcroft Karp",
+      "length": 2148,
+      "id": 88
+    },
+    {
+      "text": "const ll inf = 1e15;\ntemplate<typename MF>\nstruct max_flow_edge_demands : MF {\n\tvector<ll> in, out, dem;\n\tvector<array<int,2>> eloc;\n\tint N;\n\tmax_flow_edge_demands(int N): MF(N+2), N(N), in(N, 0), out(N, 0) {}\n\tvoid add_edge(int u, int v, ll cap, ll d = 0) {\n\t\teloc.push_back({u, (int)MF::G[u].size()});\n\t\tdem.push_back(d);\n\t\tMF::add_edge(u, v, cap - d);\n\t\tout[u] += d; in[v] += d;\n\t}\n\tbool feasible() {\n\t\tll total = 0;\n\t\tfor (int i = 0; i < N; i++) {\n\t\t\tif (in[i]) MF::add_edge(N, i, in[i]), total += in[i];\n\t\t\tif (out[i]) MF::add_edge(i, N+1, out[i]);\n\t\t}\n\t\treturn MF::max_flow(N, N+1) == total;\n\t}\n\tll flow(int e) {\n\t\tauto &[u, idx] = eloc[e];\n\t\treturn dem[e] + MF::G[u][idx].f;\n\t}\n\tint size() { return eloc.size(); }\n};",
+      "source": "Flow with Demands",
+      "length": 723,
+      "id": 89
+    },
+    {
+      "text": "void Hungarian(vector<vector<ll>> &A, vector<pair<int, int>> &result, ll &C, const ll INF = 1e15) {\n\tint n = A.size() - 1, m = A[0].size() - 1;\n\tvector<ll> minv(m + 1), u(n + 1), v(m + 1);\n\tvector<int> p(m + 1), way(m + 1);\n\tvector<bool> used(m + 1);\n\tfor (int i = 1; i <= n; ++i) {\n\t\tp[0] = i; int j0 = 0;\n\t\tfor (int j = 0; j <= m; ++j)\n\t\t\tminv[j] = INF;\n\t\tfor (int j = 0; j <= m; ++j)\n\t\t\tused[j] = false;\n\t\tdo {\n\t\t\tused[j0] = true;\n\t\t\tint i0 = p[j0], j1;\n\t\t\tll delta = INF;\n\t\t\tfor (int j = 1; j <= m; ++j)\n\t\t\t\tif (!used[j]) {\n\t\t\t\t\tll cur = A[i0][j] - u[i0] - v[j];\n\t\t\t\t\tif (cur < minv[j]) minv[j] = cur, way[j] = j0;\n\t\t\t\t\tif (minv[j] < delta) delta = minv[j], j1 = j;\n\t\t\t\t}\n\t\t\tfor (int j = 0; j <= m; ++j) {\n\t\t\t\tif (used[j]) u[p[j]] += delta, v[j] -= delta;\n\t\t\t\telse minv[j] -= delta;\n\t\t\t}\n\t\t\tj0 = j1;\n\t\t} while (p[j0] != 0);\n\t\tdo {\n\t\t\tint j1 = way[j0];\n\t\t\tp[j0] = p[j1];\n\t\t\tj0 = j1;\n\t\t} while(j0);\n\t}\n\tfor (int i = 1; i <= m; ++i)\n\t\tresult.push_back(make_pair(p[i], i));\n\tC = -v[0];\n}",
+      "source": "Hungarian",
+      "length": 987,
+      "id": 90
+    },
+    {
+      "text": "template<class T1, class T2>\nstruct min_cost_flow {\n\tstruct edge {int v; T1 c,f; T2 w; };\n\tvector<vector<int>> g; vector<T2> dist,pot; vector<T1> fl;\n\tvector<bool> vis; vector<int> par; vector<edge> e;\n\tmin_cost_flow(int n):g(n),dist(n),pot(n),fl(n),vis(n),par(n){}\n\tvoid add_edge(int u, int v, T1 c, T2 w){\n\t\tint k = e.size();\n\t\te.push_back({v,c,0,w}); e.push_back({u,c,c,-w});\n\t\tg[u].push_back(k); g[v].push_back(k^1);\n\t}\n\tusing pli = pair<T2,int>;\n\tvoid dijk(int s){\n\t\tfill(dist.begin(),dist.end(),numeric_limits<T2>::max());\n\t\tfill(vis.begin(),vis.end(),0); fl[s] = numeric_limits<T1>::max();\n\t\tpriority_queue<pli,vector<pli>,greater<pli>> q;\n\t\tq.push({0,s}); dist[s] = 0;\n\t\twhile (!q.empty()){\n\t\t\tpli p = q.top(); q.pop(); int x = p.second;\n\t\t\tif (vis[x]) continue; vis[x] = 1;\n\t\t\tfor (int to : g[x]){\n\t\t\t\tT2 d2 = p.first+e[to].w+pot[x]-pot[e[to].v];\n\t\t\t\tif (!vis[e[to].v] && e[to].f < e[to].c && d2 < dist[e[to].v]){\n\t\t\t\t\tdist[e[to].v] = d2; fl[e[to].v] = min(fl[x],e[to].c-e[to].f);\n\t\t\t\t\tpar[e[to].v] = to; q.push({d2,e[to].v});\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\tT2 calc_flow(int s, int t, T1 _f){\n\t\tT2 cost = 0;\n\t\twhile (1){\n\t\t\tdijk(s);\n\t\t\tif (!vis[t]) return -1;\n\t\t\tfor (int i = 0; i < g.size(); i++)\n\t\t\t\tdist[i] += pot[i]-pot[s];\n\t\t\tT1 mnf = min(_f,fl[t]);\n\t\t\tcost += dist[t]*mnf;\n\t\t\tint cur = t;\n\t\t\twhile (cur != s){\n\t\t\t\te[par[cur]].f += mnf;\n\t\t\t\te[par[cur]^1].f -= mnf;\n\t\t\t\tcur = e[par[cur]^1].v;\n\t\t\t}\n\t\t\tdist.swap(pot);\n\t\t\t_f -= mnf;\n\t\t\tif (!_f) break;\n\t\t}\n\t\treturn cost;\n\t}\n};",
+      "source": "Min Cost Flow",
+      "length": 1475,
+      "id": 91
+    },
+    {
+      "text": "const ll MOD = 998244353;\nll pw(ll b, ll e, ll m = MOD) {\n\tll r = 1; for (b %= m; e > 0; e >>= 1, b = b*b%m)\n\t\tif (e & 1) r = r*b%m; return r;\n}\nint matInv(vector<vector<ll>>& A) {\n\tint n = A.size(); vector<int> col(n);\n\tvector<vector<ll>> tmp(n, vector<ll>(n));\n\tfor (int i = 0; i < n; i++) tmp[i][i] = 1, col[i] = i;\n\tfor (int i = 0; i < n; i++) {\n\t\tint r = i, c = i;\n\t\tfor (int j = i; j < n; j++) for (int k = i; k < n; k++)\n\t\t\tif (A[j][k]) { r = j; c = k; goto found; }\n\t\treturn i;\n\t\tfound:\n\t\tswap(A[i], A[r]); swap(tmp[i], tmp[r]);\n\t\tfor (int j = 0; j < n; j++)\n\t\t\tswap(A[j][i], A[j][c]), swap(tmp[j][i], tmp[j][c]);\n\t\tswap(col[i], col[c]);\n\t\tll v = pw(A[i][i], MOD - 2);\n\t\tfor (int j = i+1; j < n; j++) {\n\t\t\tll f = A[j][i] * v % MOD;\n\t\t\tA[j][i] = 0;\n\t\t\tfor (int k = i+1; k < n; k++)\n\t\t\t\tA[j][k] = (A[j][k] - f*A[i][k]) % MOD;\n\t\t\tfor (int k = 0; k < n; k++)\n\t\t\t\ttmp[j][k] = (tmp[j][k] - f*tmp[i][k]) % MOD;\n\t\t}\n\t\tfor (int j = i+1; j < n; j++) A[i][j] = A[i][j]*v%MOD;\n\t\tfor (int j = 0; j < n; j++) tmp[i][j] = tmp[i][j]*v%MOD;\n\t\tA[i][i] = 1;\n\t}\n\tfor (int i = n-1; i > 0; --i) for (int j = 0; j < i; j++) {\n\t\tll v = A[j][i];\n\t\tfor (int k = 0; k < n; k++)\n\t\t\ttmp[j][k] = (tmp[j][k] - v*tmp[i][k]) % MOD;\n\t}\n\tfor (int i = 0; i < n; i++) for (int j = 0; j < n; j++)\n\t\tA[col[i]][col[j]] = tmp[i][j]%MOD + (tmp[i][j]<0)*MOD;\n\treturn n;\n}\nvector<pair<int,int>> generalMatching(int N,\n\t\tvector<pair<int,int>>& ed) {\n\tmt19937 rng(chrono::steady_clock::now()\n\t\t.time_since_epoch().count());\n\tvector<vector<ll>> mat(N, vector<ll>(N)), A;\n\tfor (auto [a, b] : ed) {\n\t\tint r = rng() % MOD;\n\t\tmat[a][b] = r; mat[b][a] = (MOD - r) % MOD;\n\t}\n\tint r = matInv(A = mat), M = 2*N - r, fi, fj;\n\tif (M != N) do {\n\t\tmat.resize(M, vector<ll>(M));\n\t\tfor (int i = 0; i < N; i++) {\n\t\t\tmat[i].resize(M);\n\t\t\tfor (int j = N; j < M; j++) {\n\t\t\t\tint rv = rng() % MOD;\n\t\t\t\tmat[i][j] = rv; mat[j][i] = (MOD - rv) % MOD;\n\t\t\t}\n\t\t}\n\t} while (matInv(A = mat) != M);\n\tvector<int> has(M, 1);\n\tvector<pair<int,int>> ret;\n\tfor (int it = 0; it < M/2; it++) {\n\t\tfor (int i = 0; i < M; i++) if (has[i])\n\t\t\tfor (int j = i+1; j < M; j++)\n\t\t\t\tif (A[i][j] && mat[i][j])\n\t\t\t\t\t{ fi = i; fj = j; goto done; }\n\t\tbreak; done:\n\t\tif (fj < N) ret.emplace_back(fi, fj);\n\t\thas[fi] = has[fj] = 0;\n\t\tfor (int sw = 0; sw < 2; sw++) {\n\t\t\tll a = pw(A[fi][fj], MOD - 2);\n\t\t\tfor (int i = 0; i < M; i++)\n\t\t\t\tif (has[i] && A[i][fj]) {\n\t\t\t\t\tll b = A[i][fj] * a % MOD;\n\t\t\t\t\tfor (int j = 0; j < M; j++)\n\t\t\t\t\t\tA[i][j] = (A[i][j] - A[fi][j]*b) % MOD;\n\t\t\t\t}\n\t\t\tswap(fi, fj);\n\t\t}\n\t}\n\treturn ret;\n}",
+      "source": "General Matching",
+      "length": 2525,
+      "id": 92
+    },
+    {
+      "text": "pair<int, vector<int>> globalMinCut(vector<vector<int>> mat) {\n\tpair<int, vector<int>> best = {INT_MAX, {}};\n\tint n = mat.size();\n\tvector<vector<int>> co(n);\n\tfor (int i = 0; i < n; i++) co[i] = {i};\n\tfor (int ph = 1; ph < n; ph++) {\n\t\tvector<int> w = mat[0];\n\t\tsize_t s = 0, t = 0;\n\t\tfor (int it = 0; it < n-ph; it++) {\n\t\t\tw[t] = INT_MIN;\n\t\t\ts = t;\n\t\t\tt = max_element(w.begin(), w.end()) - w.begin();\n\t\t\tfor (int i = 0; i < n; i++) w[i] += mat[t][i];\n\t\t}\n\t\tbest = min(best, {w[t] - mat[t][t], co[t]});\n\t\tco[s].insert(co[s].end(), co[t].begin(), co[t].end());\n\t\tfor (int i = 0; i < n; i++) mat[s][i] += mat[t][i];\n\t\tfor (int i = 0; i < n; i++) mat[i][s] = mat[s][i];\n\t\tmat[0][t] = INT_MIN;\n\t}\n\treturn best;\n}",
+      "source": "Global Min Cut",
+      "length": 708,
+      "id": 93
+    },
+    {
+      "text": "using Edge3 = array<ll,3>;\nvector<Edge3> gomoryHu(int N,\n\t\tvector<array<ll,3>>& ed) {\n\tvector<Edge3> tree;\n\tvector<int> par(N, 0);\n\tfor (int i = 1; i < N; i++) {\n\t\tDinic D(N);\n\t\tfor (auto& [a,b,c] : ed)\n\t\t\tD.add_edge(a, b, c), D.add_edge(b, a, c);\n\t\tll flow = D.max_flow(i, par[i]);\n\t\ttree.push_back({i, par[i], flow});\n\t\tfor (int j = i+1; j < N; j++)\n\t\t\tif (par[j] == par[i] && D.D[j] != -1)\n\t\t\t\tpar[j] = i;\n\t}\n\treturn tree;\n}",
+      "source": "Gomory Hu",
+      "length": 427,
+      "id": 94
+    },
+    {
+      "text": "template<class T>\nstruct push_relabel {\n\tstruct Edge {int to,rev; T f,c; bool r; };\n\tvector<vector<Edge>> G;\n\tvector<int> h,pt; vector<T> e; queue<int> q;\n\tpush_relabel(int n) : G(n), h(n,0), e(n,0), pt(n,0) {}\n\tvoid add_edge(int u, int v, T cap){\n\t\tG[u].push_back({v,(int)G[v].size(),0,cap,0});\n\t\tG[v].push_back({u,(int)G[u].size()-1,0,0,1});\n\t}\n\tvoid push(int u, int ev) {\n\t\tauto [v,rev,fl,cap,r] = G[u][ev];\n\t\tT d = min(e[u],cap-fl);\n\t\tG[u][ev].f += d; G[v][rev].f -= d;\n\t\te[u] -= d; e[v] += d;\n\t\tif (d != 0 && e[v] == d) q.push(v);\n\t}\n\tvoid relabel(int u) {\n\t\tint d = INT_MAX;\n\t\tfor (auto &eg : G[u])\n\t\tif (eg.c-eg.f > 0) d = min(d,h[eg.to]);\n\t\tif (d < INT_MAX) h[u] = d+1;\n\t}\n\tvoid discharge(int u) {\n\t\twhile (e[u] > 0) {\n\t\t\tif (pt[u] < (int)G[u].size()) {\n\t\t\t\tauto [v,rev,fl,cap,r] = G[u][pt[u]];\n\t\t\t\tif (cap-fl > 0 && h[u] > h[v]) push(u,pt[u]);\n\t\t\t\telse pt[u]++;\n\t\t\t} else {\n\t\t\t\trelabel(u); pt[u] = 0;\n\t\t\t}\n\t\t}\n\t}\n\tT max_flow(int s, int t){\n\t\th[s] = (int)G.size(); e[s] = numeric_limits<T>::max();\n\t\tfor (int i = 0; i < G[s].size(); i++) push(s,i);\n\t\twhile (!q.empty()) {\n\t\t\tint u = q.front(); q.pop();\n\t\t\tif (u != s && u != t) discharge(u);\n\t\t}\n\t\tT ans = 0;\n\t\tfor (auto & eg : G[t]) ans += G[eg.to][eg.rev].f;\n\t\treturn ans;\n\t}\n};",
+      "source": "Push Relabel",
+      "length": 1238,
+      "id": 95
+    },
+    {
+      "text": "template<class T>\nstruct hlpp {\n\tstruct Edge {int to,rev; T f,c; bool r; };\n\tvector<vector<Edge>> G; vector<int> h,pt,cnt; vector<T> e;\n\tvector<vector<int>> q; int mx,n;\n\thlpp(int _n) : G(_n),h(_n,_n), pt(_n,0), cnt(2*_n+1,0), e(_n,0), q(2*_n), mx(-1), n(_n) {}\n\tvoid add_edge(int u, int v, T cap){\n\t\tG[u].push_back({v,(int)G[v].size(),0,cap,0});\n\t\tG[v].push_back({u,(int)G[u].size()-1,0,0,1});\n\t}\n\tvoid bfs(int s, int t){\n\t\tqueue<int> qr; qr.push(t); h[t] = 0;\n\t\twhile (!qr.empty()){\n\t\t\tint u = qr.front(); qr.pop();\n\t\t\tfor (auto [v,rev,fl,cap,r] : G[u]) {\n\t\t\t\tif (h[v] == n && G[v][rev].c-G[v][rev].f > 0) {\n\t\t\t\t\th[v] = h[u]+1; cnt[h[v]]++;\n\t\t\t\t\tqr.push(v);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\tvoid push(int u, int ev) {\n\t\tauto [v,rev,fl,cap,r] = G[u][ev];\n\t\tT d = min(e[u],cap-fl);\n\t\tG[u][ev].f += d; G[v][rev].f -= d;\n\t\te[u] -= d; e[v] += d;\n\t\tif (d != 0 && e[v] == d){\n\t\t\tq[h[v]].push_back(v);\n\t\t\tmx = max(mx,h[v]);\n\t\t}\n\t}\n\tvoid relabel(int u) {\n\t\tcnt[h[u]]--;\n\t\tif (cnt[h[u]] == 0) {\n\t\t\tint gap = h[u];\n\t\t\tfor (int v = 0; v < n; v++){\n\t\t\t\tif (h[v] > gap && h[v] < n) {\n\t\t\t\t\tcnt[h[v]]--;\n\t\t\t\t\th[v] = n;\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\tint d = 2*n;\n\t\tfor (auto &eg : G[u]) {\n\t\t\tif (eg.c-eg.f > 0) d = min(d, h[eg.to]);\n\t\t}\n\t\tif (d < 2*n) h[u] = d+1, cnt[h[u]]++;\n\t}\n\tvoid discharge(int u) {\n\t\twhile (e[u] > 0) {\n\t\t\tif (pt[u] < (int)G[u].size()) {\n\t\t\t\tauto [v,rev,fl,cap,r] = G[u][pt[u]];\n\t\t\t\tif (cap-fl > 0 && h[u] > h[v]) push(u,pt[u]);\n\t\t\t\telse pt[u]++;\n\t\t\t} else {\n\t\t\t\trelabel(u); pt[u] = 0;\n\t\t\t\tif (h[u] >= 2*n) break;\n\t\t\t}\n\t\t}\n\t}\n\tT max_flow(int s, int t){\n\t\tbfs(s,t); cnt[0] = 1;\n\t\th[s] = n; e[s] = numeric_limits<T>::max();\n\t\tfor (int i = 0; i < (int)G[s].size(); i++) push(s,i);\n\t\twhile (mx != -1) {\n\t\t\twhile (mx != -1 && q[mx].empty()) mx--;\n\t\t\tif (mx == -1) break;\n\t\t\tint u = q[mx].back(); q[mx].pop_back();\n\t\t\tif (u != s && u != t) discharge(u);\n\t\t}\n\t\tT ans = 0;\n\t\tfor (auto &eg : G[t]) ans += G[eg.to][eg.rev].f;\n\t\treturn ans;\n\t}\n};",
+      "source": "HLPP",
+      "length": 1916,
+      "id": 96
+    },
+    {
+      "text": "template<class Edge>\nvector<array<int,2>> min_cut(int s, vector<vector<Edge>> &G){\n\tint n = G.size(); queue<int> q;\n\tvector<bool> vis(n,0);\n\tq.push(s); vis[s] = 1;\n\twhile (!q.empty()){\n\t\tint p = q.front(); q.pop();\n\t\tfor (auto & eg : G[p]){\n\t\t\tif (!vis[eg.to] && eg.c-eg.f > 0){\n\t\t\t\tq.push(eg.to);\n\t\t\t\tvis[eg.to] = 1;\n\t\t\t}\n\t\t}\n\t}\n\tvector<array<int,2>> res;\n\tfor (int i = 0; i < n; i++){\n\t\tif (!vis[i]) continue;\n\t\tfor (auto & eg : G[i]){\n\t\t\tif (vis[eg.to] || eg.r) continue;\n\t\t\tres.push_back({i,eg.to});\n\t\t}\n\t}\n\treturn res;\n}",
+      "source": "Min Cut",
+      "length": 525,
+      "id": 97
+    },
+    {
+      "text": "struct LCA {\n\tvector<vector<int>> T, parent;\n\tvector<int> depth, vis;\n\tint LOGN, V;\n\tLCA(vector<vector<int>> &T, int logn = 20): T(T), LOGN(logn), vis(T.size()) {\n\t\tparent.assign(T.size()+1, vector<int>(LOGN, 0));\n\t\tdepth.assign(T.size()+1, 0);\n\t}\n\tvoid dfs(int u = 0, int p = -1) {\n\t\tvis[u] = true;\n\t\tfor (int v : T[u]) {\n\t\t\tif (p != v) {\n\t\t\t\tdepth[v] = depth[u] + 1;\n\t\t\t\tparent[v][0] = u;\n\t\t\t\tfor (int j = 1; j < LOGN; j++)\n\t\t\t\t\tparent[v][j] = parent[parent[v][j-1]][j-1];\n\t\t\t\t\tdfs(v, u);\n\t\t\t}\n\t\t}\n\t}\n\tint query(int u, int v) {\n\t\tif (depth[u] < depth[v]) swap(u, v);\n\t\tint k = depth[u]-depth[v];\n\t\tfor (int j = LOGN - 1; j >= 0; j--)\n\t\t\tif (k & (1 << j))\n\t\t\t\tu = parent[u][j];\n\t\tif (u == v)\n\t\t\treturn u;\n\t\tfor (int j = LOGN - 1; j >= 0; j--) {\n\t\t\tif (parent[u][j] != parent[v][j]) {\n\t\t\t\tu = parent[u][j];\n\t\t\t\tv = parent[v][j];\n\t\t\t}\n\t\t}\n\t\treturn parent[u][0];\n\t}\n};",
+      "source": "LCA",
+      "length": 866,
+      "id": 98
+    },
+    {
+      "text": "struct lca_rmq {\n\tusing pll = pair<ll, ll>;\n\tvector<vector<int>> T;\n\tvector<pll> linear;\n\tvector<int> in, out, depth;\n\tll t = 0, n;\n\tstatic pll _min(pll a, pll b) { return min(a, b); }\n\tsparse_table<pll, lca_rmq::_min> st;\n\tlca_rmq(){}\n\tlca_rmq(vector<vector<int>> &T, ll rooted = 0): n(T.size()) {\n\t\tin = out = depth = vector<int>(n, -1);\n\t\tlinear.resize(2*n);\n\t\tauto dfs = [&](int u, int d, auto&&dfs) -> void {\n\t\t\tlinear[t] = {d, u}, in[u] = t++, depth[u] = d;\n\t\t\tfor (int v : T[u]) {\n\t\t\t\tif (in[v] != -1) continue;\n\t\t\t\tdfs(v, d+1, dfs);\n\t\t\t\tlinear[t++] = {d, u};\n\t\t\t}\n\t\t\tout[u] = t;\n\t\t};\n\t\tdfs(rooted, 0, dfs);\n\t\tst = sparse_table<pll, lca_rmq::_min>(linear);\n\t}\n\tll query(int u, int v) {\n\t\ttie(u, v) = {in[u], in[v]};\n\t\treturn st.query(min(u, v), max(u, v)).second;\n\t}\n};",
+      "source": "LCA with RMQ",
+      "length": 776,
+      "id": 99
+    },
+    {
+      "text": "template <class DS, class T, T merge(T, T), int IN_EDGES>\nstruct heavy_light {\n\tvector <int> parent, depth, heavy, head, pos_down;\n\tint n, cur_pos_down; DS ds_down;\n\tint dfs(int v, vector < vector < int >>\n\t\tconst & adj) {\n\t\tint size = 1;\n\t\tint max_c_size = 0;\n\t\tfor (int c: adj[v])\n\t\t\tif (c != parent[v]) {\n\t\t\t\tparent[c] = v, depth[c] = depth[v] + 1;\n\t\t\t\tint c_size = dfs(c, adj);\n\t\t\t\tsize += c_size;\n\t\t\t\tif (c_size > max_c_size)\n\t\t\t\t\tmax_c_size = c_size, heavy[v] = c;\n\t\t\t}\n\t\treturn size;\n\t}\n\tvoid decompose(int v, int h, vector<vector<int>>\n\t\tconst & adj, vector <T> & a_down, vector <T> & values) {\n\t\thead[v] = h, pos_down[v] = cur_pos_down++;\n\t\ta_down[pos_down[v]] = values[v];\n\t\tif (heavy[v] != -1)\n\t\t\tdecompose(heavy[v], h, adj, a_down, values);\n\t\tfor (int c: adj[v]) {\n\t\t\tif (c != parent[v] && c != heavy[v])\n\t\t\t\tdecompose(c, c, adj, a_down, values);\n\t\t}\n\t}\n\theavy_light(vector <vector<int>> &adj, vector <T> & values) {\n\t\tn = adj.size();\n\t\tparent.resize(n);\n\t\tdepth.resize(n);\n\t\theavy.resize(n, -1);\n\t\thead.resize(n);\n\t\tpos_down.resize(n);\n\t\tvector < T > a_down(n);\n\t\tcur_pos_down = 0;\n\t\tdfs(0, adj);\n\t\tdecompose(0, 0, adj, a_down, values);\n\t\tds_down = DS(a_down);\n\t}\n\tvoid update(int a, int b, T x) {\n\t\twhile (head[a] != head[b]) {\n\t\t\tif (depth[head[a]] < depth[head[b]])\n\t\t\t\tswap(a, b);\n\t\t\tds_down.update(pos_down[head[a]], pos_down[a], x);\n\t\t\ta = parent[head[a]];\n\t\t}\n\t\tif (depth[a] < depth[b])\n\t\t\tswap(a, b);\n\t\tif (pos_down[b] + IN_EDGES > pos_down[a])\n\t\t\treturn;\n\t\tds_down.update(pos_down[b] + IN_EDGES, pos_down[a], x);\n\t}\n\tvoid update(int a, T x) { ds_down.update(pos_down[a], x); }\n\tT query(int a, int b) {\n\t\tT ans; bool has = 0;\n\t\twhile (head[a] != head[b]) {\n\t\t\tif (depth[head[a]] < depth[head[b]])\n\t\t\t\tswap(a, b);\n\t\t\tans = has ? merge(ans, ds_down.query(pos_down[head[a]], pos_down[a])) : ds_down.query(pos_down[head[a]], pos_down[a]);\n\t\t\thas = 1;\n\t\t\ta = parent[head[a]];\n\t\t}\n\t\tif (depth[a] < depth[b])\n\t\t\tswap(a, b);\n\t\tif (pos_down[b] + IN_EDGES > pos_down[a])\n\t\t\treturn ans;\n\t\treturn has ? merge(ans, ds_down.query(pos_down[b] + IN_EDGES, pos_down[a])) : ds_down.query(pos_down[b] + IN_EDGES, pos_down[a]);\n\t}\n};",
+      "source": "Heavy Light Decomposition",
+      "length": 2134,
+      "id": 100
+    },
+    {
+      "text": "template < class DS, class T, T merge(T, T), int IN_EDGES >\n\tstruct associative_heavy_light {\n\t\tvector <int> parent, depth, heavy, head, pos_up, pos_down;\n\t\tint n, cur_pos_up, cur_pos_down;\n\t\tDS ds_up, ds_down;\n\t\tint dfs(int v, vector < vector < int >>\n\t\t\tconst & adj) {\n\t\t\tint size = 1;\n\t\t\tint max_c_size = 0;\n\t\t\tfor (int c: adj[v])\n\t\t\t\tif (c != parent[v]) {\n\t\t\t\t\tparent[c] = v, depth[c] = depth[v] + 1;\n\t\t\t\t\tint c_size = dfs(c, adj);\n\t\t\t\t\tsize += c_size;\n\t\t\t\t\tif (c_size > max_c_size)\n\t\t\t\t\t\tmax_c_size = c_size, heavy[v] = c;\n\t\t\t\t}\n\t\t\treturn size;\n\t\t}\n\t\tvoid decompose(int v, int h, vector < vector < int >>\n\t\t\tconst & adj, vector < T > & a_up, vector < T > & a_down, vector < T > & values) {\n\t\t\thead[v] = h, pos_up[v] = cur_pos_up--, pos_down[v] = cur_pos_down++;\n\t\t\ta_up[pos_up[v]] = values[v];\n\t\t\ta_down[pos_down[v]] = values[v];\n\t\t\tif (heavy[v] != -1)\n\t\t\t\tdecompose(heavy[v], h, adj, a_up, a_down, values);\n\t\t\tfor (int c: adj[v]) {\n\t\t\t\tif (c != parent[v] && c != heavy[v])\n\t\t\t\t\tdecompose(c, c, adj, a_up, a_down, values);\n\t\t\t}\n\t\t}\n\t\tassociative_heavy_light(vector < vector < int > >\n\t\t\tconst & adj, vector < T > & values) {\n\t\t\tn = adj.size(); parent.resize(n);\n\t\t\tdepth.resize(n); heavy.resize(n, -1);\n\t\t\thead.resize(n); pos_up.resize(n);\n\t\t\tpos_down.resize(n);\n\t\t\tvector <T> a_up(n), a_down(n);\n\t\t\tcur_pos_up = n - 1;\n\t\t\tcur_pos_down = 0;\n\t\t\tdfs(0, adj);\n\t\t\tdecompose(0, 0, adj, a_up, a_down, values);\n\t\t\tds_up = DS(a_up);\n\t\t\tds_down = DS(a_down);\n\t\t}\n\t\tvoid update(int a, int b, T x) {\n\t\t\twhile (head[a] != head[b]) {\n\t\t\t\tif (depth[head[a]] < depth[head[b]])\n\t\t\t\t\tswap(a, b);\n\t\t\t\tds_up.update(pos_up[a], pos_up[head[a]], x);\n\t\t\t\tds_down.update(pos_down[head[a]], pos_down[a], x);\n\t\t\t\ta = parent[head[a]];\n\t\t\t}\n\t\t\tif (depth[a] < depth[b])\n\t\t\t\tswap(a, b);\n\t\t\tif (pos_up[a] > pos_up[b] - IN_EDGES)\n\t\t\t\treturn;\n\t\t\tds_up.update(pos_up[a], pos_up[b] - IN_EDGES, x);\n\t\t\tds_down.update(pos_down[b] + IN_EDGES, pos_down[a], x);\n\t\t}\n\t\tvoid update(int a, T x) {\n\t\t\tds_up.update(pos_up[a], x);\n\t\t\tds_down.update(pos_down[a], x);\n\t\t}\n\t\tT query(int a, int b) {\n\t\t\tT ansL, ansR;\n\t\t\tbool hasL = 0, hasR = 0;\n\t\t\twhile (head[a] != head[b]) {\n\t\t\t\tif (depth[head[a]] > depth[head[b]]) {\n\t\t\t\t\thasL ? ansL = merge(ansL, ds_up.query(pos_up[a], pos_up[head[a]])) : ansL = ds_up.query(pos_up[a], pos_up[head[a]]), hasL = 1;\n\t\t\t\t\ta = parent[head[a]];\n\t\t\t\t} else {\n\t\t\t\t\thasR ? ansR = merge(ds_down.query(pos_down[head[b]], pos_down[b]), ansR) : ansR = ds_down.query(pos_down[head[b]], pos_down[b]), hasR = 1;\n\t\t\t\t\tb = parent[head[b]];\n\t\t\t\t}\n\t\t\t}\n\t\t\tif (depth[a] > depth[b] && pos_up[a] <= pos_up[b] - IN_EDGES)\n\t\t\t\thasL ? ansL = merge(ansL, ds_up.query(pos_up[a], pos_up[b] - IN_EDGES)) : ansL = ds_up.query(pos_up[a], pos_up[b] - IN_EDGES), hasL = 1;\n\t\t\telse if (depth[a] <= depth[b] && pos_down[a] + IN_EDGES <= pos_down[b])\n\t\t\t\thasR ? ansR = merge(ds_down.query(pos_down[a] + IN_EDGES, pos_down[b]), ansR) : ansR = ds_down.query(pos_down[a] + IN_EDGES, pos_down[b]), hasR = 1;\n\t\t\treturn (!hasL) ? ansR : (!hasR ? ansL : merge(ansL, ansR));\n\t\t}\n\t};",
+      "source": "Associative HLD",
+      "length": 3031,
+      "id": 101
+    },
+    {
+      "text": "struct centroid_decomp {\n\t\tint n;\n\t\tvector<bool> vis;\n\t\tvector<int> subtr, parent;\n\t\tvector<vector<int>> adj;\n\t\tvoid dfs(int v,int p = -1){\n\t\t\t\tfor(int u: adj[v]){\n\t\t\t\t\t\tif(u != p && !vis[u]) dfs(u,v);\n\t\t\t\t}\n\t\t}\n\t\tint calculate_subtree(int v, int p){\n\t\t\t\tsubtr[v] = 1;\n\t\t\t\tfor (int to : adj[v]){\n\t\t\t\t\t\tif (to == p || vis[to]) continue;\n\t\t\t\t\t\tsubtr[v] += calculate_subtree(to,v);\n\t\t\t\t}\n\t\t\t\treturn subtr[v];\n\t\t}\n\t\tint get_centroid(int v, int p, int sz){\n\t\t\t\tfor (int to : adj[v]){\n\t\t\t\t\t\tif (to == p || vis[to]) continue;\n\t\t\t\t\t\tif (subtr[to]*2> sz) return get_centroid(to,v,sz);\n\t\t\t\t}\n\t\t\t\treturn v;\n\t\t}\n\t\tint build(int v = 0){\n\t\t\t\tint centroid = get_centroid(v,v,calculate_subtree(v,v));\n\t\t\t\tdfs(centroid);\n\t\t\t\tvis[centroid] = 1;\n\t\t\t\tfor (int to : adj[centroid]){\n\t\t\t\t\t\tif (vis[to]) continue;\n\t\t\t\t\t\tbuild(to);\n\t\t\t\t\t\tparent[build(to)] = centroid;\n\t\t\t\t}\n\t\t\t\treturn centroid;\n\t\t}\n\t\tcentroid_decomp(vector<vector<int>> &_adj){\n\t\t\t\tadj = _adj;\n\t\t\t\tn = adj.size();\n\t\t\t\tsubtr.resize(n,0);\n\t\t\t\tparent.resize(n,-1);\n\t\t\t\tvis.resize(n,0);\n\t\t\t\tbuild();\n\t\t}\n};",
+      "source": "Centroid Decomposition",
+      "length": 1044,
+      "id": 102
+    },
+    {
+      "text": "struct virtual_tree {\n\tint n,timer,lg;\n\tvector<int> tin,tout,dep;\n\tvector<vector<int>> up,adj_vt;\n\tvoid dfs(int u, int p, vector<vector<int>> & adj){\n\t\ttin[u] = ++timer;\n\t\tup[u][0] = p;\n\t\tfor (int i = 1; i <= lg; i++)\n\t\t\tup[u][i] = up[up[u][i-1]][i-1];\n\t\tfor (int v : adj[u]){\n\t\t\tif (v == p) continue;\n\t\t\tdep[v] = dep[u]+1;\n\t\t\tdfs(v,u,adj);\n\t\t}\n\t\ttout[u] = timer;\n\t}\n\tbool is_ancestor(int u, int v) {\n\t\treturn (tin[u] <= tin[v] && tout[u] >= tout[v]);\n\t}\n\tint lca(int u, int v){\n\t\tif (is_ancestor(u,v)) return u;\n\t\tif (is_ancestor(v,u)) return v;\n\t\tfor (int i = lg; i >= 0; i--)\n\t\t\tif (!is_ancestor(up[u][i],v))\n\t\t\t\tu = up[u][i];\n\t\treturn up[u][0];\n\t}\n\tvirtual_tree(vector<vector<int>> & adj, int logn = 20){\n\t\tn = adj.size(); timer = 0; lg = logn;\n\t\ttin.resize(n); tout.resize(n); dep.resize(n,0);\n\t\tup.assign(n,vector<int>(lg+1));\n\t\tadj_vt.resize(n); dfs(0,0,adj);\n\t}\n\tint build(vector<int> nodes){\n\t\tassert(!nodes.empty());\n\t\tauto cmp = [&](int u, int v){ return (tin[u] < tin[v]); };\n\t\tsort(nodes.begin(),nodes.end(),cmp);\n\t\tint k = nodes.size();\n\t\tfor (int i = 1; i < k; i++)\n\t\t\tnodes.push_back(lca(nodes[i-1],nodes[i]));\n\t\tsort(nodes.begin(),nodes.end(),cmp);\n\t\tnodes.erase(unique(nodes.begin(),nodes.end()),nodes.end());\n\t\tfor (int v : nodes) adj_vt[v].clear();\n\t\tvector<int> st = {nodes[0]};\n\t\tfor (int i = 1; i < nodes.size(); i++){\n\t\t\tint u = nodes[i];\n\t\t\twhile (st.size() >= 2 && !is_ancestor(st.back(),u)){\n\t\t\t\tadj_vt[st[st.size()-2]].push_back(st.back());\n\t\t\t\tst.pop_back();\n\t\t\t}\n\t\t\tst.push_back(u);\n\t\t}\n\t\twhile (st.size() >= 2){\n\t\t\tadj_vt[st[st.size()-2]].push_back(st.back());\n\t\t\tst.pop_back();\n\t\t}\n\t\treturn nodes[0];\n\t}\n};",
+      "source": "Virtual Tree",
+      "length": 1638,
+      "id": 103
+    },
+    {
+      "text": "for (int i = 1; i <= n; i++) {\n\tfor (int j = 1; j <= n; j++) {\n\t\tif (i == j) distance[i][j] = 0;\n\t\telse if (adj[i][j]) distance[i][j] = adj[i][j];\n\t\telse distance[i][j] = INF;\n\t}\n}\nfor (int k = 1; k <= n; k++) {\n\tfor (int i = 1; i <= n; i++) {\n\t\tfor (int j = 1; j <= n; j++) {\n\t\t\tdistance[i][j] = min(distance[i][j], distance[i][k]+distance[k][j]);\n\t\t}\n\t}\n}",
+      "source": "Floyd Warshall",
+      "length": 357,
+      "id": 104
+    },
+    {
+      "text": "for (int i = 1; i <= n; i++) distance[i] = INF;\ndistance[x] = 0;\nq.push({0,x});\nwhile (!q.empty()) {\n\tint a = q.top().second; q.pop();\n\tif (processed[a]) continue;\n\tprocessed[a] = true;\n\tfor (auto u : adj[a]) {\n\t\tint b = u.first, w = u.second;\n\t\tif (distance[a]+w < distance[b]) {\n\t\t\tdistance[b] = distance[a]+w;\n\t\t\tq.push({-distance[b],b});\n\t\t}\n\t}\n}",
+      "source": "Dijkstra",
+      "length": 350,
+      "id": 105
+    },
+    {
+      "text": "struct BellmanFord {\n\tstruct Edge { int from, to; ll weight; };\n\tint n, last_updated = -1; const ll INF = 1e18;\n\tvector<int> p; vector<ll> dist;\n\tBellmanFord(vector<Edge> &G, int s, int _n) {\n\t\tn = _n; dist.assign(n+1,INF);\n\t\tp.assign(n+1,-1); dist[s] = 0;\n\t\tfor (int i = 1; i <= n; i++) {\n\t\t\tlast_updated = -1;\n\t\t\tfor (Edge &e : G)\n\t\t\t\tif (dist[e.from] != INF && dist[e.from] + e.weight < dist[e.to]) {\n\t\t\t\t\tdist[e.to] = dist[e.from] + e.weight;\n\t\t\t\t\tp[e.to] = e.from; last_updated = e.to;\n\t\t\t\t}\n\t\t}\n\t}\n\tbool getCycle(vector<int> &cycle) {\n\t\tif (last_updated == -1) return false;\n\t\tfor (int i = 0; i < n-1; i++)\n\t\t\tlast_updated = p[last_updated];\n\t\tfor (int x = last_updated ;; x=p[x]) {\n\t\t\tcycle.push_back(x);\n\t\t\tif (x == last_updated and cycle.size() > 1) break;\n\t\t}\n\t\treverse(cycle.begin(), cycle.end());\n\t\treturn true;\n\t}\n};",
+      "source": "Bellman Ford",
+      "length": 829,
+      "id": 106
+    },
+    {
+      "text": "struct Eppstein {\n\t#define x first\n\t#define y second\n\tusing T = ll; const T INF = 1e15;\n\tusing Edge = pair<int, T>;\n\tstruct Node { int E[2] = {}, s{0}; Edge x; };\n\tT shortest;\n\tpriority_queue<pair<T, int>> Q;\n\tvector<Node> P{1}; vector<int> h;\n\tEppstein(vector<vector<Edge>>& G, int s, int t) {\n\t\tint n = G.size();\n\t\tvector<vector<Edge>> H(n);\n\t\tfor(int i = 0; i < n; i++)\n\t\t\tfor (Edge &e : G[i])\n\t\t\t\tH[e.x].push_back({i, e.y});\n\t\tvector<int> ord, par(n, -1);\n\t\tvector<T> d(n, -INF);\n\t\tQ.push({d[t] = 0, t});\n\t\twhile (!Q.empty()) {\n\t\t\tauto v = Q.top(); Q.pop();\n\t\t\tif (d[v.y] == v.x) {\n\t\t\t\tord.push_back(v.y);\n\t\t\t\tfor (Edge &e : H[v.y])\n\t\t\t\t\tif (v.x-e.y > d[e.x]) {\n\t\t\t\t\t\tQ.push({d[e.x] = v.x-e.y, e.x});\n\t\t\t\t\t\tpar[e.x] = v.y;\n\t\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\tif ((shortest = -d[s]) >= INF) return;\n\t\th.resize(n);\n\t\tfor (int v : ord) {\n\t\t\tint p = par[v];\n\t\t\tif (p+1) h[v] = h[p];\n\t\t\tfor (Edge &e : G[v])\n\t\t\t\tif (d[e.x] > -INF) {\n\t\t\t\t\tT k = e.y - d[e.x] + d[v];\n\t\t\t\t\tif (k or e.x != p) h[v] = push(h[v], {e.x, k});\n\t\t\t\t\telse p = -1;\n\t\t\t\t}\n\t\t}\n\t\tP[0].x.x = s;\n\t\tQ.push({0, 0});\n\t}\n\tint push(int t, Edge x) {\n\t\tP.push_back(P[t]);\n\t\tif (!P[t = int(P.size())-1].s or P[t].x.y >= x.y)\n\t\t\tswap(x, P[t].x);\n\t\tif (P[t].s) {\n\t\t\tint i = P[t].E[0], j = P[t].E[1];\n\t\t\tint d = P[i].s > P[j].s;\n\t\t\tint k = push(d ? j : i, x);\n\t\t\tP[t].E[d] = k;\n\t\t}\n\t\tP[t].s++;\n\t\treturn t;\n\t}\n\tint nextPath() {\n\t\tif (Q.empty()) return -1;\n\t\tauto v = Q.top(); Q.pop();\n\t\tfor (int i : P[v.y].E) if (i)\n\t\t\t\tQ.push({ v.x-P[i].x.y+P[v.y].x.y, i });\n\t\tint t = h[P[v.y].x.x];\n\t\tif (t) Q.push({ v.x - P[t].x.y, t });\n\t\treturn shortest - v.x;\n\t}\n};",
+      "source": "Eppstein",
+      "length": 1591,
+      "id": 107
+    },
+    {
+      "text": "void dfs(int s) {\n\tif (visited[s]) return;\n\tvisited[s] = true;\n\tfor (auto u: adj[s]) {\n\t\tdfs(u);\n\t}\n}",
+      "source": "DFS",
+      "length": 101,
+      "id": 108
+    },
+    {
+      "text": "visited[x] = true;\ndistance[x] = 0;\nq.push(x);\nwhile (!q.empty()) {\nint s = q.front(); q.pop();\n\tfor (auto u : adj[s]) {\n\t\tif (visited[u]) continue;\n\t\tvisited[u] = true;\n\t\tdistance[u] = distance[s]+1;\n\t\tq.push(u);\n\t}\n}",
+      "source": "BFS",
+      "length": 218,
+      "id": 109
+    },
+    {
+      "text": "struct tarjan {\n\tstruct edge { int u, v, comp, bridge; };\n\tint n, nbc, T;\n\tvector<vector<int>> adj;\n\tvector<edge> e;\n\tvector<int> disc, low, art, st;\n\ttarjan(int n) : n(n), nbc(0), T(0), adj(n), disc(n, -1), low(n), art(n, 0) {}\n\tint add_edge(int u, int v) {\n\t\tint i = e.size();\n\t\tadj[u].push_back(i);\n\t\tadj[v].push_back(i);\n\t\te.push_back({u, v, -1, false});\n\t\treturn i;\n\t}\n\tvoid dfs(int u, int pe) {\n\t\tlow[u] = disc[u] = T++;\n\t\tfor (int i : adj[u]) {\n\t\t\tif (i == pe) continue;\n\t\t\tint v = e[i].u ^ e[i].v ^ u;\n\t\t\tif (disc[v] < 0) {\n\t\t\t\tst.push_back(i);\n\t\t\t\tdfs(v, i);\n\t\t\t\tif (low[v] > disc[u])\n\t\t\t\t\te[i].bridge = true;\n\t\t\t\tif (low[v] >= disc[u]) {\n\t\t\t\t\tart[u]++;\n\t\t\t\t\twhile (st.back() != i) {\n\t\t\t\t\t\te[st.back()].comp = nbc;\n\t\t\t\t\t\tst.pop_back();\n\t\t\t\t\t}\n\t\t\t\t\te[st.back()].comp = nbc;\n\t\t\t\t\tst.pop_back();\n\t\t\t\t\tnbc++;\n\t\t\t\t}\n\t\t\t\tlow[u] = min(low[u], low[v]);\n\t\t\t} else if (disc[v] < disc[u]) {\n\t\t\t\tst.push_back(i);\n\t\t\t\tlow[u] = min(low[u], disc[v]);\n\t\t\t}\n\t\t}\n\t}\n\tvoid solve() {\n\t\tfor (int i = 0; i < n; i++)\n\t\t\tif (disc[i] < 0) dfs(i, -1), art[i]--;\n\t}\n\tbool is_bridge(int i) { return e[i].bridge; }\n\tbool is_art(int v) { return art[v] > 0; }\n\tint component(int i) { return e[i].comp; }\n};",
+      "source": "Tarjan",
+      "length": 1184,
+      "id": 110
+    },
+    {
+      "text": "struct tarjan {\n\tint n,timer;\n\tvector<bool> vis,ist;\n\tvector<int> tin,low,st,cmp;\n\tvector<vector<int>> scc;\n\tvoid dfs(int u, vector<vector<int>> & adj){\n\t\tvis[u] = ist[u] = 1;\n\t\tst.push_back(u); tin[u] = low[u] = timer++;\n\t\tfor (auto v : adj[u]){\n\t\t\tif (!vis[v]){\n\t\t\t\tdfs(v,adj);\n\t\t\t\tlow[u] = min(low[u],low[v]);\n\t\t\t} else if (ist[v]){\n\t\t\t\tlow[u] = min(low[u],tin[v]);\n\t\t\t}\n\t\t}\n\t\tif (low[u] == tin[u]){\n\t\t\tscc.emplace_back(); int cur;\n\t\t\tdo {\n\t\t\t\tcur = st.back(); st.pop_back();\n\t\t\t\tist[cur] = 0; scc.back().push_back(cur);\n\t\t\t\tcmp[cur] = (int)scc.size()-1;\n\t\t\t} while (cur != u);\n\t\t}\n\t}\n\ttarjan(vector<vector<int>> & adj){\n\t\tn = adj.size(); tin.resize(n); timer = 0; cmp.resize(n);\n\t\tlow.resize(n); vis.resize(n,0); ist.resize(n,0);\n\t\tfor (int i = 0; i < n; i++) if (!vis[i]) dfs(i,adj);\n\t}\n};",
+      "source": "Tarjan SCC",
+      "length": 794,
+      "id": 111
+    },
+    {
+      "text": "struct Bridges {\n\tint n, timer;\n\tvector <int> tin, low, vis;\n\tvector <pair<int, int>> bridges;\n\tBridges(vector <vector<int>> &adj, int root = 0) {\n\t\tn = adj.size();\n\t\ttimer = 0;\n\t\tvis.resize(n, false);\n\t\ttin.resize(n);\n\t\tlow.resize(n);\n\t\tdfs(root, root, adj);\n\t}\n\tvoid dfs(int v, int p, vector <vector<int>> &adj) {\n\t\tvis[v] = 1; tin[v] = low[v] = timer++;\n\t\tfor (int to: adj[v]) {\n\t\t\tif (to == p) continue;\n\t\t\tif (vis[to]) low[v] = min(low[v], tin[to]);\n\t\t\telse {\n\t\t\t\tdfs(to, v, adj);\n\t\t\t\tlow[v] = min(low[v], low[to]);\n\t\t\t\tif (low[to] > tin[v]) bridges.push_back({v,to});\n\t\t\t}\n\t\t}\n\t}\n};",
+      "source": "Bridges",
+      "length": 588,
+      "id": 112
+    },
+    {
+      "text": "struct ArticulationPoints {\n\tint n, timer;\n\tvector <int> tin, low, vis;\n\tset <int> points;\n\tvoid dfs(int v, int p, vector<vector<int>> &adj) {\n\t\tvis[v] = true; tin[v] = low[v] = timer++;\n\t\tint child = 0;\n\t\tfor (int to: adj[v]) {\n\t\t\tif (to == p) continue;\n\t\t\tif (vis[to]) low[v] = min(low[v], tin[to]);\n\t\t\telse {\n\t\t\t\tdfs(to, v, adj);\n\t\t\t\tlow[v] = min(low[v], low[to]);\n\t\t\t\tif ((low[to] >= tin[v]) && (p != -1))\n\t\t\t\t\tpoints.insert(v);\n\t\t\t\tchild++;\n\t\t\t}\n\t\t}\n\t\tif ((p == -1) && (child > 1)) points.insert(v);\n\t}\n\tArticulationPoints(vector < vector < int >> & adj, int root = 0) {\n\t\tn = adj.size();\n\t\tvis.resize(n, false);\n\t\ttin.resize(n);\n\t\tlow.resize(n);\n\t\tdfs(root, -1, adj);\n\t}\n};",
+      "source": "Articulation Points",
+      "length": 679,
+      "id": 113
+    },
+    {
+      "text": "struct dominator_tree {\n\t\tint n,l,s;\n\t\tvector<int> tin,par,vis_ord, dsu_mn, dsu_par, sdom, dep,rdom,idom;\n\t\tvector<bool> vis;\n\t\tvector<vector<int>> up;\n\t\tvector<vector<pair<int,int>>> up_mn;\n\t\tvoid dfs(int u, int p, vector<vector<int>> & adj){\n\t\t\t\tif (vis[u]) return;\n\t\t\t\tvis[u] = 1;\n\t\t\t\tdep[u] = dep[p]+1;\n\t\t\t\ttin[u] = vis_ord.size();\n\t\t\t\tvis_ord.push_back(u);\n\t\t\t\tpar[u] = p;\n\t\t\t\tfor (int v : adj[u]) dfs(v,u,adj);\n\t\t}\n\t\tint find(int x){\n\t\t\t\tif (dsu_par[x] == -1) return x;\n\t\t\t\tif (dsu_par[dsu_par[x]] != -1){\n\t\t\t\t\t\tint res = find(dsu_par[x]);\n\t\t\t\t\t\tif (tin[res] < tin[dsu_mn[x]])\n\t\t\t\tdsu_mn[x] = res;\n\t\t\tdsu_par[x] = dsu_par[dsu_par[x]];\n\t\t\t\t}\n\t\t\t\tassert(dsu_mn[x] != INT32_MAX);\n\t\t\t\treturn dsu_mn[x];\n\t\t}\n\t\tvoid get_sdom(vector<vector<int>> & rev){\n\t\t\t\tfor (int i = vis_ord.size()-1; i >= 0; i--){\n\t\t\t\t\t\tint c = vis_ord[i];\n\t\t\t\t\t\tif (c == s) continue;\n\t\t\t\t\t\tfor (int to : rev[c]){\n\t\t\t\t\t\t\t\tint res = find(to);\n\t\t\t\t\t\t\t\tif (sdom[c] == -1 || tin[res] < tin[sdom[c]])\n\t\t\t\t\t\t\t\t\t\tsdom[c] = res;\n\t\t\t\t\t\t}\n\t\t\t\t\t\tdsu_par[c] = par[c];\n\t\t\t\t\t\tdsu_mn[c] = sdom[c];\n\t\t\t\t\t\tif (sdom[c] == -1) cerr << c << endl;\n\t\t\t\t}\n\t\t}\n\t\tvoid init_up(){\n\t\t\t\tfor (int i = 0; i < n; i++){\n\t\t\t\t\t\tif (!vis[i]) continue;\n\t\t\t\t\t\tup[i][0] = par[i];\n\t\t\t\t\t\tup_mn[i][0] = {tin[sdom[i]],i};\n\t\t\t\t}\n\t\t\t\tfor (int i = 1; i < l; i++) {\n\t\t\tfor (int j = 0; j < n; j++) {\n\t\t\t\t\t\t\t\tif (!vis[j]) continue;\n\t\t\t\tint h = up[j][i-1];\n\t\t\t\tif (h == -1) {\n\t\t\t\t\tup[j][i] = -1;\n\t\t\t\t\tup_mn[j][i] = up_mn[j][i-1];\n\t\t\t\t} else {\n\t\t\t\t\tup[j][i] = up[h][i-1];\n\t\t\t\t\tup_mn[j][i] = min(up_mn[j][i-1], up_mn[h][i-1]);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\t}\n\t\tint get_min(int v, int u){\n\t\t\t\tint dist = dep[u]-dep[v];\n\t\t\t\tpair<int,int> ret = up_mn[u][0];\n\t\t\t\tint w = u;\n\t\t\t\tfor (int i = 0; i < l; i++)\n\t\t\t\t\t\tif (dist&(1<<i)){\n\t\t\t\t\t\t\t\tret = min(ret,up_mn[w][i]);\n\t\t\t\t\t\t\t\tw = up[w][i];\n\t\t\t\t\t\t}\n\t\t\t\tassert(w == v);\n\t\t\t\treturn ret.second;\n\t\t}\n\t\tvoid get_idom(){\n\t\t\t\tfor (int c : vis_ord){\n\t\t\t\t\t\tif (c == s) continue;\n\t\t\t\t\t\trdom[c] = get_min(sdom[c],c);\n\t\t\t\t}\n\t\t\t\tfor (int c : vis_ord)\n\t\t\t\t\t\tif (c != s)\n\t\t\t\t\t\t\t\tidom[c] = ((rdom[c] == c)?sdom[c]:idom[rdom[c]]);\n\t\t}\n\t\tdominator_tree(vector<vector<int>> & adj, vector<vector<int>> & rev, int _s = 0, int logn = 20){\n\t\t\t\tn = adj.size(); l = logn; s = _s;\n\t\t\t\ttin.resize(n,INT32_MAX);\n\t\t\t\tpar.resize(n,-1);\n\t\t\t\tvis.resize(n,0);\n\t\t\t\tdep.resize(n,0);\n\t\t\t\tdfs(s,-1,adj);\n\t\t\t\tdsu_par.resize(n,-1);\n\t\t\t\tdsu_mn.resize(n,INT32_MAX);\n\t\t\t\tsdom.resize(n,-1);\n\t\t\t\trdom.resize(n,-1);\n\t\t\t\tidom.resize(n,-1);\n\t\t\t\tget_sdom(rev);\n\t\t\t\tup.assign(n,vector<int>(logn));\n\t\t\t\tup_mn.assign(n,vector<pair<int,int>>(logn));\n\t\t\t\tinit_up();\n\t\t\t\tget_idom();\n\t\t}\n};",
+      "source": "Dominator Tree",
+      "length": 2585,
+      "id": 114
+    },
+    {
+      "text": "template<typename T>\nstruct SCC {\n\tvector<vector<int>> GT, G, SCC_G, SCC_GT, comp_nodes;\n\tvector<T> data, cdata;\n\tstack<int> order;\n\tvector<int> comp, dp;\n\tvector<bool> visited;\n\tT (*cfunc)(T, T);\n\tint comp_count = 0;\n\tvoid topsort(int u) {\n\t\tvisited[u] = true;\n\t\tfor (int v : G[u])\n\t\t\tif (!visited[v])\n\t\t\t\ttopsort(v);\n\t\t\torder.push(u);\n\t}\n\tvoid build_component(int u) {\n\t\tvisited[u] = true;\n\t\tfor (int v : GT[u])\n\t\t\tif (!visited[v])\n\t\t\t\tbuild_component(v);\n\t\tcomp[u] = comp_count;\n\t\tcomp_nodes[comp_count].push_back(u);\n\t}\n\tvoid compress_graph() {\n\t\tfor (int u = 0; u < G.size(); u++)\n\t\t\tcdata[comp[u]] = cfunc(cdata[comp[u]], data[u]);\n\t\t\tfor (int u = 0; u < G.size(); u++)\n\t\t\t\tfor (int v : G[u])\n\t\t\t\t\tif (comp[u] != comp[v]) {\n\t\t\t\t\t\tSCC_G[comp[u]].push_back(comp[v]);\n\t\t\t\t\t\tSCC_GT[comp[v]].push_back(comp[u]);\n\t\t\t\t\t}\n\t}\n\tT process(int cmp, T (*func)(T a, T b), T (*merge)(T a, T b)) {\n\t\tif (dp[cmp]) return dp[cmp];\n\t\tdp[cmp] = cdata[cmp];\n\t\tfor (int u : SCC_G[cmp])\n\t\t\tdp[cmp] = merge(dp[cmp], func(process(u, func, merge), cdata[cmp]));\n\t\treturn dp[cmp];\n\t}\n\tSCC(vector<vector<int>> &G, vector<T> &data, T (*cfunc)(T a, T b), T comp_identity, T dp_identity): cfunc(cfunc), G(G), data(data) {\n\t\tGT.resize(G.size()); comp_nodes.resize(G.size());\n\t\tvisited.assign(G.size(), 0);\n\t\tcdata.assign(G.size(), comp_identity);\n\t\tcomp.assign(G.size(), 0);\n\t\tSCC_G.resize(G.size()); SCC_GT.resize(G.size());\n\t\tdp.assign(G.size(), dp_identity);\n\t\tfor (int u = 0; u < G.size(); u++)\n\t\tfor (int v : G[u])\n\t\t\tGT[v].push_back(u);\n\t\t\tfor (int u = 0; u < G.size(); u++)\n\t\t\t\tif (!visited[u])\n\t\t\t\t\ttopsort(u);\n\t\tvisited.assign(G.size(), 0);\n\t\twhile (!order.empty()) {\n\t\t\tint u = order.top();\n\t\t\torder.pop();\n\t\t\tif (visited[u]) continue;\n\t\t\tbuild_component(u);\n\t\t\tcomp_count++;\n\t\t}\n\t\tcompress_graph();\n\t}\n};",
+      "source": "Kosaraju",
+      "length": 1789,
+      "id": 115
+    },
+    {
+      "text": "struct directed_euler_trail {\n\tll n, m = 0;\n\tvector<vector<ll>> adj;\n\tvector<pair<ll, ll>> E;\n\tvector<ll> indeg, outdeg, vertices, edges;\n\tdirected_euler_trail(ll n) : n(n), adj(n), indeg(n), outdeg(n) {}\n\tvoid add_edge(ll u, ll v) {\n\t\tadj[u].push_back(m);\n\t\tE.push_back({u, v});\n\t\toutdeg[u]++, indeg[v]++, m++;\n\t}\n\tll find_start() {\n\t\tll s = -1, cp = 0, cm = 0;\n\t\tfor (ll v = 0; v < n; v++) {\n\t\t\tll d = outdeg[v] - indeg[v];\n\t\t\tif (d == 1) cp++, s = v;\n\t\t\telse if (d == -1) cm++;\n\t\t\telse if (d != 0) return -2;\n\t\t\tif (outdeg[v] > 0 && s < 0) s = v;\n\t\t}\n\t\tif (cp == 0 && cm == 0) return s;\n\t\treturn (cp == 1 && cm == 1) ? s : -2;\n\t}\n\tbool solve() {\n\t\tif (m == 0) { vertices = {0}; return true; }\n\t\tll s = find_start();\n\t\tif (s == -2) return false;\n\t\tvector<ll> ep(n);\n\t\tedges.resize(m);\n\t\tll pp = 0, pq = m, v = s;\n\t\twhile (pp < pq) {\n\t\t\tif (ep[v] >= (ll)adj[v].size()) {\n\t\t\t\tif (pp == 0)\n\t\t\t\t\treturn false;\n\t\t\t\tedges[--pq] = edges[--pp];\n\t\t\t\tv = E[edges[pq]].first;\n\t\t\t} else {\n\t\t\t\tll e = adj[v][ep[v]++];\n\t\t\t\tedges[pp++] = e;\n\t\t\t\tv = E[e].second;\n\t\t\t}\n\t\t}\n\t\tvertices = {s};\n\t\tfor (ll e : edges) vertices.push_back(E[e].second);\n\t\treturn true;\n\t}\n};",
+      "source": "Directed Euler Trail",
+      "length": 1150,
+      "id": 116
+    },
+    {
+      "text": "struct undirected_euler_trail {\n\tll n, m = 0;\n\tvector<vector<ll>> adj;\n\tvector<pair<ll, ll>> E;\n\tvector<ll> deg, vertices, edges;\n\tundirected_euler_trail(ll n) : n(n), adj(n), deg(n) {}\n\tvoid add_edge(ll u, ll v) {\n\t\tadj[u].push_back(m);\n\t\tif (u != v) adj[v].push_back(m);\n\t\tE.push_back({u, v});\n\t\tdeg[u]++, deg[v]++, m++;\n\t}\n\tll find_start() {\n\t\tll s = -1, codd = 0;\n\t\tfor (ll v = 0; v < n; v++) {\n\t\t\tif (deg[v]&1) codd++, s = v;\n\t\t\telse if (deg[v] > 0 && s < 0)\n\t\t\t\ts = v;\n\t\t}\n\t\treturn (codd == 0 || codd == 2) ? s : -2;\n\t}\n\tbool solve() {\n\t\tif (m == 0) { vertices = {0}; return true; }\n\t\tll s = find_start();\n\t\tif (s == -2) return false;\n\t\tvector<ll> ep(n);\n\t\tedges.resize(m);\n\t\tvector<bool> alive(m, true);\n\t\tll pp = 0, pq = m, v = s;\n\t\twhile (pp < pq) {\n\t\t\tif (ep[v] >= adj[v].size()) {\n\t\t\t\tif (pp == 0)\n\t\t\t\t\treturn false;\n\t\t\t\tedges[--pq] = edges[--pp];\n\t\t\t\tv ^= E[edges[pq]].first ^ E[edges[pq]].second;\n\t\t\t} else {\n\t\t\t\tll e = adj[v][ep[v]++];\n\t\t\t\tif (!alive[e])\n\t\t\t\t\tcontinue;\n\t\t\t\talive[e] = false;\n\t\t\t\tedges[pp++] = e;\n\t\t\t\tv ^= E[e].first ^ E[e].second;\n\t\t\t}\n\t\t}\n\t\tvertices = {s};\n\t\tfor (ll e : edges) {\n\t\t\ts ^= E[e].first ^ E[e].second;\n\t\t\tvertices.push_back(s);\n\t\t}\n\t\treturn true;\n\t}\n};",
+      "source": "Undirected Euler Trail",
+      "length": 1196,
+      "id": 117
+    },
+    {
+      "text": "struct TwoSat {\n\tint N;\n\tvector<vector<int>> gr;\n\tvector<int> values;\n\tTwoSat(int n = 0) : N(n), gr(2*n) {}\n\tint addVar() {\n\t\tgr.emplace_back(); gr.emplace_back();\n\t\treturn N++;\n\t}\n\tvoid either(int f, int j) {\n\t\tf = max(2*f, -1-2*f);\n\t\tj = max(2*j, -1-2*j);\n\t\tgr[f].push_back(j^1);\n\t\tgr[j].push_back(f^1);\n\t}\n\tvoid setValue(int x) { either(x, x); }\n\tvoid atMostOne(const vector<int>& li) {\n\t\tif ((int)li.size() <= 1) return;\n\t\tint cur = ~li[0];\n\t\tfor (int i = 2; i < (int)li.size(); i++) {\n\t\t\tint next = addVar();\n\t\t\teither(cur, ~li[i]);\n\t\t\teither(cur, next);\n\t\t\teither(~li[i], next);\n\t\t\tcur = ~next;\n\t\t}\n\t\teither(cur, ~li[1]);\n\t}\n\tvector<int> val, comp, z; int Time = 0;\n\tint dfs(int i) {\n\t\tint low = val[i] = ++Time, x; z.push_back(i);\n\t\tfor (int e : gr[i]) if (!comp[e])\n\t\t\tlow = min(low, val[e] ? val[e] : dfs(e));\n\t\tif (low == val[i]) do {\n\t\t\tx = z.back(); z.pop_back();\n\t\t\tcomp[x] = low;\n\t\t\tif (values[x>>1] == -1)\n\t\t\t\tvalues[x>>1] = x&1;\n\t\t} while (x != i);\n\t\treturn val[i] = low;\n\t}\n\tbool solve() {\n\t\tvalues.assign(N, -1);\n\t\tval.assign(2*N, 0); comp = val;\n\t\tfor (int i = 0; i < 2*N; i++) if (!comp[i]) dfs(i);\n\t\tfor (int i = 0; i < N; i++)\n\t\t\tif (comp[2*i] == comp[2*i+1]) return false;\n\t\treturn true;\n\t}\n};",
+      "source": "2-SAT",
+      "length": 1216,
+      "id": 118
+    },
+    {
+      "text": "ll count_cycle_4(const vector<vector<ll>>& g) {\n\tll n = g.size(), w = 0;\n\tvector<ll> val(n, 0), deg(n);\n\tvector<vector<ll>> G(n);\n\tfor (ll i = 0; i < n; i++) deg[i] = g[i].size();\n\tfor (ll i = 0; i < n; i++) {\n\t\tfor (auto e : g[i]) {\n\t\t\tif (e < i) continue;\n\t\t\tif (deg[i] <= deg[e]) G[i].push_back(e);\n\t\t\telse G[e].push_back(i);\n\t\t}\n\t}\n\tfor (ll i = 0; i < n; i++) {\n\t\tfor (auto u : g[i]) {\n\t\t\tfor (auto v : G[u]) {\n\t\t\t\tif (deg[v] > deg[i] || (deg[v] == deg[i] && v > i))\n\t\t\t\t\tw += val[v]++;\n\t\t\t}\n\t\t}\n\t\tfor (auto u : g[i]) {\n\t\t\tfor (auto v : G[u]) {\n\t\t\t\tval[v] = 0;\n\t\t\t}\n\t\t}\n\t}\n\treturn w;\n}",
+      "source": "4-Cycle Counting",
+      "length": 589,
+      "id": 119
+    },
+    {
+      "text": "ll count_cycle_3(const vector<vector<ll>>& g) {\n\tll n = g.size(), w = 0;\n\tvector<ll> val(n, 0), deg(n);\n\tvector<vector<ll>> G(n);\n\tfor (ll i = 0; i < n; i++) deg[i] = g[i].size();\n\tfor (ll i = 0; i < n; i++) {\n\t\tfor (auto e : g[i]) {\n\t\t\tif (e < i) continue;\n\t\t\tif (deg[i] <= deg[e]) G[i].push_back(e);\n\t\t\telse G[e].push_back(i);\n\t\t}\n\t}\n\tfor (ll i = 0; i < n; i++) {\n\t\tfor (auto u : G[i]) val[u] = i;\n\t\tfor (auto e : g[i]) {\n\t\t\tif (e < i) continue;\n\t\t\tfor (auto v : G[e])\n\t\t\t\tif (val == i) {\n\t\t\t\t\tw++;\n\t\t\t\t}\n\t\t}\n\t}\n\treturn w;\n}",
+      "source": "3-Cycle Counting",
+      "length": 526,
+      "id": 120
+    },
+    {
+      "text": "int chromatic(vector<int> & adj){\n\t\tint n = adj.size();\n\t\tif (n == 0) return 0;\n\t\tll mod = 998244353, m = (1<<n);\n\t\tvector<ll> ind(m),s(m);\n\t\tfor (int i = 0; i < m; i++)\n\t\t\t\ts[i] = ((n-__builtin_popcount(i))&1?-1:1);\n\t\tind[0] = 1;\n\t\tfor (int i = 1; i < m; i++){\n\t\t\t\tint ctz = __builtin_ctz(i);\n\t\t\t\tind[i] = (ind[i-(1<<ctz)]+ind[(i-(1<<ctz))&~adj[ctz]])%mod;\n\t\t}\n\t\tfor (int j = 1; j < n; j++){\n\t\t\t\tll sum = 0;\n\t\t\t\tfor (int i = 0; i < m; i++){\n\t\t\t\t\t\tll cur = (s[i]*ind[i])%mod;\n\t\t\t\t\t\ts[i] = cur;\n\t\t\t\t\t\tsum = (sum+cur)%mod;\n\t\t\t\t}\n\t\t\t\tif (sum != 0) return j;\n\t\t}\n\t\treturn n;\n}",
+      "source": "Chromatic Number",
+      "length": 572,
+      "id": 121
+    },
+    {
+      "text": "template <class T> struct chu_liu {\n\tstruct edge {\n\t\tint u, v, id;\n\t\tT len;\n\t};\n\tint n;\n\tvector<edge> e;\n\tvector<int> inc, dec, take, pre, num, id, vis;\n\tvector<T> inw;\n\tT INF;\n\tchu_liu(int n) : n(n), pre(n), num(n), id(n), vis(n), inw(n) {\n\t\tINF = numeric_limits<T>::max() / 2;\n\t}\n\tvoid add_edge(int x, int y, T w) {\n\t\tinc.push_back(0), dec.push_back(0), take.push_back(0);\n\t\te.push_back({x, y, (int)e.size(), w});\n\t}\n\tT solve(int root) {\n\t\tauto e2 = e;\n\t\tT ans = 0;\n\t\tint eg = e.size() - 1, pos = eg;\n\t\twhile (1) {\n\t\t\tfor (int i = 0; i < n; i++)\n\t\t\t\tinw[i] = INF, id[i] = vis[i] = -1;\n\t\t\tfor (auto &ed : e2)\n\t\t\t\tif (ed.len < inw[ed.v])\n\t\t\t\t\tinw[ed.v] = ed.len, pre[ed.v] = ed.u, num[ed.v] = ed.id;\n\t\t\tinw[root] = 0;\n\t\t\tfor (int i = 0; i < n; i++)\n\t\t\t\tif (inw[i] == INF)\n\t\t\t\t\treturn -1;\n\t\t\tint tot = -1;\n\t\t\tfor (int i = 0; i < n; i++) {\n\t\t\t\tans += inw[i];\n\t\t\t\tif (i != root)\n\t\t\t\t\ttake[num[i]]++;\n\t\t\t\tint j = i;\n\t\t\t\twhile (vis[j] != i && j != root && id[j] < 0)\n\t\t\t\t\tvis[j] = i, j = pre[j];\n\t\t\t\tif (j != root && id[j] < 0) {\n\t\t\t\t\tid[j] = ++tot;\n\t\t\t\t\tfor (int k = pre[j]; k != j; k = pre[k])\n\t\t\t\t\t\tid[k] = tot;\n\t\t\t\t}\n\t\t\t}\n\t\t\tif (tot < 0)\n\t\t\t\tbreak;\n\t\t\tfor (int i = 0; i < n; i++)\n\t\t\t\tif (id[i] < 0)\n\t\t\t\t\tid[i] = ++tot;\n\t\t\tn = tot + 1;\n\t\t\tint j = 0;\n\t\t\tfor (int i = 0; i < (int)e2.size(); i++) {\n\t\t\t\tint v = e2[i].v;\n\t\t\t\te2[j] = {id[e2[i].u], id[e2[i].v], e2[i].id, e2[i].len - inw[v]};\n\t\t\t\tif (e2[j].u != e2[j].v) {\n\t\t\t\t\tinc.push_back(e2[i].id);\n\t\t\t\t\tdec.push_back(num[v]);\n\t\t\t\t\ttake.push_back(0);\n\t\t\t\t\te2[j++].id = ++pos;\n\t\t\t\t}\n\t\t\t}\n\t\t\te2.resize(j);\n\t\t\troot = id[root];\n\t\t}\n\t\twhile (pos > eg) {\n\t\t\tif (take[pos])\n\t\t\t\ttake[inc[pos]]++, take[dec[pos]]--;\n\t\t\tpos--;\n\t\t}\n\t\treturn ans;\n\t}\n};",
+      "source": "Chu Liu",
+      "length": 1686,
+      "id": 122
+    },
+    {
+      "text": "template <class T> struct fast_chu_liu {\n\tstruct edge {\n\t\tint u, v;\n\t\tT len;\n\t};\n\tstruct node {\n\t\tedge key;\n\t\tnode *l = nullptr, *r = nullptr;\n\t\tT delta = 0;\n\t\tnode(edge e) : key(e) {}\n\t\tvoid prop() {\n\t\t\tkey.len += delta;\n\t\t\tif (l) l->delta += delta;\n\t\t\tif (r) r->delta += delta;\n\t\t\tdelta = 0;\n\t\t}\n\t\tedge top() {\n\t\t\tprop();\n\t\t\treturn key;\n\t\t}\n\t};\n\tint n;\n\tvector<edge> e;\n\tfast_chu_liu(int n) : n(n) {}\n\tvoid add_edge(int x, int y, T w) { e.push_back({x, y, w}); }\n\tnode *merge(node *a, node *b) {\n\t\tif (!a || !b)\n\t\t\treturn a ? a : b;\n\t\ta->prop(), b->prop();\n\t\tif (a->key.len > b->key.len)\n\t\t\tswap(a, b);\n\t\tswap(a->l, (a->r = merge(b, a->r)));\n\t\treturn a;\n\t}\n\tvoid pop(node *&a) {\n\t\ta->prop();\n\t\ta = merge(a->l, a->r);\n\t}\n\tpair<T, vector<int>> solve(int root) {\n\t\tunion_find_rb uf(n);\n\t\tvector<node *> heap(n, nullptr);\n\t\tfor (edge &ed : e)\n\t\t\theap[ed.v] = merge(heap[ed.v], new node(ed));\n\t\tT ans = 0;\n\t\tvector<int> seen(n, -1), path(n), par(n);\n\t\tseen[root] = root;\n\t\tvector<edge> Q(n), in(n, {-1, -1, 0});\n\t\tdeque<tuple<int, int, vector<edge>>> cycs;\n\t\tfor (int s = 0; s < n; s++) {\n\t\t\tint u = s, qi = 0, w;\n\t\t\twhile (seen[u] < 0) {\n\t\t\t\tif (!heap[u])\n\t\t\t\t\treturn {-1, {}};\n\t\t\t\tedge ed = heap[u]->top();\n\t\t\t\theap[u]->delta -= ed.len, pop(heap[u]);\n\t\t\t\tQ[qi] = ed, path[qi++] = u, seen[u] = s;\n\t\t\t\tans += ed.len, u = uf.findSet(ed.u);\n\t\t\t\tif (seen[u] == s) {\n\t\t\t\t\tnode *cyc = nullptr;\n\t\t\t\t\tint end = qi, t = (int)uf.ops.size();\n\t\t\t\t\tdo\n\t\t\t\t\t\tcyc = merge(cyc, heap[w = path[--qi]]);\n\t\t\t\t\twhile (uf.unionSet(u, w));\n\t\t\t\t\tu = uf.findSet(u), heap[u] = cyc, seen[u] = -1;\n\t\t\t\t\tcycs.push_front({u, t, {&Q[qi], &Q[end]}});\n\t\t\t\t}\n\t\t\t}\n\t\t\tfor (int i = 0; i < qi; i++)\n\t\t\t\tin[uf.findSet(Q[i].v)] = Q[i];\n\t\t}\n\t\tfor (auto &[u, t, comp] : cycs) {\n\t\t\twhile ((int)uf.ops.size() > t)\n\t\t\t\tuf.rb();\n\t\t\tedge inEdge = in[u];\n\t\t\tfor (auto &ed : comp)\n\t\t\t\tin[uf.findSet(ed.v)] = ed;\n\t\t\tin[uf.findSet(inEdge.v)] = inEdge;\n\t\t}\n\t\tfor (int i = 0; i < n; i++)\n\t\t\tpar[i] = in[i].u;\n\t\treturn {ans, par};\n\t}\n};",
+      "source": "Fast Chu Liu",
+      "length": 1981,
+      "id": 123
+    },
+    {
+      "text": "template<typename T, T f(T)>\npair<ll, ll> tortoise_hare(T x0) {\n\tT t = f(x0); T h = f(f(x0));\n\twhile(t != h) t = f(t), h = f(f(h));\n\tll mu = 0; t = x0;\n\twhile(t != h) t = f(t), h = f(h), mu++;\n\tll lam = 1; h = f(t);\n\twhile(t != h)h = f(h), lam += 1;\n\treturn {mu, lam};\n}",
+      "source": "Tortoise and Hare",
+      "length": 270,
+      "id": 124
+    },
+    {
+      "text": "template <typename T> struct point2d {\n\tT x, y;\n\tpoint2d(){};\n\tpoint2d(T x_, T y_) : x(x_), y(y_) {}\n\tpoint2d<T> &operator+=(point2d<T> t) {\n\t\tx += t.x, y += t.y;\n\t\treturn *this;\n\t}\n\tpoint2d<T> operator-(point2d<T> t) { return {x - t.x, y - t.y}; }\n\tpoint2d<T> operator+(point2d<T> t) { return {x + t.x, y + t.y}; }\n\tpoint2d<T> operator*(T t) { return {x * t, y * t}; }\n\tpoint2d<T> operator/(T t) { return {x / t, y / t}; }\n\tpoint2d<T> &operator-=(point2d<T> t) {\n\t\tx -= t.x, y -= t.y;\n\t\treturn *this;\n\t}\n\tT operator|(point2d<T> b) { return x * b.x + y * b.y; }\n\tT operator^(point2d<T> b) { return x * b.y - y * b.x; }\n\tT cross(point2d<T> a, point2d<T> b) { return (a - *this) ^ (b - *this); }\n\tT norm() { return (*this) | (*this); }\n\tT sqdist(point2d<T> b) { return ((*this) - b).norm(); }\n\tdouble abs() { return sqrt(norm()); }\n};\ntemplate <typename T> point2d<T> operator*(T a, point2d<T> b) { return b * a; }",
+      "source": "Point 2D",
+      "length": 912,
+      "id": 125
+    },
+    {
+      "text": "template <typename T> struct point3d {\n\tT x, y, z;\n\tpoint3d() : x(0), y(0), z(0) {}\n\tpoint3d(T x_, T y_, T z_) : x(x_), y(y_), z(z_) {}\n\tpoint3d<T> &operator=(const point3d<T> &t) {\n\t\tx = t.x, y = t.y, z = t.z;\n\t\treturn *this;\n\t}\n\tpoint3d<T> &operator+=(const point3d<T> &t) {\n\t\tx += t.x, y += t.y, z += t.z;\n\t\treturn *this;\n\t}\n\tpoint3d<T> &operator-=(const point3d<T> &t) {\n\t\tx -= t.x, y -= t.y, z -= t.z;\n\t\treturn *this;\n\t}\n\tpoint3d<T> &operator*=(T t) {\n\t\tx *= t, y *= t, z *= t;\n\t\treturn *this;\n\t}\n\tpoint3d<T> &operator/=(T t) {\n\t\tx /= t, y /= t, z /= t;\n\t\treturn *this;\n\t}\n\tpoint3d<T> operator-(const point3d<T> &t) const {\n\t\treturn {x - t.x, y - t.y, z - t.z};\n\t}\n\tpoint3d<T> operator+(const point3d<T> &t) const {\n\t\treturn {x + t.x, y + t.y, z + t.z};\n\t}\n\tpoint3d<T> operator*(T t) const { return {x * t, y * t, z * t}; }\n\tpoint3d<T> operator/(T t) const { return {x / t, y / t, z / t}; }\n\tT dot(const point3d<T> &b) const { return x * b.x + y * b.y + z * b.z; }\n\tT operator|(const point3d<T> &b) const { return dot(b); }\n\tpoint3d<T> cross(const point3d<T> &b) const {\n\t\treturn {y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x};\n\t}\n\tpoint3d<T> operator^(const point3d<T> &b) const { return cross(b); }\n\tT triple(const point3d<T> &a, const point3d<T> &b) const {\n\t\treturn dot(a ^ b);\n\t}\n\tbool nonzero() const { return x != 0 || y != 0 || z != 0; }\n\tT norm() const { return dot(*this); }\n\tT sq_dist(const point3d<T> &b) const { return (*this - b).norm(); }\n\tdouble abs() const { return sqrt((double)norm()); }\n\tdouble dist(const point3d<T> &b) const { return (*this - b).abs(); }\n\tpoint3d<T> unit() const { return *this / this->abs(); }\n\tdouble proj(const point3d<T> &b) const { return (double)dot(b) / b.abs(); }\n\tdouble angle(const point3d<T> &b) const {\n\t\treturn acos(clamp((double)dot(b) / this->abs() / b.abs(), -1.0, 1.0));\n\t}\n\tpoint3d<T> rotate_z(double a) const {\n\t\treturn {(T)(cos(a) * x - sin(a) * y), (T)(sin(a) * x + cos(a) * y), z};\n\t}\n\tpoint3d<T> rotate_x(double a) const {\n\t\treturn {x, (T)(cos(a) * y - sin(a) * z), (T)(sin(a) * y + cos(a) * z)};\n\t}\n\tpoint3d<T> rotate_y(double a) const {\n\t\treturn {(T)(cos(a) * x + sin(a) * z), y, (T)(-sin(a) * x + cos(a) * z)};\n\t}\n};\ntemplate <typename T> point3d<T> operator*(T a, point3d<T> b) { return b * a; }",
+      "source": "Point 3D",
+      "length": 2277,
+      "id": 126
+    },
+    {
+      "text": "template<typename T>\nstruct segment {\n\tpoint2d<T> P;\n\tpoint2d<T> Q;\n\tconst T INF = numeric_limits<T>::max();\n\tsegment(point2d<T> P, point2d<T> Q): P(P), Q(Q) {}\n\tint sign(T x, T eps = 0) { return x > eps ? 1 : x < -eps ? -1 : 0; }\n\tbool contain(point2d<T> p, T eps = 0) {\n\t\treturn ((P - p)|(Q - p)) <= (T)0 and abs(((Q - P)^(p - P))) <= eps;\n\t}\n\tbool intersect(segment<T> b) {\n\t\tif (this->contain(b.P) or this->contain(b.Q) or b.contain(P) or b.contain(Q))\n\t\t\t\treturn true;\n\t\treturn sign((((b.P) - P))^((Q - P)))*sign(((b.Q - P)^(Q - P))) < 0 and\n\t\t\t\t\tsign(((P - b.Q)^(b.Q - b.P)))*sign(((Q- b.P)^(b.Q - b.P))) < 0;\n\t}\n\tpoint2d<T> intersection(segment<T> b) {\n\t\tif(this->intersect(b))\n\t\t\treturn (((b.Q-b.P)^(Q-b.P))*P + ((P-b.P)^(b.Q-b.P))*Q)/((P-Q)^(b.Q-b.P));\n\t\treturn {INF, INF};\n\t}\n};",
+      "source": "Segment",
+      "length": 788,
+      "id": 127
+    },
+    {
+      "text": "struct halfplane {\n\tpoint2d<ld> p, pq;\n\tld angle;\n\thalfplane() {}\n\thalfplane(point2d<ld> &a, point2d<ld> &b) : p(a), pq(b - a) {\n\t\tangle = atan2l(pq.y, pq.x);\n\t}\n\tbool out(point2d<ld> r) { return ((pq) ^ (r - p)) < -eps; }\n\tbool operator<(halfplane &e) { return angle < e.angle; }\n\tfriend point2d<ld> inter(halfplane &s, halfplane &t) {\n\t\tld alpha = ((t.p - s.p) ^ t.pq) / ((s.pq) ^ (t.pq));\n\t\treturn s.p + (s.pq * alpha);\n\t}\n};",
+      "source": "Halfplane",
+      "length": 428,
+      "id": 128
+    },
+    {
+      "text": "template <typename T> struct circle {\n\tpoint2d<T> c;\n\tT r;\n\tcircle() : c(), r(0) {}\n\tcircle(point2d<T> c_, T r_) : c(c_), r(r_) {}\n\tcircle(point2d<T> a, point2d<T> b, point2d<T> p) {\n\t\tpoint2d<T> ab = b - a, ap = p - a;\n\t\tT d = 2 * (ab ^ ap);\n\t\tif (sign(d) == 0) {\n\t\t\tc = point2d<T>();\n\t\t\tr = 0;\n\t\t\treturn;\n\t\t}\n\t\tT s = ab.norm(), t = ap.norm();\n\t\tc = a + point2d<T>(ap.y * s - ab.y * t, ab.x * t - ap.x * s) / d;\n\t\tr = c.sqdist(a);\n\t\tr = sqrtl(r);\n\t}\n};",
+      "source": "Circle",
+      "length": 453,
+      "id": 129
+    },
+    {
+      "text": "template<class T>\nld line_dist(point2d<T> a, point2d<T> b, point2d<T> p) {\n\treturn (ld)((b-a)^(p-a)) / (b-a).abs();\n}",
+      "source": "Line Distance",
+      "length": 117,
+      "id": 130
+    },
+    {
+      "text": "using P = point2d<ld>;\nld seg_dist(P s, P e, P p) {\n\tif (s.sqdist(e) < 1e-18) return (p-s).abs();\n\tauto d = (e-s).norm();\n\tauto t = min(d, max((ld)0.0, (p-s)|(e-s)));\n\treturn ((p-s)*d - (e-s)*t).abs() / d;\n}",
+      "source": "Segment Distance",
+      "length": 207,
+      "id": 131
+    },
+    {
+      "text": "template <typename T> struct sphere {\n\tpoint3d<T> center;\n\tld radius;\n\tsphere() : center(), radius(0) {}\n\tsphere(point3d<T> c, ld r) : center(c), radius(r) {}\n\tbool contains(const point3d<T> &pt) const {\n\t\treturn center.sq_dist(pt) <= radius * radius + 1e-9;\n\t}\n};",
+      "source": "Sphere",
+      "length": 264,
+      "id": 132
+    },
+    {
+      "text": "template<typename T>\nvector<point2d<T>> convex_hull(vector<point2d<T>> cloud, bool ac = 0) {\n\tint n = cloud.size(), k = 0;\n\tsort(cloud.begin(), cloud.end(), [](point2d<T> &a, point2d<T> &b) {\n\t\treturn a.x < b.x or (a.x == b.x and a.y < b.y);\n\t});\n\tif (n <= 2) return cloud;\n\tbool allCollinear = true;\n\tfor (int i = 2; i < n; ++i) {\n\t\tif (((cloud[1] - cloud[0]) ^ (cloud[i] - cloud[0])) != 0) {\n\t\t\tallCollinear = false; break;\n\t\t}\n\t}\n\tif (allCollinear) return ac ? cloud : vector<point2d<T>>{cloud[0], cloud.back()};\n\tvector<point2d<T>> ch(2 * n);\n\tauto process = [&](int st, int end, int stp, int t, auto cmp) {\n\t\tfor (int i = st; i != end; i += stp) {\n\t\t\twhile (k >= t and cmp(ch[k - 1], ch[k - 2], cloud[i])) k--;\n\t\t\tch[k++] = cloud[i];\n\t\t}\n\t};\n\tprocess(0, n, 1, 2, [&](auto a, auto b, auto c) {\n\t\treturn ((a - b) ^ (c - b)) < (ac ? 0 : 1);\n\t});\n\tprocess(n - 2, -1, -1, k + 1, [&](auto a, auto b, auto c) {\n\t\treturn ((a - b) ^ (c - b)) < (ac ? 0 : 1);\n\t});\n\tch.resize(k - 1);\n\treturn ch;\n}",
+      "source": "Convex Hull",
+      "length": 991,
+      "id": 133
+    },
+    {
+      "text": "template <typename T> int in_convex(vector<point2d<T>> &P, point2d<T> q) {\n\tint n = P.size();\n\tif (n < 3) return -1;\n\tpoint2d<T> q0 = q - P[0];\n\tT c1 = (P[1] - P[0]) ^ q0, c2 = (P[n - 1] - P[0]) ^ q0;\n\tif (c1 < 0 || c2 > 0) return -1;\n\tint l = 1, r = n - 1;\n\twhile (r - l > 1) {\n\t\tint mid = (l + r) / 2;\n\t\t((P[mid] - P[0]) ^ q0) >= 0 ? l = mid : r = mid;\n\t}\n\tT c = (P[l + 1] - P[l]) ^ (q - P[l]);\n\treturn c < 0 ? -1 : (c == 0 || c1 == 0 || c2 == 0 ? 0 : 1);\n}",
+      "source": "Inside Convex Polygon",
+      "length": 459,
+      "id": 134
+    },
+    {
+      "text": "pair<ll, ll> lattice_points(vector<point2d<ll>> &P) {\n\tP.push_back(P.front());\n\tll area = 0, bounds = 0;\n\tfor(int i = 0; i < (int)P.size()-1; ++i) {\n\t\tarea += P[i]^(P[i+1]);\n\t\tpoint2d<ll> p = P[i+1]-P[i];\n\t\tbounds += abs(__gcd(p.x, p.y));\n\t}\n\tll inside = (abs(area) - bounds + 2)/2;\n\tP.pop_back();\n\treturn {inside, bounds};\n}",
+      "source": "Lattice Points",
+      "length": 325,
+      "id": 135
+    },
+    {
+      "text": "template <typename T>\nvector<point2d<T>> minkowski(vector<point2d<T>> &p, vector<point2d<T>> &q) {\n\tvector<point2d<T>> v;\n\tif (min(p.size(), q.size()) < 3) {\n\t\tfor (auto &a : p) for (auto &b : q)\n\t\t\tv.push_back(a + b);\n\t\treturn convex_hull(v);\n\t}\n\tauto reorder = [](vector<point2d<T>> &v) {\n\t\tif (((v[1] - v[0]) ^ (v[2] - v[0])) < 0)\n\t\t\treverse(v.begin(), v.end());\n\t\tint pos = 0;\n\t\tfor (int i = 1; i < (int)v.size(); i++)\n\t\t\tif (pair{v[i].y, v[i].x} < pair{v[pos].y, v[pos].x})\n\t\t\t\tpos = i;\n\t\trotate(v.begin(), v.begin() + pos, v.end());\n\t};\n\treorder(p), reorder(q);\n\tfor (int i = 0; i < 2; i++)\n\t\tp.push_back(p[i]), q.push_back(q[i]);\n\tint i = 0, j = 0;\n\twhile (i + 2 < p.size() or j + 2 < q.size()) {\n\t\tv.push_back(p[i] + q[j]);\n\t\tT c = (p[i + 1] - p[i]) ^ (q[j + 1] - q[j]);\n\t\tif (c >= 0 and i + 2 < p.size()) i++;\n\t\tif (c <= 0 and j + 2 < q.size()) j++;\n\t}\n\treturn v;\n}",
+      "source": "Minkowski Sum",
+      "length": 874,
+      "id": 136
+    },
+    {
+      "text": "#define sq(x) ((x)*(x))\ntemplate <typename T>\npair<point2d<T>, point2d<T>> nearest_points(vector<point2d<T>> &P, int l, int r) {\n\tconst T INF = 1e10;\n\tif (r-l == 1) return {P[l], P[r]};\n\tif (l >= r) return {{INF, INF}, {-INF, -INF}};\n\tint m = (l+r)/2;\n\tpair<point2d<T>, point2d<T>> D1, D2, D;\n\tD1 = nearest_points(P, l, m);\n\tD2 = nearest_points(P, m+1, r);\n\tD = (D1.first.sqdist(D1.second) <= D2.first.sqdist(D2.second) ? D1 : D2);\n\tT d = D.first.sqdist(D.second), x_center = (P[m].x + P[m+1].x)/2;\n\tvector<point2d<T>> Pk;\n\tfor (int i = l; i <= r; i++)\n\t\tif (sq(P[i].x-x_center) <= d)\n\t\t\tPk.push_back(P[i]);\n\tsort(Pk.begin(), Pk.end(), [](const point2d<T> p1, const point2d<T> p2) {\n\t\treturn p1.y != p2.y ? p1.y < p2.y : p1.x < p2.x;\n\t});\n\tfor(int i = 0; i < Pk.size(); ++i) {\n\t\tfor(int j = i-1; j >= 0; --j) {\n\t\t\tif(sq(Pk[i].y-Pk[j].y) > d) break;\n\t\t\tif(Pk[i].sqdist(Pk[j]) <= D.first.sqdist(D.second))\n\t\t\t\tD = {Pk[i],Pk[j]};\n\t\t}\n\t\tfor(int j = i+1; j < Pk.size(); ++j) {\n\t\t\tif(sq(Pk[i].y-Pk[j].y) > d) break;\n\t\t\tif(Pk[i].sqdist(Pk[j]) <= D.first.sqdist(D.second))\n\t\t\t\tD = {Pk[i],Pk[j]};\n\t\t}\n\t}\n\treturn D;\n}\ntemplate <typename T>\npair<point2d<T>, point2d<T>> nearest_points(vector<point2d<T>> &P) {\n\tsort(P.begin(), P.end(), [](const point2d<T> &p1, const point2d<T> &p2) {\n\t\tif (p1.x == p2.x) return p1.y < p2.y;\n\t\treturn p1.x < p2.x;\n\t});\n\treturn nearest_points(P, 0, P.size()-1);\n}",
+      "source": "Closest Pair",
+      "length": 1384,
+      "id": 137
+    },
+    {
+      "text": "template <typename T>\nint semiplane(point2d<T> p) { return p.y > 0 or (p.y == 0 and p.x > 0); }\ntemplate <typename T>\nvoid order_by_angle(vector<point2d<T>> &P) {\n\tsort(P.begin(), P.end(), [](point2d<T> &p1, point2d<T> &p2) {\n\t\tint s1 = semiplane(p1), s2 = semiplane(p2);\n\t\treturn s1 != s2 ? s1 > s2 : (p1^p2) > 0;\n\t});\n}",
+      "source": "Order by Angle",
+      "length": 321,
+      "id": 138
+    },
+    {
+      "text": "template <typename T>\nvoid order_by_slope(vector<point2d<T>> &P) {\n\tsort(P.begin(), P.end(), [](const point2d<T> &p1, const point2d<T> &p2) {\n\t\tFraction<T> r1 = Fraction<T>(p1.x, p1.y), r2 = Fraction<T>(p2.x, p2.y);\n\t\treturn r2 < r1;\n\t});\n}",
+      "source": "Order by Slope",
+      "length": 240,
+      "id": 139
+    },
+    {
+      "text": "template<typename T>\nint point_inside_polygon(vector<point2d<T>> &P, point2d<T> q) {\n\tint N = P.size(), cnt = 0;\n\tfor(int i = 0; i < N; i++) {\n\t\tint j = (i == N-1 ? 0 : i+1);\n\t\tsegment<T> s(P[i], P[j]);\n\t\tif(s.contain(q)) return 0;\n\t\tif(P[i].x <= q.x and q.x < P[j].x and q.cross(P[i], P[j]) < 0) cnt++;\n\t\telse if(P[j].x <= q.x and q.x < P[i].x and q.cross(P[j], P[i]) < 0) cnt++;\n\t}\n\treturn cnt&1 ? 1 : -1;\n}",
+      "source": "Point Inside Polygon",
+      "length": 409,
+      "id": 140
+    },
+    {
+      "text": "template<typename T>\nT polygon_area(vector<point2d<T>> P, bool x2 = 0) {\n\tif (P.size() < 3) return (T)0;\n\tT area = 0;\n\tfor(int i = 0; i < P.size()-1; ++i)\n\t\tarea += P[i]^(P[i+1]);\n\tarea += (P.back())^(P.front());\n\treturn abs(area)/ (x2 ? 1 : 2);\n}",
+      "source": "Polygon Area",
+      "length": 247,
+      "id": 141
+    },
+    {
+      "text": "const ld inf = 1e18;\nconst ld eps = 1e-9;\nvector<point2d<ld>> hp_intersect(vector<halfplane> &H) {\n\tpoint2d<ld> box[4] = {{inf, inf}, {-inf, inf}, {-inf, -inf}, {inf, -inf}};\n\tfor (int i = 0; i < 4; i++) {\n\t\thalfplane aux(box[i], box[(i + 1) % 4]);\n\t\tH.push_back(aux);\n\t}\n\tsort(H.begin(), H.end());\n\tdeque<halfplane> dq;\n\tint len = 0;\n\tfor (int i = 0; i < H.size(); i++) {\n\t\twhile (len > 1 && H[i].out(inter(dq[len - 1], dq[len - 2])))\n\t\t\tdq.pop_back(), --len;\n\t\twhile (len > 1 && H[i].out(inter(dq[0], dq[1])))\n\t\t\tdq.pop_front(), --len;\n\t\tif (len > 0 && fabsl((H[i].pq ^ dq[len - 1].pq)) < eps) {\n\t\t\tif ((H[i].pq | dq[len - 1].pq) < 0.0)\n\t\t\t\treturn vector<point2d<ld>>();\n\t\t\tif (H[i].out(dq[len - 1].p))\n\t\t\t\tdq.pop_back(), --len;\n\t\t\telse\n\t\t\t\tcontinue;\n\t\t}\n\t\tdq.push_back(H[i]), ++len;\n\t}\n\twhile (len > 2 && dq[0].out(inter(dq[len - 1], dq[len - 2])))\n\t\tdq.pop_back(), --len;\n\twhile (len > 2 && dq[len - 1].out(inter(dq[0], dq[1])))\n\t\tdq.pop_front(), --len;\n\tif (len < 3)\n\t\treturn vector<point2d<ld>>();\n\tvector<point2d<ld>> ret(len);\n\tfor (int i = 0; i + 1 < len; i++)\n\t\tret[i] = inter(dq[i], dq[i + 1]);\n\tret.back() = inter(dq[len - 1], dq[0]);\n\treturn ret;\n}",
+      "source": "Halfplane Intersection",
+      "length": 1161,
+      "id": 142
+    },
+    {
+      "text": "circle<ld> minimum_enclosing_circle(vector<point2d<ld>> p) {\n\tmt19937 rng(chrono::steady_clock::now().time_since_epoch().count());\n\tshuffle(p.begin(), p.end(), rng);\n\tint n = p.size();\n\tif (n == 0) return circle<ld>();\n\tcircle<ld> cur(p[0], 0);\n\tauto out = [&](int i) { return sign(sqrtl(cur.c.sqdist(p[i])) - cur.r) > 0; };\n\tfor (int i = 1; i < n; i++) if (out(i)) {\n\t\tcur = circle<ld>(p[i], 0);\n\t\tfor (int j = 0; j < i; j++ ) if (out(j)) {\n\t\t\tcur = circle<ld>((p[i] + p[j]) / 2, sqrtl(p[i].sqdist(p[j])) / 2);\n\t\t\tfor (int k = 0; k < j; k++) if (out(k))\n\t\t\t\tcur = circle<ld>(p[i], p[j], p[k]);\n\t\t}\n\t}\n\treturn cur;\n}",
+      "source": "Minimum Enclosing Circle",
+      "length": 616,
+      "id": 143
+    },
+    {
+      "text": "template <typename T>\nsphere<T> minimum_enclosing_sphere(vector<point3d<T>> p, int it = 100000) {\n\tint n = p.size();\n\tif (n == 0) return sphere<T>();\n\tif (n == 1) return sphere<T>(p[0], 0);\n\tpoint3d<T> c(0, 0, 0);\n\tfor (int i = 0; i < n; i++)\n\t\tc = c + p[i];\n\tc = c / (ld)n;\n\tld ratio = 0.1;\n\twhile (it--) {\n\t\tint pos = 0;\n\t\tfor (int i = 1; i < n; i++) {\n\t\t\tif (c.sq_dist(p[i]) > c.sq_dist(p[pos]))\n\t\t\t\tpos = i;\n\t\t}\n\t\tc = c + (p[pos] - c) * ratio;\n\t\tratio *= 0.998;\n\t}\n\treturn sphere(c, c.dist(p[pos]));\n}",
+      "source": "Minimum Enclosing Sphere",
+      "length": 505,
+      "id": 144
+    },
+    {
+      "text": "template <typename T> struct convex_hull_3d {\n\tusing pt = point3d<T>;\n\tstruct edge;\n\tstruct face {\n\t\tint a, b, c;\n\t\tpt q;\n\t\tedge *e1, *e2, *e3;\n\t\tvector<int> points;\n\t\tint dead = 1e9;\n\t\tface(int a, int b, int c, pt pa, pt pb, pt pc)\n\t\t\t\t: a(a), b(b), c(c) {\n\t\t\tq = (pb - pa) ^ (pc - pa);\n\t\t\te1 = e2 = e3 = nullptr;\n\t\t}\n\t};\n\tstruct edge { edge *rev; face *f; };\n\tvector<pt> p;\n\tvector<face *> f;\n\tbool degenerate = false;\n\tstatic void glue(face *F1, face *F2, edge *&e1, edge *&e2) {\n\t\te1 = new edge; e2 = new edge;\n\t\te1->rev = e2; e2->rev = e1;\n\t\te1->f = F2; e2->f = F1;\n\t}\n\tvoid prepare() {\n\t\tint n = (int)p.size();\n\t\tmt19937 rng(42);\n\t\tshuffle(p.begin(), p.end(), rng);\n\t\tvector<int> ve = {0};\n\t\tfor (int i = 1; i < n && (int)ve.size() < 4; i++) {\n\t\t\tif (ve.size() == 1) {\n\t\t\t\tif ((p[ve[0]] - p[i]).nonzero()) ve.push_back(i);\n\t\t\t} else if (ve.size() == 2) {\n\t\t\t\tif (((p[ve[1]] - p[ve[0]]) ^ (p[i] - p[ve[0]])).nonzero())\n\t\t\t\t\tve.push_back(i);\n\t\t\t} else {\n\t\t\t\tif ((p[i] - p[ve[0]]).dot((p[ve[1]] - p[ve[0]]) ^ (p[ve[2]] - p[ve[0]])) != 0)\n\t\t\t\t\tve.push_back(i);\n\t\t\t}\n\t\t}\n\t\tif ((int)ve.size() < 4) { degenerate = true; return; }\n\t\tvector<pt> ve2;\n\t\tfor (int i : ve) ve2.push_back(p[i]);\n\t\treverse(ve.begin(), ve.end());\n\t\tfor (int i : ve) p.erase(p.begin() + i);\n\t\tp.insert(p.begin(), ve2.begin(), ve2.end());\n\t}\n\tconvex_hull_3d() {}\n\tconvex_hull_3d(vector<pt> points) : p(move(points)) { build_hull(); }\n\tvoid build_hull() {\n\t\tint n = (int)p.size();\n\t\tprepare();\n\t\tif (degenerate) return;\n\t\tvector<face *> new_face(n, nullptr);\n\t\tvector<vector<face *>> conflict(n);\n\t\tauto add_face = [&](int a, int b, int c) {\n\t\t\tface *F = new face(a, b, c, p[a], p[b], p[c]);\n\t\t\tf.push_back(F); return F;\n\t\t};\n\t\tface *F1 = add_face(0, 1, 2);\n\t\tface *F2 = add_face(0, 2, 1);\n\t\tglue(F1, F2, F1->e1, F2->e3);\n\t\tglue(F1, F2, F1->e2, F2->e2);\n\t\tglue(F1, F2, F1->e3, F2->e1);\n\t\tfor (int i = 3; i < n; i++) {\n\t\t\tfor (face *F : {F1, F2}) {\n\t\t\t\tT Q = (p[i] - p[F->a]).dot(F->q);\n\t\t\t\tif (Q > 0) conflict[i].push_back(F);\n\t\t\t\tif (Q >= 0) F->points.push_back(i);\n\t\t\t}\n\t\t}\n\t\tfor (int i = 3; i < n; i++) {\n\t\t\tfor (face *F : conflict[i]) F->dead = min(F->dead, i);\n\t\t\tint v = -1;\n\t\t\tfor (face *F : conflict[i]) {\n\t\t\t\tif (F->dead != i) continue;\n\t\t\t\tint parr[3] = {F->a, F->b, F->c};\n\t\t\t\tedge *earr[3] = {F->e1, F->e2, F->e3};\n\t\t\t\tfor (int j = 0; j < 3; j++) {\n\t\t\t\t\tint j2 = (j + 1) % 3;\n\t\t\t\t\tif (earr[j]->f->dead > i) {\n\t\t\t\t\t\tface *Fn = new_face[parr[j]] = add_face(parr[j], parr[j2], i);\n\t\t\t\t\t\tset_union(F->points.begin(), F->points.end(),\n\t\t\t\t\t\t\t\t\t\t\tearr[j]->f->points.begin(), earr[j]->f->points.end(),\n\t\t\t\t\t\t\t\t\t\t\tback_inserter(Fn->points));\n\t\t\t\t\t\tFn->points.erase(\n\t\t\t\t\t\t\t\tstable_partition(Fn->points.begin(), Fn->points.end(),\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t[&](int k) { return k > i && (p[k] - p[Fn->a]).dot(Fn->q) > 0; }),\n\t\t\t\t\t\t\t\tFn->points.end());\n\t\t\t\t\t\tfor (int k : Fn->points) conflict[k].push_back(Fn);\n\t\t\t\t\t\tearr[j]->rev->f = Fn;\n\t\t\t\t\t\tFn->e1 = earr[j];\n\t\t\t\t\t\tv = parr[j];\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t\tif (v == -1) continue;\n\t\t\twhile (new_face[v]->e2 == nullptr) {\n\t\t\t\tint u = new_face[v]->b;\n\t\t\t\tglue(new_face[v], new_face[u], new_face[v]->e2, new_face[u]->e3);\n\t\t\t\tv = u;\n\t\t\t}\n\t\t}\n\t\tf.erase(remove_if(f.begin(), f.end(),\n\t\t\t\t\t\t\t\t\t\t\t[&](face *F) { return F->dead < n; }), f.end());\n\t}\n\tint num_faces() const { return (int)f.size(); }\n\tdouble area() const {\n\t\tdouble res = 0;\n\t\tfor (face *F : f) res += F->q.abs() / 2.0;\n\t\treturn res;\n\t}\n\tdouble volume() const {\n\t\tdouble vol = 0;\n\t\tfor (face *F : f) vol += p[F->a].dot(F->q);\n\t\treturn std::abs(vol) / 6.0;\n\t}\n\tvector<array<int, 3>> faces() const {\n\t\tvector<array<int, 3>> res;\n\t\tfor (face *F : f) res.push_back({F->a, F->b, F->c});\n\t\treturn res;\n\t}\n};",
+      "source": "Convex Hull 3D",
+      "length": 3663,
+      "id": 145
+    },
+    {
+      "text": "using P = point2d<ld>;\nbool circle_inter(P a, P b, ld r1, ld r2,\n\t\tpair<P,P>* out) {\n\tif (a.sqdist(b) < 1e-18) return false;\n\tP vec = b - a;\n\tld d2 = vec.norm(), sum = r1+r2, dif = r1-r2,\n\t\tp = (d2 + r1*r1 - r2*r2) / (d2*2),\n\t\th2 = r1*r1 - p*p*d2;\n\tif (sum*sum < d2 || dif*dif > d2) return false;\n\tP per = {-vec.y, vec.x};\n\tP mid = a + vec*p;\n\tper = per * sqrt(fmax(0, h2) / d2);\n\t*out = {mid + per, mid - per};\n\treturn true;\n}",
+      "source": "Circle Intersection",
+      "length": 427,
+      "id": 146
+    },
+    {
+      "text": "using P = point2d<ld>;\nvector<pair<P,P>> tangents(P c1, ld r1,\n\t\tP c2, ld r2) {\n\tP d = c2 - c1;\n\tld dr = r1 - r2, d2 = d.norm(), h2 = d2 - dr*dr;\n\tif (d2 < 1e-18 || h2 < 0) return {};\n\tvector<pair<P,P>> out;\n\tP perp = {-d.y, d.x};\n\tfor (ld sign : {-1.0, 1.0}) {\n\t\tP v = (d*dr + perp*sqrt(h2)*sign) / d2;\n\t\tout.push_back({c1 + v*r1, c2 + v*r2});\n\t}\n\tif (h2 < 1e-18) out.pop_back();\n\treturn out;\n}",
+      "source": "Circle Tangents",
+      "length": 395,
+      "id": 147
+    },
+    {
+      "text": "using P = point2d<ld>;\nld circle_poly(P c, ld r, vector<P>& ps) {\n\tauto arg = [](P p, P q) {\n\t\treturn atan2(p^q, p|q);\n\t};\n\tauto tri = [&](P p, P q) {\n\t\tauto r2 = r*r/2;\n\t\tP d = q - p;\n\t\tauto a = (d|p)/d.norm(), b = (p.norm()-r*r)/d.norm();\n\t\tauto det = a*a - b;\n\t\tif (det <= 0) return arg(p,q) * r2;\n\t\tauto s = max(0.0L, -a-sqrt(det));\n\t\tauto t = min(1.0L, -a+sqrt(det));\n\t\tif (t < 0 or 1 <= s) return arg(p,q) * r2;\n\t\tP u = p + d*s, v = p + d*t;\n\t\treturn arg(p,u)*r2 + (u^v)/2 + arg(v,q)*r2;\n\t};\n\tld sum = 0;\n\tint n = ps.size();\n\tfor (int i = 0; i < n; i++)\n\t\tsum += tri(ps[i]-c, ps[(i+1)%n]-c);\n\treturn sum;\n}",
+      "source": "Circle Polygon Intersection",
+      "length": 612,
+      "id": 148
+    },
+    {
+      "text": "using P = point2d<ld>;\nP polygon_center(vector<P>& v) {\n\tP res(0, 0); ld A = 0;\n\tint n = v.size();\n\tfor (int i = 0, j = n-1; i < n; j = i++) {\n\t\tres = res + (v[i]+v[j]) * (v[j]^v[i]);\n\t\tA += v[j]^v[i];\n\t}\n\treturn res / A / 3;\n}",
+      "source": "Polygon Center",
+      "length": 227,
+      "id": 149
+    },
+    {
+      "text": "using P = point2d<ld>;\nvector<P> polygon_cut(vector<P>& poly, P s, P e) {\n\tvector<P> res;\n\tint n = poly.size();\n\tfor (int i = 0; i < n; i++) {\n\t\tP cur = poly[i], prev = i ? poly[i-1] : poly.back();\n\t\tauto a = s.cross(e, cur), b = s.cross(e, prev);\n\t\tif ((a < 0) != (b < 0))\n\t\t\tres.push_back(cur + (prev-cur) * (a / (a-b)));\n\t\tif (a < 0) res.push_back(cur);\n\t}\n\treturn res;\n}",
+      "source": "Polygon Cut",
+      "length": 374,
+      "id": 150
+    },
+    {
+      "text": "template<class T>\narray<point2d<T>,2> hull_diameter(vector<point2d<T>>& S) {\n\tint n = S.size(), j = n < 2 ? 0 : 1;\n\tpair<T, array<point2d<T>,2>> res = {0, {S[0], S[0]}};\n\tfor (int i = 0; i < j;)\n\t\tfor (;; j = (j+1)%n) {\n\t\t\tres = max(res, {S[i].sqdist(S[j]), {S[i], S[j]}});\n\t\t\tif (((S[(j+1)%n]-S[j])^(S[i+1]-S[i])) >= 0)\n\t\t\t\t{ i++; break; }\n\t\t}\n\treturn res.second;\n}",
+      "source": "Hull Diameter",
+      "length": 366,
+      "id": 151
+    },
+    {
+      "text": "template <typename T> struct delaunay {\n\tusing pt = point2d<T>;\n\tusing lll = __int128_t;\n\tstruct Quad {\n\t\tQuad *rot, *o;\n\t\tpt p; int id; bool mark;\n\t\tpt& F() { return rot->rot->p; }\n\t\tint& Fi() { return rot->rot->id; }\n\t\tQuad*& r() { return rot->rot; }\n\t\tQuad* prev() { return rot->o->rot; }\n\t\tQuad* next() { return r()->prev(); }\n\t};\n\tQuad* pool;\n\tbool circ(pt p, pt a, pt b, pt c) {\n\t\tlll p2=p.norm(), A=a.norm()-p2, B=b.norm()-p2, C=c.norm()-p2;\n\t\treturn p.cross(a,b)*C + p.cross(b,c)*A + p.cross(c,a)*B > 0;\n\t}\n\tQuad* makeEdge(pt orig, int oi, pt dest, int di) {\n\t\tauto nq = [&]() { return new Quad{nullptr,nullptr,{}, -1, false}; };\n\t\tQuad* r;\n\t\tif (pool) { r = pool; pool = r->o; }\n\t\telse { r = nq(); r->rot = nq(); r->rot->rot = nq(); r->rot->rot->rot = nq(); }\n\t\tr->r()->r() = r; r->rot->rot->rot->rot = r;\n\t\tpt arb{(T)1e18, (T)1e18};\n\t\tQuad* c = r;\n\t\tfor (int i = 0; i < 4; i++) {\n\t\t\tc = c->rot; c->p = arb; c->id = -1;\n\t\t\tc->o = (i & 1) ? c : c->r();\n\t\t}\n\t\tr->p = orig; r->id = oi; r->F() = dest; r->Fi() = di;\n\t\treturn r;\n\t}\n\tvoid splice(Quad* a, Quad* b) {\n\t\tswap(a->o->rot->o, b->o->rot->o); swap(a->o, b->o);\n\t}\n\tQuad* connect(Quad* a, Quad* b) {\n\t\tQuad* q = makeEdge(a->F(), a->Fi(), b->p, b->id);\n\t\tsplice(q, a->next()); splice(q->r(), b); return q;\n\t}\n\tpair<Quad*,Quad*> rec(vector<pt>& s, vector<int>& ids, int lo, int hi) {\n\t\tint sz = hi - lo;\n\t\tif (sz <= 3) {\n\t\t\tQuad* a = makeEdge(s[lo],ids[lo], s[lo+1],ids[lo+1]);\n\t\t\tQuad* b = makeEdge(s[lo+1],ids[lo+1], s[lo+sz-1],ids[lo+sz-1]);\n\t\t\tif (sz == 2) return {a, a->r()};\n\t\t\tsplice(a->r(), b);\n\t\t\tauto side = s[lo].cross(s[lo+1], s[lo+2]);\n\t\t\tQuad* c = side ? connect(b, a) : nullptr;\n\t\t\treturn {side<0 ? c->r() : a, side<0 ? c : b->r()};\n\t\t}\n\t\tint mid = lo + sz/2;\n\t\tauto [ra, A] = rec(s, ids, lo, mid);\n\t\tauto [B, rb] = rec(s, ids, mid, hi);\n\t\twhile ((B->p.cross(A->F(), A->p)<0 && (A=A->next())) ||\n\t\t\t\t\t(A->p.cross(B->F(), B->p)>0 && (B=B->r()->o)));\n\t\tQuad* base = connect(B->r(), A);\n\t\tif (A->p.x==ra->p.x && A->p.y==ra->p.y) ra = base->r();\n\t\tif (B->p.x==rb->p.x && B->p.y==rb->p.y) rb = base;\n\t\tauto valid = [&](Quad* e) { return e->F().cross(base->F(), base->p) > 0; };\n\t\tfor (;;) {\n\t\t\tQuad* LC = base->r()->o;\n\t\t\tif (valid(LC)) while (circ(LC->o->F(), base->F(), base->p, LC->F()))\n\t\t\t\t{ Quad* t=LC->o; splice(LC,LC->prev()); splice(LC->r(),LC->r()->prev()); LC->o=pool; pool=LC; LC=t; }\n\t\t\tQuad* RC = base->prev();\n\t\t\tif (valid(RC)) while (circ(RC->prev()->F(), base->F(), base->p, RC->F()))\n\t\t\t\t{ Quad* t=RC->prev(); splice(RC,RC->prev()); splice(RC->r(),RC->r()->prev()); RC->o=pool; pool=RC; RC=t; }\n\t\t\tif (!valid(LC) && !valid(RC)) break;\n\t\t\tif (!valid(LC) || (valid(RC) && circ(RC->F(), base->F(), base->p, LC->F())))\n\t\t\t\tbase = connect(RC, base->r());\n\t\t\telse base = connect(base->r(), LC->r());\n\t\t}\n\t\treturn {ra, rb};\n\t}\n\tint n;\n\tvector<array<int, 3>> tri;\n\tdelaunay() : pool(nullptr), n(0) {}\n\tdelaunay(vector<T> &px, vector<T> &py) : pool(nullptr), n(0) { build(px, py); }\n\tvoid build(vector<T> &px, vector<T> &py) {\n\t\tn = (int)px.size(); tri.clear(); pool = nullptr;\n\t\tif (n < 2) return;\n\t\tvector<int> ord(n); iota(ord.begin(), ord.end(), 0);\n\t\tsort(ord.begin(), ord.end(), [&](int a, int b) {\n\t\t\treturn px[a]<px[b] || (px[a]==px[b] && py[a]<py[b]);\n\t\t});\n\t\tvector<pt> sp(n); vector<int> si(n);\n\t\tfor (int i = 0; i < n; i++) { sp[i] = {px[ord[i]], py[ord[i]]}; si[i] = ord[i]; }\n\t\tQuad* e = rec(sp, si, 0, n).first;\n\t\tvector<Quad*> q = {e};\n\t\tint qi = 0;\n\t\twhile (e->o->F().cross(e->F(), e->p) < 0) e = e->o;\n\t\tauto add = [&](Quad* e) {\n\t\t\tQuad* c = e; vector<int> face;\n\t\t\tdo { c->mark=1; face.push_back(c->id); q.push_back(c->r()); c=c->next(); } while (c!=e);\n\t\t\tif ((int)face.size()==3) tri.push_back({face[0],face[1],face[2]});\n\t\t};\n\t\tadd(e);\n\t\twhile (qi < (int)q.size()) if (!(e=q[qi++])->mark) add(e);\n\t}\n};",
+      "source": "Delaunay Triangulation",
+      "length": 3803,
+      "id": 152
+    },
+    {
+      "text": "template <typename T> struct delaunay_graph : delaunay<T> {\n\tvector<vector<int>> adj;\n\tdelaunay_graph() {}\n\tdelaunay_graph(vector<T> &px, vector<T> &py) { build(px, py); }\n\tvoid build(vector<T> &px, vector<T> &py) {\n\t\tdelaunay<T>::build(px, py);\n\t\tadj.assign(this->n, {});\n\t\tfor (auto &t : this->tri)\n\t\t\tfor (int i = 0; i < 3; i++) for (int j = i+1; j < 3; j++) {\n\t\t\t\tadj[t[i]].push_back(t[j]); adj[t[j]].push_back(t[i]);\n\t\t\t}\n\t\tfor (auto &v : adj) { sort(v.begin(), v.end()); v.erase(unique(v.begin(), v.end()), v.end()); }\n\t}\n\tint walk(vector<T> &px, vector<T> &py, T qx, T qy) const {\n\t\tauto d2 = [&](int i) { return (qx-px[i])*(qx-px[i]) + (qy-py[i])*(qy-py[i]); };\n\t\tint cur = 0; T best = d2(0);\n\t\tfor (bool ok = true; ok; ) { ok = false;\n\t\t\tfor (int nb : adj[cur]) { T d = d2(nb); if (d < best) { best=d; cur=nb; ok=true; break; } }\n\t\t}\n\t\treturn cur;\n\t}\n\tvector<int> locate(vector<T> &px, vector<T> &py, T qx, T qy) const {\n\t\tauto d2 = [&](int i) { return (qx-px[i])*(qx-px[i]) + (qy-py[i])*(qy-py[i]); };\n\t\tint v = walk(px, py, qx, qy);\n\t\tT best = d2(v);\n\t\tvector<int> res = {v};\n\t\tvector<bool> vis(this->n, false);\n\t\tvis[v] = true;\n\t\tfor (int qi = 0; qi < (int)res.size(); qi++)\n\t\t\tfor (int nb : adj[res[qi]])\n\t\t\t\tif (!vis[nb]) { vis[nb] = true; if (d2(nb) == best) res.push_back(nb); }\n\t\tsort(res.begin(), res.end());\n\t\treturn res;\n\t}\n};",
+      "source": "Delaunay Graph",
+      "length": 1346,
+      "id": 153
+    },
+    {
+      "text": "template <class I> vector<int> LIS(const vector<I> &S) {\n\tif (S.empty())\n\t\treturn {};\n\tvector<int> prev(S.size());\n\tvector<pair<I, int>> res;\n\tfor (int i = 0; i < S.size(); i++) {\n\t\tauto it = lower_bound(res.begin(), res.end(), pair<I, int>{S[i], i});\n\t\tif (it == res.end())\n\t\t\tres.emplace_back(), it = res.end() - 1;\n\t\t*it = {S[i], i};\n\t\tprev[i] = (it == res.begin() ? 0 : (it - 1)->second);\n\t}\n\tint L = res.size(), cur = res.back().second;\n\tvector<int> ans(L);\n\twhile (L--)\n\t\tans[L] = cur, cur = prev[cur];\n\treturn ans;\n}",
+      "source": "Longest Increasing Subsequence",
+      "length": 523,
+      "id": 154
+    },
+    {
+      "text": "const ll INF = 1e18;\nll egg_drop(int h, int k) {\n\tvector<vector<ll>> dp(h + 1, vector<ll>(k + 1, INF));\n\tfor (int j = 0; j <= k; j++) dp[0][j] = 0;\n\tfor (int j = 1; j <= k; j++) {\n\t\tfor (int i = 1; i <= h; i++) {\n\t\t\tint lo = 1, hi = i;\n\t\t\twhile (lo <= hi) {\n\t\t\t\tint mid = (lo + hi) / 2;\n\t\t\t\tll br = dp[mid - 1][j - 1], sv = dp[i - mid][j];\n\t\t\t\tdp[i][j] = min(dp[i][j], 1 + max(br, sv));\n\t\t\t\t(br < sv) ? lo = mid + 1 : hi = mid - 1;\n\t\t\t}\n\t\t}\n\t}\n\treturn dp[h][k];\n}\nll egg_drop_fast(int h, int k) {\n\tvector<ll> cur(k + 1, 0), nxt(k + 1);\n\tfor (int t = 1; t <= h; t++) {\n\t\tfor (int j = 1; j <= k; j++) {\n\t\t\tnxt[j] = cur[j - 1] + cur[j] + 1;\n\t\t\tif (nxt[j] >= h) return t;\n\t\t}\n\t\tswap(cur, nxt);\n\t}\n\treturn h;\n}",
+      "source": "Egg Drop",
+      "length": 705,
+      "id": 155
+    },
+    {
+      "text": "const ll INF = 1e18;\nint n;\nvector<ll> dp, ndp;\nll cost(int l, int r);\nvoid dac_solve(int l, int r, int optl, int optr) {\n\tif (l > r) return;\n\tint mid = (l + r) / 2, opt = optl;\n\tndp[mid] = INF;\n\tfor (int k = optl; k <= min(mid - 1, optr); k++) {\n\t\tll val = dp[k] + cost(k + 1, mid);\n\t\tif (val < ndp[mid]) ndp[mid] = val, opt = k;\n\t}\n\tdac_solve(l, mid - 1, optl, opt);\n\tdac_solve(mid + 1, r, opt, optr);\n}\nll dac_dp(int layers) {\n\tdp.assign(n + 1, INF); dp[0] = 0;\n\tfor (int i = 0; i < layers; i++) {\n\t\tndp.assign(n + 1, INF);\n\t\tdac_solve(1, n, 0, n - 1);\n\t\tswap(dp, ndp);\n\t}\n\treturn dp[n];\n}",
+      "source": "Divide and Conquer DP",
+      "length": 592,
+      "id": 156
+    },
+    {
+      "text": "const ll INF = 1e18;\nint n;\nvector<vector<ll>> dp;\nvector<vector<int>> opt;\nll cost(int i, int j);\nll knuth_dp() {\n\tdp.assign(n, vector<ll>(n, 0));\n\topt.assign(n, vector<int>(n));\n\tfor (int i = 0; i < n; i++) opt[i][i] = i;\n\tfor (int len = 2; len <= n; len++) {\n\t\tfor (int i = 0; i + len <= n; i++) {\n\t\t\tint j = i + len - 1;\n\t\t\tdp[i][j] = INF;\n\t\t\tfor (int k = opt[i][j - 1]; k <= opt[min(i + 1, j)][j]; k++) {\n\t\t\t\tll val = dp[i][k] + (k + 1 <= j ? dp[k + 1][j] : 0) + cost(i, j);\n\t\t\t\tif (val < dp[i][j]) dp[i][j] = val, opt[i][j] = k;\n\t\t\t}\n\t\t}\n\t}\n\treturn dp[0][n - 1];\n}",
+      "source": "Knuth Optimization",
+      "length": 570,
+      "id": 157
+    },
+    {
+      "text": "struct convex_hull_trick {\n\tvector<ll> A, B;\n\tconst ll inf = numeric_limits<ll>::max()/4;\n\tdouble cross(ll i, ll j, ll k) {\n\t\treturn 1.0*(A[j] - A[i]) * (B[k] - B[i]) - 1.0*(A[k] - A[i]) * (B[j] - B[i]);\n\t}\n\tvoid add(ll a, ll b) {\n\t\tA.push_back(a), B.push_back(b);\n\t\twhile(A.size() > 2 and cross(A.size() - 3, A.size() - 2, A.size() - 1) <= 0)\n\t\t\tA.erase(A.end() - 2), B.erase(B.end() - 2);\n\t}\n\tll query(ll x) {\n\t\tif(A.empty()) return inf;\n\t\tll l = 0, r = A.size() - 1;\n\t\twhile (l < r) {\n\t\t\tll mid = (l + r)/2;\n\t\t\tll f1 = A[mid] * x + B[mid];\n\t\t\tll f2 = A[mid + 1] * x + B[mid + 1];\n\t\t\tif(f1 > f2) l = mid + 1;\n\t\t\telse r = mid;\n\t\t}\n\t\treturn A[l] * x + B[l];\n\t}\n};",
+      "source": "Convex Hull Trick",
+      "length": 663,
+      "id": 158
+    },
+    {
+      "text": "struct Line{\n\tll a,b;\n\tLine(ll _a, ll _b) : a(_a), b(_b) {};\n\tll eval(ll x){ return a*x + b;}\n};\nstruct li_chao{\n\tconst ll INF = 1e18;\n\tll L,R;\n\tvector<Line> st;\n\tli_chao(ll l,ll r){\n\t\tL = l, R = r+1;\n\t\tst = vector<Line>(4*(r - l + 1),Line(0,INF));\n\t};\n\tvoid add(Line nw, ll v, ll l, ll r){\n\t\tll m = (l+r)/2;\n\t\tbool lc = nw.eval(l) < st[v].eval(l);\n\t\tbool mc = nw.eval(m) < st[v].eval(m);\n\t\tif(mc) swap(nw,st[v]);\n\t\tif(r - l == 1) return;\n\t\tif(lc != mc) add(nw,2*v,l,m);\n\t\telse add(nw,2*v + 1,m,r);\n\t}\n\tll get(ll x, ll v, ll l, ll r){\n\t\tll m = (l+r)/2;\n\t\tif(r - l == 1) return st[v].eval(x);\n\t\tif(x < m) return min(st[v].eval(x),get(x,2*v,l,m));\n\t\treturn min(st[v].eval(x),get(x,2*v+1,m,r));\n\t}\n\tvoid add(ll a, ll b){add(Line(a,b),1,L,R);};\n\tll get(ll x){return get(x,1,L,R);};\n};",
+      "source": "Li Chao Tree",
+      "length": 780,
+      "id": 159
+    },
+    {
+      "text": "using ll = long long;\nconst ll inf = 2e18;\nstruct Line {\n\tll m, c;\n\tll eval(ll x) { return m * x + c; }\n};\nstruct node {\n\tLine line;\n\tnode *left = nullptr;\n\tnode *right = nullptr;\n\tnode(Line line) : line(line) {}\n\tvoid add_segment(Line nw, int l, int r, int L, int R) {\n\t\tif (l > r || r < L || l > R)\n\t\t\treturn;\n\t\tint m = (l + 1 == r ? l : (l + r) / 2);\n\t\tif (l >= L and r <= R) {\n\t\t\tbool lef = nw.eval(l) < line.eval(l);\n\t\t\tbool mid = nw.eval(m) < line.eval(m);\n\t\t\tif (mid)\n\t\t\t\tswap(line, nw);\n\t\t\tif (l == r)\n\t\t\t\treturn;\n\t\t\tif (lef != mid) {\n\t\t\t\tif (left == nullptr)\n\t\t\t\t\tleft = new node(nw);\n\t\t\t\telse\n\t\t\t\t\tleft->add_segment(nw, l, m, L, R);\n\t\t\t} else {\n\t\t\t\tif (right == nullptr)\n\t\t\t\t\tright = new node(nw);\n\t\t\t\telse\n\t\t\t\t\tright->add_segment(nw, m + 1, r, L, R);\n\t\t\t}\n\t\t\treturn;\n\t\t}\n\t\tif (max(l, L) <= min(m, R)) {\n\t\t\tif (left == nullptr)\n\t\t\t\tleft = new node({0, inf});\n\t\t\tleft->add_segment(nw, l, m, L, R);\n\t\t}\n\t\tif (max(m + 1, L) <= min(r, R)) {\n\t\t\tif (right == nullptr)\n\t\t\t\tright = new node({0, inf});\n\t\t\tright->add_segment(nw, m + 1, r, L, R);\n\t\t}\n\t}\n\tll query_segment(ll x, int l, int r, int L, int R) {\n\t\tif (l > r || r < L || l > R)\n\t\t\treturn inf;\n\t\tint m = (l + 1 == r ? l : (l + r) / 2);\n\t\tif (l >= L and r <= R) {\n\t\t\tll ans = line.eval(x);\n\t\t\tif (l < r) {\n\t\t\t\tif (x <= m && left != nullptr)\n\t\t\t\t\tans = min(ans, left->query_segment(x, l, m, L, R));\n\t\t\t\tif (x > m && right != nullptr)\n\t\t\t\t\tans = min(ans, right->query_segment(x, m + 1, r, L, R));\n\t\t\t}\n\t\t\treturn ans;\n\t\t}\n\t\tll ans = inf;\n\t\tif (max(l, L) <= min(m, R)) {\n\t\t\tif (left == nullptr)\n\t\t\t\tleft = new node({0, inf});\n\t\t\tans = min(ans, left->query_segment(x, l, m, L, R));\n\t\t}\n\t\tif (max(m + 1, L) <= min(r, R)) {\n\t\t\tif (right == nullptr)\n\t\t\t\tright = new node({0, inf});\n\t\t\tans = min(ans, right->query_segment(x, m + 1, r, L, R));\n\t\t}\n\t\treturn ans;\n\t}\n};\nstruct LiChaoTree {\n\tint L, R;\n\tnode *root;\n\tLiChaoTree()\n\t\t\t: L(numeric_limits<int>::min() / 2), R(numeric_limits<int>::max() / 2),\n\t\t\t\troot(nullptr) {}\n\tLiChaoTree(int L, int R) : L(L), R(R) { root = new node({0, inf}); }\n\tvoid add_line(Line line) { root->add_segment(line, L, R, L, R); }\n\tvoid add_segment(Line line, int l, int r) {\n\t\troot->add_segment(line, L, R, l, r);\n\t}\n\tll query(ll x) { return root->query_segment(x, L, R, L, R); }\n\tll query_segment(ll x, int l, int r) {\n\t\treturn root->query_segment(x, l, r, L, R);\n\t}\n};",
+      "source": "Li Chao Segment Tree",
+      "length": 2348,
+      "id": 160
+    },
+    {
+      "text": "int knapsack(vector<int> w, int t) {\n\tint a = 0, b = 0, n = w.size(), x;\n\twhile (b < n && a + w[b] <= t) a += w[b++];\n\tif (b == n) return a;\n\tint m = *max_element(w.begin(), w.end());\n\tvector<int> u, v(2*m, -1);\n\tv[a+m-t] = b;\n\tfor (int i = b; i < n; i++) {\n\t\tu = v;\n\t\tfor (x = 0; x < m; x++)\n\t\t\tv[x+w[i]] = max(v[x+w[i]], u[x]);\n\t\tfor (x = 2*m; --x > m;)\n\t\t\tfor (int j = max(0, u[x]); j < v[x]; j++)\n\t\t\t\tv[x-w[j]] = max(v[x-w[j]], j);\n\t}\n\tfor (a = t; v[a+m-t] < 0; a--) ;\n\treturn a;\n}",
+      "source": "Fast Knapsack",
+      "length": 485,
+      "id": 161
+    },
+    {
+      "text": "template<class T, class repr>\nstruct simulated_annealing {\n\tT val;\n\tdouble get_time(){\n\t\treturn chrono::duration<double>(\n\t\t\tchrono::high_resolution_clock::now().time_since_epoch()\n\t\t).count();\n\t}\n\tdouble P(double old_val, double new_val, double temp) { return exp(((old_val-new_val))/temp); }\n\tsimulated_annealing(double time_limit, double t_i, double t_f, repr & q){\n\t\tq.init();\n\t\tdouble st = get_time(); val = q.eval();\n\t\twhile (1){\n\t\t\tdouble elapsed = get_time()-st;\n\t\t\tif (elapsed > time_limit) break;\n\t\t\tdouble ela_frac = elapsed/time_limit;\n\t\t\tdouble temp = t_i*pow(t_f/t_i,ela_frac);\n\t\t\tq.get_neighbor();\n\t\t\tT new_val = q.eval();\n\t\t\tif (new_val < val || ((double)rand())/RAND_MAX < P(val,new_val,temp)){\n\t\t\t\tval = new_val;\n\t\t\t} else {\n\t\t\t\tq.rollback();\n\t\t\t}\n\t\t}\n\t}\n};",
+      "source": "Simulated Annealing",
+      "length": 775,
+      "id": 162
+    },
+    {
+      "text": "template<\n\t\ttypename W_t,\n\t\ttypename T,\n\t\ttypename Orc1,\n\t\ttypename Orc2\n>\nvector<vector<T>> weighted_matroid_intersection(const vector<T> & ground_set, const Orc1 & matroid1, const Orc2 & matroid2){\n\t\tint n = ground_set.size();\n\t\tvector<vector<T>> res;\n\t\tvector<char> in_set(n), in_matroid1(n), in_matroid2(n);\n\t\tvector<pair<W_t,int>> dist(n);\n\t\tvector<pair<int,int>> edges;\n\t\tvector<int> par(n), l, r;\n\t\tl.reserve(n);\n\t\tr.reserve(n);\n\t\twhile (1) {\n\t\t\t\tres.push_back({});\n\t\t\t\tfor (int i = 0; i < n; i++)\n\t\t\t\t\t\tif (in_set[i])\n\t\t\t\t\t\t\t\tres.back().push_back(ground_set[i]);\n\t\t\t\tOrc1 m1 = matroid1;\n\t\t\t\tOrc2 m2 = matroid2;\n\t\t\t\tl.clear();\n\t\t\t\tr.clear();\n\t\t\t\tfor (int i = 0; i < n; i++)\n\t\t\t\t\t\tif (in_set[i]) {\n\t\t\t\t\t\t\t\tm1.add(ground_set[i]);\n\t\t\t\t\t\t\t\tm2.add(ground_set[i]);\n\t\t\t\t\t\t\t\tl.push_back(i);\n\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\t\tr.push_back(i);\n\t\t\t\t\t\t}\n\t\t\t\tfill(in_matroid1.begin(), in_matroid1.end(), 0);\n\t\t\t\tfill(in_matroid2.begin(), in_matroid2.end(), 0);\n\t\t\t\tfor (int i : r) {\n\t\t\t\t\t\tin_matroid1[i] = m1.independed_with(ground_set[i]);\n\t\t\t\t\t\tin_matroid2[i] = m2.independed_with(ground_set[i]);\n\t\t\t\t}\n\t\t\t\tedges.clear();\n\t\t\t\tfor (int i : l) {\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\tOrc1 m = matroid1;\n\t\t\t\t\t\t\t\tfor (int j : l)\n\t\t\t\t\t\t\t\t\t\tif (i != j)\n\t\t\t\t\t\t\t\t\t\t\t\tm.add(ground_set[j]);\n\t\t\t\t\t\t\t\tfor (int j : r)\n\t\t\t\t\t\t\t\t\t\tif (m.independed_with(ground_set[j]))\n\t\t\t\t\t\t\t\t\t\t\t\tedges.emplace_back(i, j);\n\t\t\t\t\t\t}\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\tOrc2 m = matroid2;\n\t\t\t\t\t\t\t\tfor (int j : l)\n\t\t\t\t\t\t\t\t\t\tif (i != j)\n\t\t\t\t\t\t\t\t\t\t\t\tm.add(ground_set[j]);\n\t\t\t\t\t\t\t\tfor (int j : r)\n\t\t\t\t\t\t\t\t\t\tif (m.independed_with(ground_set[j]))\n\t\t\t\t\t\t\t\t\t\t\t\tedges.emplace_back(j, i);\n\t\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\tstatic constexpr W_t INF = numeric_limits<W_t>::max();\n\t\t\t\tfill(dist.begin(), dist.end(), pair{INF, -1});\n\t\t\t\tfill(par.begin(), par.end(), -1);\n\t\t\t\tfor (int i : r)\n\t\t\t\t\t\tif (in_matroid1[i])\n\t\t\t\t\t\t\t\tdist[i] = {-ground_set[i].weight, 0};\n\t\t\t\twhile (1) {\n\t\t\t\t\t\tbool any = false;\n\t\t\t\t\t\tfor (auto &[v, u] : edges) {\n\t\t\t\t\t\t\t\tif (dist[v].first == INF)\n\t\t\t\t\t\t\t\t\t\tcontinue;\n\t\t\t\t\t\t\t\tint coeff = in_set[v] ? -1 : 1;\n\t\t\t\t\t\t\t\tif (dist[u] > pair{dist[v].first + coeff * ground_set[u].weight, dist[v].second + 1}) {\n\t\t\t\t\t\t\t\t\t\tpar[u] = v;\n\t\t\t\t\t\t\t\t\t\tdist[u] = {dist[v].first + coeff * ground_set[u].weight, dist[v].second + 1};\n\t\t\t\t\t\t\t\t\t\tany = 1;\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t\tif (!any)\n\t\t\t\t\t\t\t\tbreak;\n\t\t\t\t}\n\t\t\t\tint finish = -1;\n\t\t\t\tfor (int v : r)\n\t\t\t\t\t\tif (in_matroid2[v] && dist[v].first != INF && (finish == -1 || dist[finish] > dist[v]))\n\t\t\t\t\t\t\t\tfinish = v;\n\t\t\t\tif (finish == -1)\n\t\t\t\t\t\tbreak;\n\t\t\t\tfor (; finish != -1; finish = par[finish])\n\t\t\t\t\t\tin_set[finish] ^= 1;\n\t\t}\n\t\treturn res;\n}",
+      "source": "Weighted Matroid Intersection",
+      "length": 2572,
+      "id": 163
+    }
+  ]
+}

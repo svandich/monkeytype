@@ -208,8 +208,15 @@ export function AboutPage(): JSXElement {
           <p>
             By default, tests use ariasctl: the most common tokens of real
             competitive programming code (keywords, types, macros and the names
-            we all use). English and many other languages are still available in
-            the options.
+            we all use). handbook-usm does the same for the code of the{" "}
+            <a
+              href="https://github.com/ProgramacionCompetitivaUTFSM/Handbook-USM"
+              target="_blank"
+            >
+              USM handbook
+            </a>
+            , and its quotes are the handbook&apos;s algorithms. English and
+            many other languages are still available in the options.
           </p>
         </section>
         <section>

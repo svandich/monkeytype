@@ -29,6 +29,7 @@ export const LanguageGroups: Record<string, Language[]> = {
     "code_java",
   ],
   ariasctl: ["ariasctl"],
+  "handbook-usm": ["handbook-usm"],
 };
 
 export type LanguageGroupName = keyof typeof LanguageGroups;
@@ -45,4 +46,17 @@ export function getGroupForLanguage(
   language: Language,
 ): LanguageGroupName | undefined {
   return LanguageGroupNames.find((group) => group.includes(language));
+}
+
+/**
+ * Whether the language is made of code. Code languages auto insert tabs and
+ * unindent on backspace.
+ * @param language The language code.
+ */
+export function isCodeLanguage(language: Language): boolean {
+  return (
+    language.startsWith("code") ||
+    language === "ariasctl" ||
+    language === "handbook-usm"
+  );
 }
