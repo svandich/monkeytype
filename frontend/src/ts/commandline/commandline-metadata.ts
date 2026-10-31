@@ -142,7 +142,7 @@ export const commandlineConfigMetadata: CommandlineConfigMetadataObject = {
   },
   mode: {
     subgroup: {
-      options: "fromSchema",
+      options: ["quote", "time", "words", "custom"],
       afterExec: () => {
         void TestLogic.restart();
       },

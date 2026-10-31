@@ -116,6 +116,7 @@ describe("PresetController", () => {
         settingGroups: ["test"],
       });
 
+      setConfig("mode", "time");
       setConfig("numbers", true);
       const oldConfig = structuredClone(Config);
 

@@ -68,7 +68,11 @@ describe("ConfigMeta", () => {
       expected: Partial<ConfigType>;
     }> = {
       punctuation: [
-        { value: true, expected: { punctuation: true } },
+        {
+          value: true,
+          given: { mode: "time" },
+          expected: { punctuation: true },
+        },
         {
           value: true,
           given: { mode: "quote" },
@@ -76,7 +80,11 @@ describe("ConfigMeta", () => {
         },
       ],
       numbers: [
-        { value: true, expected: { numbers: true } },
+        {
+          value: true,
+          given: { mode: "time" },
+          expected: { numbers: true },
+        },
         {
           value: true,
           given: { mode: "quote" },

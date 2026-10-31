@@ -3,7 +3,17 @@ import { KnownFontNameSchema } from "./fonts";
 import { customEnumErrorHandler } from "./util";
 
 export const LanguageSchema = z.enum(
+  // the order languages are listed in
   [
+    "ariasctl",
+    "handbook-usm",
+    "code_c++",
+    "code_c",
+    "code_java",
+    "code_python",
+    "code_python_1k",
+    "code_python_2k",
+    "code_python_5k",
     "english",
     "english_1k",
     "english_5k",
@@ -16,20 +26,11 @@ export const LanguageSchema = z.enum(
     "english_shakespearean",
     "english_old",
     "english_medical",
+    "english_legal",
     "spanish",
     "spanish_1k",
     "spanish_10k",
     "spanish_650k",
-    "code_python",
-    "code_python_1k",
-    "code_python_2k",
-    "code_python_5k",
-    "code_c",
-    "code_c++",
-    "code_java",
-    "english_legal",
-    "ariasctl",
-    "handbook-usm",
   ],
   {
     errorMap: customEnumErrorHandler("Must be a supported language"),

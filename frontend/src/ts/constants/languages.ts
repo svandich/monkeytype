@@ -3,6 +3,17 @@ import { Language, LanguageSchema } from "@monkeytype/schemas/languages";
 export const LanguageList: Language[] = LanguageSchema._def.values;
 
 export const LanguageGroups: Record<string, Language[]> = {
+  ariasctl: ["ariasctl"],
+  "handbook-usm": ["handbook-usm"],
+  code: [
+    "code_c++",
+    "code_c",
+    "code_java",
+    "code_python",
+    "code_python_1k",
+    "code_python_2k",
+    "code_python_5k",
+  ],
   english: [
     "english",
     "english_1k",
@@ -19,17 +30,6 @@ export const LanguageGroups: Record<string, Language[]> = {
     "english_legal",
   ],
   spanish: ["spanish", "spanish_1k", "spanish_10k", "spanish_650k"],
-  code: [
-    "code_python",
-    "code_python_1k",
-    "code_python_2k",
-    "code_python_5k",
-    "code_c",
-    "code_c++",
-    "code_java",
-  ],
-  ariasctl: ["ariasctl"],
-  "handbook-usm": ["handbook-usm"],
 };
 
 export type LanguageGroupName = keyof typeof LanguageGroups;

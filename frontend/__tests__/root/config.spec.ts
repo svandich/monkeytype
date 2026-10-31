@@ -184,7 +184,7 @@ describe("Config", () => {
 
     it("saves to localstorage if nosave=false", async () => {
       //GIVEN
-      replaceConfig({ numbers: false });
+      replaceConfig({ mode: "time", numbers: false });
 
       //WHEN
       Config.setConfig("numbers", true);
@@ -218,7 +218,7 @@ describe("Config", () => {
     it("does not save to localstorage if nosave=true", async () => {
       //GIVEN
 
-      replaceConfig({ numbers: false });
+      replaceConfig({ mode: "time", numbers: false });
 
       //WHEN
       Config.setConfig("numbers", true, {
@@ -234,7 +234,7 @@ describe("Config", () => {
 
     it("dispatches event on set", () => {
       //GIVEN
-      replaceConfig({ numbers: false });
+      replaceConfig({ mode: "time", numbers: false });
 
       //WHEN
       Config.setConfig("numbers", true, {
@@ -295,13 +295,11 @@ describe("Config", () => {
         mode: "words",
       });
       await Lifecycle.applyConfig({
-        numbers: true,
-        punctuation: true,
+        blindMode: true,
       });
       const config = getConfig();
-      expect(config.mode).toBe("time");
-      expect(config.numbers).toBe(true);
-      expect(config.punctuation).toBe(true);
+      expect(config.mode).toBe("quote");
+      expect(config.blindMode).toBe(true);
     });
 
     describe("should reset to default if setting failed", () => {
@@ -377,6 +375,7 @@ describe("Config", () => {
 
     it("should apply a partial config but keep the rest unchanged", async () => {
       replaceConfig({
+        mode: "time",
         numbers: true,
       });
       await Lifecycle.applyConfig({

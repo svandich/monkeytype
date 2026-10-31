@@ -27,7 +27,7 @@ const obj: Config = {
   numbers: false,
   words: 50,
   time: 30,
-  mode: "time",
+  mode: "quote",
   quoteLength: [1],
   language: "ariasctl",
   fontSize: 2,
