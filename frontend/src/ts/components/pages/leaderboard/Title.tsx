@@ -1,5 +1,8 @@
 import { UTCDateMini } from "@date-fns/utc/date/mini";
-import { QUOTE_LEADERBOARD_MIN_QUOTES } from "@monkeytype/schemas/leaderboards";
+import {
+  ORGANIZATION_TEAM_SIZE,
+  QUOTE_LEADERBOARD_MIN_QUOTES,
+} from "@monkeytype/schemas/leaderboards";
 import { QuoteData } from "@monkeytype/schemas/quotes";
 import {
   endOfDay,
@@ -21,12 +24,12 @@ import { H2 } from "../../common/Headers";
 export function Title(props: {
   selection: Selection;
   onPreviousSelect: () => void;
-  /** the selected quote, on single quote leaderboards */
+  /** the selected quote, on single quote and university leaderboards */
   quote?: QuoteData["quotes"][number];
 }): JSXElement {
   const title = createMemo(() => {
     const type = {
-      allTime: "All-time",
+      allTime: "Words",
       universities: "University",
       quotes: "Quote",
       weekly: "Weekly XP",
@@ -45,7 +48,10 @@ export function Title(props: {
       props.selection.type !== "weekly"
         ? ` ${capitalizeFirstLetter(props.selection.mode ?? "")} ${props.selection.mode2}`
         : "";
-    if (props.selection.type === "quotes") {
+    if (
+      props.selection.type === "quotes" ||
+      props.selection.type === "universities"
+    ) {
       mode =
         props.selection.mode2 === "all"
           ? " Overall"
@@ -120,14 +126,28 @@ export function Title(props: {
           />
         </div>
       </Show>
-      <Show when={props.selection.type === "quotes"}>
+      <Show
+        when={
+          props.selection.type === "quotes" ||
+          props.selection.type === "universities"
+        }
+      >
+        <Show when={props.selection.type === "universities"}>
+          <div class="text-sub">
+            Average speed of each university&apos;s {ORGANIZATION_TEAM_SIZE}{" "}
+            fastest typists on the {props.quote ? "quote" : "overall quote"}{" "}
+            leaderboard, missing ones count as 0.
+          </div>
+        </Show>
         <Show
           when={props.quote}
           fallback={
-            <div class="text-sub">
-              Average of the best result on each quote typed, at least{" "}
-              {QUOTE_LEADERBOARD_MIN_QUOTES} different quotes required.
-            </div>
+            <Show when={props.selection.type === "quotes"}>
+              <div class="text-sub">
+                Average of the best result on each quote typed, at least{" "}
+                {QUOTE_LEADERBOARD_MIN_QUOTES} different quotes required.
+              </div>
+            </Show>
           }
         >
           {(quote) => (

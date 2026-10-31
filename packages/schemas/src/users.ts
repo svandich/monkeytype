@@ -174,6 +174,45 @@ export const AllTimeLbsSchema = z.object({
 });
 export type AllTimeLbs = z.infer<typeof AllTimeLbsSchema>;
 
+export const QuoteBestSchema = z.object({
+  wpm: z.number().nonnegative(),
+  acc: z.number().nonnegative().max(100),
+  raw: z.number().nonnegative(),
+  consistency: z.number().nonnegative().optional(),
+  timestamp: z.number().int().nonnegative(),
+});
+export type QuoteBest = z.infer<typeof QuoteBestSchema>;
+
+export const QuoteLengthBestSchema = QuoteBestSchema.extend({
+  quoteId: z.number().int().nonnegative(),
+});
+export type QuoteLengthBest = z.infer<typeof QuoteLengthBestSchema>;
+
+export const QuoteLengthNameSchema = z.enum([
+  "short",
+  "medium",
+  "long",
+  "thicc",
+]);
+export type QuoteLengthName = z.infer<typeof QuoteLengthNameSchema>;
+
+export const LanguageQuoteStatsSchema = z.object({
+  rank: RankAndCountSchema.describe("rank on the overall quote leaderboard"),
+  overall: QuoteBestSchema.extend({
+    quotes: z.number().int().positive(),
+  }).describe("average of the best result on each quote"),
+  lengths: z
+    .record(QuoteLengthNameSchema, QuoteLengthBestSchema)
+    .describe("best result of each quote length group"),
+});
+export type LanguageQuoteStats = z.infer<typeof LanguageQuoteStatsSchema>;
+
+export const QuoteStatsSchema = z.record(
+  LanguageSchema,
+  LanguageQuoteStatsSchema,
+);
+export type QuoteStats = z.infer<typeof QuoteStatsSchema>;
+
 export const BadgeSchema = z
   .object({
     id: z.number().int().nonnegative(),
@@ -284,6 +323,9 @@ export const UserSchema = z.object({
   favoriteQuotes: FavoriteQuotesSchema.optional(),
   lbMemory: UserLbMemorySchema.optional(),
   allTimeLbs: AllTimeLbsSchema,
+  quoteStats: QuoteStatsSchema.optional().describe(
+    "quote stats of the quote leaderboard languages",
+  ),
   inventory: UserInventorySchema.optional(),
   banned: z.boolean().optional(),
   lbOptOut: z.boolean().optional(),
@@ -322,6 +364,7 @@ export const UserProfileSchema = UserSchema.pick({
   isPremium: true,
   inventory: true,
   allTimeLbs: true,
+  quoteStats: true,
   testActivity: true,
   progcomp: true,
 })

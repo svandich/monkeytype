@@ -1,8 +1,11 @@
 import { Document } from "mongodb";
 import {
+  ORGANIZATION_TEAM_SIZE,
+  OrganizationLeaderboardEntry,
   QUOTE_LEADERBOARD_MIN_QUOTES,
   QuoteLeaderboardEntry,
 } from "@monkeytype/schemas/leaderboards";
+import { roundTo2 } from "@monkeytype/util/numbers";
 import { getCachedConfiguration } from "../init/configuration";
 import { isDevEnvironment } from "../utils/misc";
 import { getResultCollection } from "./result";
@@ -57,6 +60,53 @@ export async function get(
           it.organization === filter.organization),
     )
     .map((it, index) => ({ ...it, friendsRank: index + 1 }));
+}
+
+/**
+ * Organizations (universities) ranked by the average wpm of their best
+ * ORGANIZATION_TEAM_SIZE typists on a quote leaderboard.
+ * @param quoteId leaderboard of a single quote, undefined for the overall quote leaderboard
+ */
+export async function getOrganizations(
+  language: string,
+  quoteId: number | undefined,
+): Promise<OrganizationLeaderboardEntry[]> {
+  const organizations = new Map<
+    string,
+    Omit<OrganizationLeaderboardEntry, "rank" | "score">
+  >();
+
+  // entries are sorted by rank, the first members are the team
+  for (const entry of await getCached(language, quoteId)) {
+    if (entry.organization === undefined) continue;
+    let organization = organizations.get(entry.organization);
+    if (organization === undefined) {
+      organization = { organization: entry.organization, members: 0, team: [] };
+      organizations.set(entry.organization, organization);
+    }
+    organization.members++;
+    if (organization.team.length < ORGANIZATION_TEAM_SIZE) {
+      organization.team.push({
+        uid: entry.uid,
+        name: entry.name,
+        wpm: entry.wpm,
+        acc: entry.acc,
+        rank: entry.rank,
+        progcompNickname: entry.progcompNickname,
+      });
+    }
+  }
+
+  return [...organizations.values()]
+    .map((it) => ({
+      ...it,
+      score: roundTo2(
+        it.team.reduce((sum, member) => sum + member.wpm, 0) /
+          ORGANIZATION_TEAM_SIZE,
+      ),
+    }))
+    .sort((a, b) => b.score - a.score || b.members - a.members)
+    .map((it, index) => ({ ...it, rank: index + 1 }));
 }
 
 async function getCached(
@@ -180,9 +230,66 @@ async function build(
   }));
 }
 
+export type UserQuoteBest = {
+  language: string;
+  quoteId: number;
+  /** quote length group, missing on old results */
+  quoteLength?: number;
+  wpm: number;
+  acc: number;
+  raw: number;
+  consistency: number;
+  timestamp: number;
+};
+
+/**
+ * The user's best result on each quote of the given languages, with the same
+ * rules as the quote leaderboards.
+ */
+export async function getUserBests(
+  uid: string,
+  languages: readonly string[],
+): Promise<UserQuoteBest[]> {
+  const results = await getResultCollection()
+    .aggregate<Omit<UserQuoteBest, "quoteId"> & { _id: { quote: string } }>([
+      {
+        $match: {
+          uid,
+          mode: "quote",
+          language: { $in: languages },
+          bailedOut: { $ne: true },
+          lazyMode: { $ne: true },
+        },
+      },
+      { $sort: { wpm: -1, acc: -1, timestamp: 1 } },
+      {
+        $group: {
+          _id: { language: "$language", quote: "$mode2" },
+          language: { $first: "$language" },
+          quoteLength: { $first: "$quoteLength" },
+          wpm: { $first: "$wpm" },
+          acc: { $first: "$acc" },
+          raw: { $first: "$rawWpm" },
+          consistency: { $first: "$consistency" },
+          timestamp: { $first: "$timestamp" },
+        },
+      },
+    ])
+    .toArray();
+
+  return results.map(({ _id, ...best }) => ({
+    ...best,
+    quoteId: parseInt(_id.quote, 10),
+  }));
+}
+
 export async function createIndicies(): Promise<void> {
   await getResultCollection().createIndex(
     { language: 1, mode2: 1, wpm: -1, acc: -1, timestamp: 1 },
+    { partialFilterExpression: { mode: "quote" } },
+  );
+  await getResultCollection().createIndex(
+    { uid: 1, language: 1 },
     { partialFilterExpression: { mode: "quote" } },
   );
 }

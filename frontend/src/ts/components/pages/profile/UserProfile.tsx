@@ -1,18 +1,20 @@
 import { Language } from "@monkeytype/schemas/languages";
-import { ALL_TIME_LEADERBOARD_LANGUAGES } from "@monkeytype/schemas/leaderboards";
-import { PersonalBest, PersonalBests } from "@monkeytype/schemas/shared";
+import { QUOTE_LEADERBOARD_LANGUAGES } from "@monkeytype/schemas/leaderboards";
 import {
+  LanguageQuoteStats,
+  QuoteBest,
+  QuoteLengthNameSchema,
   RankAndCount,
   UserProfile as UserProfileType,
 } from "@monkeytype/schemas/users";
+import { useQuery } from "@tanstack/solid-query";
 import { formatDate } from "date-fns/format";
-import { createMemo, For, JSXElement, Show } from "solid-js";
+import { For, JSXElement, Show } from "solid-js";
 
+import { getLeaderboardQuotesQueryOptions } from "../../../queries/leaderboards";
 import { getFormatting } from "../../../states/core";
-import { showPbTablesModal } from "../../../states/pb-tables-modal";
 import { formatTopPercentage } from "../../../utils/misc";
 import { capitalizeFirstLetter } from "../../../utils/strings";
-import { Button } from "../../common/Button";
 import { ActivityCalendar } from "./ActivityCalendar";
 import { UserDetails } from "./UserDetails";
 
@@ -27,30 +29,23 @@ export function UserProfile(props: {
         isAccountPage={props.isAccountPage}
       />
       <Show when={!props.profile.banned && !props.profile.lbOptOut}>
-        <For each={ALL_TIME_LEADERBOARD_LANGUAGES}>
+        <For each={QUOTE_LEADERBOARD_LANGUAGES}>
           {(language) => (
             <LeaderboardPosition
               language={language}
-              top15={props.profile.allTimeLbs?.time?.["15"]?.[language]}
-              top60={props.profile.allTimeLbs?.time?.["60"]?.[language]}
+              rank={props.profile.quoteStats?.[language]?.rank}
             />
           )}
         </For>
       </Show>
-      <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <PbCard
-          mode="time"
-          mode2={["15", "30", "60", "120"]}
-          pbs={props.profile.personalBests.time}
-          isAccountPage={props.isAccountPage}
-        />
-        <PbCard
-          mode="words"
-          mode2={["10", "25", "50", "100"]}
-          pbs={props.profile.personalBests.words}
-          isAccountPage={props.isAccountPage}
-        />
-      </div>
+      <For each={QUOTE_LEADERBOARD_LANGUAGES}>
+        {(language) => (
+          <QuoteBestsCard
+            language={language}
+            stats={props.profile.quoteStats?.[language]}
+          />
+        )}
+      </For>
       <Show when={props.profile.lbOptOut}>
         <span class="text-center text-xs text-sub">
           Note: This account has opted out of the leaderboards, meaning their
@@ -71,110 +66,114 @@ export function UserProfile(props: {
 
 function LeaderboardPosition(props: {
   language: Language;
-  top15?: RankAndCount;
-  top60?: RankAndCount;
+  rank?: RankAndCount;
 }): JSXElement {
   const format = getFormatting;
 
   return (
-    <Show when={props.top15 !== undefined || props.top60 !== undefined}>
-      <div class="grid w-full grid-cols-1 items-center gap-4 rounded bg-sub-alt p-4 text-sub md:grid-cols-2 lg:grid-cols-3">
-        <span class="text-center md:col-span-2 lg:col-span-1">
-          All-Time {capitalizeFirstLetter(props.language)} Leaderboards
+    <Show when={props.rank?.rank !== undefined}>
+      <div class="grid w-full grid-cols-1 items-center gap-4 rounded bg-sub-alt p-4 text-sub md:grid-cols-2">
+        <span class="text-center">
+          {capitalizeFirstLetter(props.language)} Quote Leaderboard
         </span>
-        <Show when={props.top15 !== undefined}>
-          <div class="grid grid-cols-2 gap-x-4">
-            <div class="justify-self-end">15 seconds</div>
-            <div class="row-span-2 text-3xl text-text">
-              {format().rank(props.top15?.rank)}
-            </div>
-            <div class="justify-self-end text-xs">
-              {formatTopPercentage(props.top15)}
-            </div>
+        <div class="grid grid-cols-2 gap-x-4">
+          <div class="justify-self-end">all quotes</div>
+          <div class="row-span-2 text-3xl text-text">
+            {format().rank(props.rank?.rank)}
           </div>
-        </Show>
-        <Show when={props.top60 !== undefined}>
-          <div class="grid grid-cols-2 gap-x-4">
-            <div class="justify-self-end">60 seconds</div>
-            <div class="row-span-2 text-3xl text-text">
-              {format().rank(props.top60?.rank)}
-            </div>
-            <div class="justify-self-end text-xs">
-              {formatTopPercentage(props.top60)}
-            </div>
+          <div class="justify-self-end text-xs">
+            {formatTopPercentage(props.rank)}
           </div>
-        </Show>
+        </div>
       </div>
     </Show>
   );
 }
 
-function PbCard<M extends "time" | "words">(props: {
-  mode: M;
-  mode2: string[];
-  pbs: PersonalBests[M];
-  isAccountPage?: true;
+type QuoteBestItem = {
+  label: string;
+  best?: QuoteBest;
+  /** what the best is made of, shown on hover */
+  detail?: string;
+};
+
+function QuoteBestsCard(props: {
+  language: Language;
+  stats?: LanguageQuoteStats;
 }): JSXElement {
   const format = getFormatting;
 
-  const bests = createMemo(() =>
-    props.mode2.map((mode) => {
-      const pbArray = props.pbs[mode] ?? [];
+  const quotesQuery = useQuery(() => ({
+    ...getLeaderboardQuotesQueryOptions(props.language),
+    enabled: props.stats !== undefined,
+  }));
 
-      const best = pbArray.reduce<PersonalBest | undefined>(
-        (max, current) => (current.wpm > (max?.wpm ?? 0) ? current : max),
-        undefined,
-      );
-
+  const items = (): QuoteBestItem[] => [
+    ...QuoteLengthNameSchema.options.map((length) => {
+      const best = props.stats?.lengths[length];
+      const source = quotesQuery.data?.find(
+        (it) => it.id === best?.quoteId,
+      )?.source;
       return {
-        mode2: mode,
-        pb: best,
+        label: length,
+        best,
+        detail:
+          best !== undefined
+            ? `#${best.quoteId}${source !== undefined ? ` ${source}` : ""}`
+            : undefined,
       };
     }),
-  );
+    {
+      label: "all",
+      best: props.stats?.overall,
+      detail:
+        props.stats !== undefined
+          ? `average of ${props.stats.overall.quotes} quotes`
+          : undefined,
+    },
+  ];
 
   return (
-    <div class="grid grid-cols-[1fr_minmax(0,2rem)] rounded bg-sub-alt">
-      <div class="grid grid-cols-2 gap-8 p-4 md:grid-cols-4">
-        <For each={bests()}>
+    <div class="grid gap-4 rounded bg-sub-alt p-4">
+      <div class="text-center text-sub">
+        {capitalizeFirstLetter(props.language)} Quotes
+      </div>
+      <div class="grid grid-cols-2 gap-8 sm:grid-cols-3 md:grid-cols-5">
+        <For each={items()}>
           {(item) => (
             <div class="group grid items-center">
               <div
                 class={
-                  item.pb !== undefined
+                  item.best !== undefined
                     ? "col-start-1 row-start-1 text-center transition-opacity group-hover:opacity-0"
                     : "col-start-1 row-start-1 text-center"
                 }
               >
-                <div class="text-xs text-sub">
-                  {item.mode2} {props.mode === "time" ? "seconds" : "words"}
-                </div>
+                <div class="text-xs text-sub">{item.label}</div>
                 <div class="text-4xl">
-                  {format().typingSpeed(item.pb?.wpm, {
+                  {format().typingSpeed(item.best?.wpm, {
                     showDecimalPlaces: false,
                   })}
                 </div>
                 <div class="text-xl opacity-75">
-                  {format().accuracy(item.pb?.acc, {
+                  {format().accuracy(item.best?.acc, {
                     showDecimalPlaces: false,
                   })}
                 </div>
               </div>
 
-              <Show when={item.pb !== undefined}>
+              <Show when={item.best !== undefined}>
                 <div class="col-start-1 row-start-1 grid bg-sub-alt text-center text-xs opacity-0 transition-opacity group-hover:opacity-100">
-                  <div class="text-sub">
-                    {item.mode2} {props.mode === "time" ? "seconds" : "words"}
-                  </div>
+                  <div class="truncate text-sub">{item.detail}</div>
                   <div>
-                    {format().typingSpeed(item.pb?.wpm)}{" "}
+                    {format().typingSpeed(item.best?.wpm)}{" "}
                     {format().typingSpeedUnit}
                   </div>
-                  <div>{format().typingSpeed(item.pb?.raw)} raw</div>
-                  <div>{format().accuracy(item.pb?.acc)} acc</div>
-                  <div>{format().percentage(item.pb?.consistency)} con</div>
+                  <div>{format().typingSpeed(item.best?.raw)} raw</div>
+                  <div>{format().accuracy(item.best?.acc)} acc</div>
+                  <div>{format().percentage(item.best?.consistency)} con</div>
                   <div class="text-sub">
-                    {formatDate(item.pb?.timestamp ?? 0, "dd MMM yyyy")}
+                    {formatDate(item.best?.timestamp ?? 0, "dd MMM yyyy")}
                   </div>
                 </div>
               </Show>
@@ -182,16 +181,6 @@ function PbCard<M extends "time" | "words">(props: {
           )}
         </For>
       </div>
-      <Show when={props.isAccountPage}>
-        <div class="flex h-full flex-col">
-          <Button
-            balloon={{ text: "Show all personal bests", position: "left" }}
-            class="h-full rounded-none rounded-r text-sub hover:text-bg"
-            fa={{ icon: "fa-ellipsis-v" }}
-            onClick={() => showPbTablesModal(props.mode)}
-          />
-        </div>
-      </Show>
     </div>
   );
 }

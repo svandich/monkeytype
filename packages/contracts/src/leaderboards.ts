@@ -89,7 +89,10 @@ export type GetLeaderboardRankResponse = z.infer<
 
 //--------------------------------------------------------------------------
 
-export const GetOrganizationLeaderboardQuerySchema = LanguageAndModeQuerySchema;
+export const GetOrganizationLeaderboardQuerySchema =
+  LanguageAndModeQuerySchema.extend({
+    mode2: Mode2Schema.or(z.literal("all")),
+  });
 export type GetOrganizationLeaderboardQuery = z.infer<
   typeof GetOrganizationLeaderboardQuerySchema
 >;
@@ -257,7 +260,7 @@ export const leaderboardsContract = c.router(
     getOrganizations: {
       summary: "get organization leaderboard",
       description:
-        "Get organizations (universities) ranked by the average wpm of their best typists on the all-time leaderboard.",
+        "Get organizations (universities) ranked by the average wpm of their best typists. Mode quote ranks on a quote leaderboard, mode2 being the quote id or `all` for the overall quote leaderboard. Mode time ranks on the all-time (words) leaderboard.",
       method: "GET",
       path: "/organizations",
       query: GetOrganizationLeaderboardQuerySchema.strict(),

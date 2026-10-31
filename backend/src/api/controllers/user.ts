@@ -15,6 +15,7 @@ import { deleteAllPresets } from "../../dal/preset";
 import { deleteAll as deleteAllResults } from "../../dal/result";
 import { deleteConfig } from "../../dal/config";
 import * as LeaderboardsDAL from "../../dal/leaderboards";
+import * as QuoteLeaderboardsDAL from "../../dal/quote-leaderboards";
 import { purgeUserFromDailyLeaderboards } from "../../utils/daily-leaderboards";
 import { purgeUserFromXpLeaderboards } from "../../services/weekly-xp-leaderboard";
 import { deleteUserAccount } from "../../services/user-deletion";
@@ -34,8 +35,15 @@ import {
   TestActivity,
   UserProfileDetails,
   ProgcompInfo,
+  QuoteLengthNameSchema,
+  QuoteStats,
+  LanguageQuoteStats,
 } from "@monkeytype/schemas/users";
-import { ALL_TIME_LEADERBOARD_LANGUAGES } from "@monkeytype/schemas/leaderboards";
+import {
+  ALL_TIME_LEADERBOARD_LANGUAGES,
+  QUOTE_LEADERBOARD_LANGUAGES,
+} from "@monkeytype/schemas/leaderboards";
+import { roundTo2 } from "@monkeytype/util/numbers";
 import { addImportantLog, addLog } from "../../dal/logs";
 import {
   AddCustomThemeRequest,
@@ -414,7 +422,10 @@ export async function getUser(req: MonkeyRequest): Promise<GetUserResponse> {
 
   const isPremium = await UserDAL.checkIfUserIsPremium(uid, userInfo);
 
-  const allTimeLbs = await getAllTimeLbs(uid);
+  const [allTimeLbs, quoteStats] = await Promise.all([
+    getAllTimeLbs(uid),
+    getQuoteStats(uid),
+  ]);
   const testActivity = generateCurrentTestActivity(userInfo.testActivity);
   const relevantUserInfo = getRelevantUserInfo(userInfo);
 
@@ -438,6 +449,7 @@ export async function getUser(req: MonkeyRequest): Promise<GetUserResponse> {
     customThemes,
     isPremium,
     allTimeLbs,
+    quoteStats,
     testActivity,
   };
 
@@ -812,13 +824,17 @@ export async function getProfile(
     return new MonkeyResponse("Profile retrived: banned user", baseProfile);
   }
 
-  const allTimeLbs = await getAllTimeLbs(user.uid);
+  const [allTimeLbs, quoteStats] = await Promise.all([
+    getAllTimeLbs(user.uid),
+    getQuoteStats(user.uid),
+  ]);
 
   const profileData = {
     ...baseProfile,
     inventory,
     details: profileDetails,
     allTimeLbs,
+    quoteStats,
     uid: user.uid,
   } as UserProfile;
 
@@ -978,6 +994,57 @@ async function getAllTimeLbs(uid: string): Promise<AllTimeLbs> {
   }
 
   return allTimeLbs;
+}
+
+async function getQuoteStats(uid: string): Promise<QuoteStats> {
+  const bests = await QuoteLeaderboardsDAL.getUserBests(
+    uid,
+    QUOTE_LEADERBOARD_LANGUAGES,
+  );
+  const quoteStats: QuoteStats = {};
+
+  for (const language of QUOTE_LEADERBOARD_LANGUAGES) {
+    const languageBests = bests.filter((it) => it.language === language);
+    if (languageBests.length === 0) continue;
+
+    const leaderboard = await QuoteLeaderboardsDAL.get(language, undefined);
+    const average = (key: "wpm" | "acc" | "raw" | "consistency"): number =>
+      roundTo2(
+        languageBests.reduce((sum, it) => sum + it[key], 0) /
+          languageBests.length,
+      );
+
+    const lengths: LanguageQuoteStats["lengths"] = {};
+    for (const { language: _, quoteLength, ...best } of languageBests) {
+      const name =
+        typeof quoteLength === "number"
+          ? QuoteLengthNameSchema.options[quoteLength]
+          : undefined;
+      if (name === undefined) continue;
+      const current = lengths[name];
+      if (current === undefined || best.wpm > current.wpm) {
+        lengths[name] = best;
+      }
+    }
+
+    quoteStats[language] = {
+      rank: {
+        rank: leaderboard.find((it) => it.uid === uid)?.rank,
+        count: leaderboard.length,
+      },
+      overall: {
+        wpm: average("wpm"),
+        acc: average("acc"),
+        raw: average("raw"),
+        consistency: average("consistency"),
+        timestamp: Math.max(...languageBests.map((it) => it.timestamp)),
+        quotes: languageBests.length,
+      },
+      lengths,
+    };
+  }
+
+  return quoteStats;
 }
 
 export function generateCurrentTestActivity(

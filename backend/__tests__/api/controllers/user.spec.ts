@@ -20,6 +20,8 @@ import * as ResultDal from "../../../src/dal/result";
 import * as ReportDal from "../../../src/dal/report";
 import * as DailyLeaderboards from "../../../src/utils/daily-leaderboards";
 import * as LeaderboardDal from "../../../src/dal/leaderboards";
+import * as QuoteLeaderboardDal from "../../../src/dal/quote-leaderboards";
+import { QuoteLeaderboardEntry } from "@monkeytype/schemas/leaderboards";
 import GeorgeQueue from "../../../src/queues/george-queue";
 import * as DiscordUtils from "../../../src/utils/discord";
 import * as ApeKeysDal from "../../../src/dal/ape-keys";
@@ -182,6 +184,7 @@ describe("user controller test", () => {
     const addLogMock = vi.spyOn(LogDal, "addLog");
     const addImportantLogMock = vi.spyOn(LogDal, "addImportantLog");
     const setProgcompInfoMock = vi.spyOn(UserDal, "setProgcompInfo");
+    const quoteBestsMock = vi.spyOn(QuoteLeaderboardDal, "getUserBests");
 
     const provisionedUser = {
       uid,
@@ -203,7 +206,9 @@ describe("user controller test", () => {
         addLogMock,
         addImportantLogMock,
         setProgcompInfoMock,
+        quoteBestsMock,
       ].forEach((it) => it.mockReset());
+      quoteBestsMock.mockResolvedValue([]);
       addUserMock.mockResolvedValue();
       setProgcompInfoMock.mockResolvedValue();
       checkIfUserIsPremiumMock.mockResolvedValue(false);
@@ -2493,6 +2498,8 @@ describe("user controller test", () => {
     const checkIfUserIsPremiumMock = vi.spyOn(UserDal, "checkIfUserIsPremium");
     const leaderboardGetRankMock = vi.spyOn(LeaderboardDal, "getRank");
     const leaderboardGetCountMock = vi.spyOn(LeaderboardDal, "getCount");
+    const quoteBestsMock = vi.spyOn(QuoteLeaderboardDal, "getUserBests");
+    const quoteLeaderboardMock = vi.spyOn(QuoteLeaderboardDal, "get");
 
     const foundUser: Partial<UserDal.DBUser> = {
       _id: new ObjectId(),
@@ -2548,7 +2555,78 @@ describe("user controller test", () => {
       checkIfUserIsPremiumMock.mockClear().mockResolvedValue(true);
       leaderboardGetRankMock.mockClear();
       leaderboardGetCountMock.mockClear();
+      quoteBestsMock.mockClear().mockResolvedValue([]);
+      quoteLeaderboardMock.mockClear().mockResolvedValue([]);
       await enableProfiles(true);
+    });
+
+    it("should get quote stats", async () => {
+      //GIVEN
+      getUserByNameMock.mockResolvedValue(foundUser as any);
+      leaderboardGetRankMock.mockResolvedValue(null);
+      const best = (
+        quoteId: number,
+        quoteLength: number | undefined,
+        wpm: number,
+      ): QuoteLeaderboardDal.UserQuoteBest => ({
+        language: "ariasctl",
+        quoteId,
+        quoteLength,
+        wpm,
+        acc: 90,
+        raw: wpm + 10,
+        consistency: 80,
+        timestamp: quoteId * 1000,
+      });
+      quoteBestsMock.mockResolvedValue([
+        best(1, 0, 100),
+        best(2, 2, 60),
+        best(3, 2, 80),
+        best(4, undefined, 70),
+      ]);
+      quoteLeaderboardMock.mockImplementation(async (language) =>
+        language === "ariasctl"
+          ? ([
+              { uid: "other", rank: 1 },
+              { uid: foundUser.uid, rank: 2 },
+            ] as QuoteLeaderboardEntry[])
+          : [],
+      );
+
+      //WHEN
+      const { body } = await mockApp.get("/users/bob/profile").expect(200);
+
+      //THEN
+      expect(body.data.quoteStats).toEqual({
+        ariasctl: {
+          rank: { rank: 2, count: 2 },
+          overall: {
+            wpm: 77.5,
+            acc: 90,
+            raw: 87.5,
+            consistency: 80,
+            timestamp: 4000,
+            quotes: 4,
+          },
+          lengths: {
+            short: { quoteId: 1, ...omitLanguage(best(1, 0, 100)) },
+            long: { quoteId: 3, ...omitLanguage(best(3, 2, 80)) },
+          },
+        },
+      });
+      expect(quoteBestsMock).toHaveBeenCalledWith(foundUser.uid, [
+        "ariasctl",
+        "handbook-usm",
+      ]);
+      expect(quoteLeaderboardMock).toHaveBeenCalledOnce();
+
+      function omitLanguage({
+        language: _language,
+        quoteLength: _quoteLength,
+        ...rest
+      }: QuoteLeaderboardDal.UserQuoteBest): object {
+        return rest;
+      }
     });
 
     it("should get by name without authentication", async () => {
@@ -2612,6 +2690,7 @@ describe("user controller test", () => {
               },
             },
           },
+          quoteStats: {},
           inventory: foundUser.inventory,
           details: foundUser.profileDetails,
         },

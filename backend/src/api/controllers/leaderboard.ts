@@ -124,6 +124,15 @@ export async function getOrganizationLeaderboard(
 ): Promise<GetOrganizationLeaderboardResponse> {
   const { language, mode, mode2 } = req.query;
 
+  if (mode === "quote") {
+    assertQuoteLeaderboardExists(language);
+    const entries = await QuoteLeaderboardsDAL.getOrganizations(
+      language,
+      parseQuoteId(mode2),
+    );
+    return new MonkeyResponse("Organization leaderboard retrieved", entries);
+  }
+
   assertAllTimeLeaderboardExists(mode, mode2, language);
 
   const entries = await LeaderboardsDAL.getOrganizations(mode, mode2, language);
@@ -164,12 +173,7 @@ async function getQuoteLeaderboardEntries(
   const { language, quoteId, friendsOnly, organization } = req.query;
   const { uid } = req.ctx.decodedToken;
 
-  if (!isQuoteLeaderboardLanguage(language)) {
-    throw new MonkeyError(
-      404,
-      "There is no quote leaderboard for this language",
-    );
-  }
+  assertQuoteLeaderboardExists(language);
 
   // organization and friends filters don't combine, organization wins
   const friendUids =
@@ -185,6 +189,24 @@ async function getQuoteLeaderboardEntries(
     uids: friendUids !== undefined ? [...friendUids, uid] : undefined,
     organization,
   });
+}
+
+function assertQuoteLeaderboardExists(language: string): void {
+  if (!isQuoteLeaderboardLanguage(language)) {
+    throw new MonkeyError(
+      404,
+      "There is no quote leaderboard for this language",
+    );
+  }
+}
+
+/** quote mode2 is a quote id, or "all" for the overall quote leaderboard */
+function parseQuoteId(mode2: string): number | undefined {
+  if (mode2 === "all") return undefined;
+  if (!/^[1-9]\d*$/.test(mode2)) {
+    throw new MonkeyError(404, "There is no leaderboard for this mode");
+  }
+  return parseInt(mode2, 10);
 }
 
 function assertAllTimeLeaderboardExists(

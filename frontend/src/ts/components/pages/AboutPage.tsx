@@ -222,11 +222,11 @@ export function AboutPage(): JSXElement {
         <section>
           <H3 fa={{ icon: "fa-university" }} text="universities" />
           <p>
-            The all-time leaderboards can be filtered by university. On the
-            university leaderboard, each university is ranked by the average
-            speed of its 3 fastest typists, like an ICPC team. A university with
-            fewer than 3 typists counts the missing ones as 0 wpm, so bring your
-            teammates.
+            The quote and words leaderboards can be filtered by university. On
+            the university leaderboard, each university is ranked by the average
+            quote speed of its 3 fastest typists, like an ICPC team, overall or
+            on a single quote. A university with fewer than 3 typists counts the
+            missing ones as 0 wpm, so bring your teammates.
           </p>
         </section>
         <section>

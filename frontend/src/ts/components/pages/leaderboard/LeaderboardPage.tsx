@@ -1,5 +1,4 @@
 import {
-  ALL_TIME_LEADERBOARD_LANGUAGES,
   QUOTE_LEADERBOARD_LANGUAGES,
   QUOTE_LEADERBOARD_MIN_QUOTES,
 } from "@monkeytype/schemas/leaderboards";
@@ -50,6 +49,7 @@ export function LeaderboardPage(): JSXElement {
   const isOpen = () => getActivePage() === pageName;
   const isUniversities = () => getSelection().type === "universities";
   const isQuotes = () => getSelection().type === "quotes";
+  const isQuoteBased = () => isQuotes() || isUniversities();
   const isOverallQuotes = () =>
     isQuotes() && getQuoteId(getSelection()) === undefined;
 
@@ -73,14 +73,14 @@ export function LeaderboardPage(): JSXElement {
   };
   const isSelectionEnabled = () => isTypeEnabled(getSelection().type);
 
-  //fall back to all-time if the selected leaderboard is disabled
+  //fall back to quotes if the selected leaderboard is disabled
   createEffect(() => {
     if (serverConfigurationQuery.isSuccess && !isSelectionEnabled()) {
       onSelectionChange({
-        type: "allTime",
-        mode: "time",
-        mode2: "15",
-        language: ALL_TIME_LEADERBOARD_LANGUAGES[0],
+        type: "quotes",
+        mode: "quote",
+        mode2: "all",
+        language: QUOTE_LEADERBOARD_LANGUAGES[0],
         friendsOnly: getSelection().friendsOnly,
         previous: false,
       });
@@ -157,25 +157,16 @@ export function LeaderboardPage(): JSXElement {
       isSelectionEnabled(),
   }));
 
-  // universities of the selected all-time leaderboard, for the universities
-  // view and the organization filter. quote leaderboards offer the ones of the
-  // default all-time leaderboard
+  // universities of the selected leaderboard, for the universities view and
+  // the organization filter
   const organizationsQuery = useQuery(() => {
     const selection = getSelection();
     return {
-      ...getOrganizationLeaderboardQueryOptions(
-        selection.type === "quotes"
-          ? {
-              mode: "time",
-              mode2: "15",
-              language: ALL_TIME_LEADERBOARD_LANGUAGES[0],
-            }
-          : {
-              mode: selection.mode ?? "time",
-              mode2: selection.mode2 ?? "15",
-              language: selection.language ?? "ariasctl",
-            },
-      ),
+      ...getOrganizationLeaderboardQueryOptions({
+        mode: selection.mode ?? "quote",
+        mode2: selection.mode2 ?? "all",
+        language: selection.language ?? QUOTE_LEADERBOARD_LANGUAGES[0],
+      }),
       enabled:
         isOpen() &&
         (selection.type === "allTime" ||
@@ -188,12 +179,12 @@ export function LeaderboardPage(): JSXElement {
     ...getLeaderboardQuotesQueryOptions(
       getSelection().language ?? QUOTE_LEADERBOARD_LANGUAGES[0],
     ),
-    enabled: isOpen() && isQuotes(),
+    enabled: isOpen() && isQuoteBased(),
   }));
 
   const selectedQuote = () => {
     const quoteId = getQuoteId(getSelection());
-    return isQuotes() && quoteId !== undefined
+    return isQuoteBased() && quoteId !== undefined
       ? quotesQuery.data?.find((it) => it.id === quoteId)
       : undefined;
   };

@@ -25,18 +25,27 @@ const XpSelection = z.object({
   organization: z.never().optional(),
 });
 const SpeedSelection = z.object({
-  type: z.enum(["daily", "allTime", "universities", "quotes"]),
+  type: z.enum(["daily", "allTime"]),
   friendsOnly: z.boolean(),
   previous: z.boolean(),
   mode: ModeSchema,
-  /** on quote leaderboards the quote id, or "all" for the overall one */
+  /** on quote and university leaderboards the quote id, or "all" for the overall one */
   mode2: z.string(),
   language: LanguageSchema,
   /** organization (university) short name, all-time and quote leaderboards only */
   organization: z.string().optional(),
 });
 
-export const SelectionSchema = SpeedSelection.or(XpSelection);
+const QuoteSelection = SpeedSelection.extend({
+  type: z.enum(["universities", "quotes"]),
+  mode: z.literal("quote"),
+});
+
+export const SelectionSchema = z.union([
+  SpeedSelection,
+  QuoteSelection,
+  XpSelection,
+]);
 export type Selection = z.infer<typeof SelectionSchema>;
 
 export const LeaderboardUrlParamsSchema = z
@@ -88,12 +97,13 @@ export function readLeaderboardGetParameters(
 
   if (params.type === "weekly") {
     newSelection.previous = params.lastWeek ?? false;
-  } else if (params.type === "quotes") {
+  } else if (params.type === "quotes" || params.type === "universities") {
     newSelection.mode = "quote";
     newSelection.mode2 = params.mode2 ?? "all";
     newSelection.language = params.language ?? QUOTE_LEADERBOARD_LANGUAGES[0];
     newSelection.previous = false;
-    newSelection.organization = params.organization;
+    newSelection.organization =
+      params.type === "quotes" ? params.organization : undefined;
   } else {
     newSelection.mode = params.mode ?? "time";
     newSelection.mode2 = params.mode2 ?? "15";
@@ -159,10 +169,10 @@ function lsSelection(): [Accessor<Selection>, Setter<Selection>] {
     key: "leaderboardSelector",
     schema: SelectionSchema,
     fallback: {
-      type: "allTime",
-      mode: "time",
-      mode2: "15",
-      language: ALL_TIME_LEADERBOARD_LANGUAGES[0],
+      type: "quotes",
+      mode: "quote",
+      mode2: "all",
+      language: QUOTE_LEADERBOARD_LANGUAGES[0],
       friendsOnly: false,
       previous: false,
     },
@@ -184,6 +194,15 @@ function lsSelection(): [Accessor<Selection>, Setter<Selection>] {
         delete result.mode2;
         delete result.language;
         delete result.organization;
+      }
+      //university leaderboards used to rank on the all-time leaderboards
+      const old = value as Record<string, unknown>;
+      if (old["type"] === "universities" && old["mode"] !== "quote") {
+        Object.assign(old, {
+          mode: "quote",
+          mode2: "all",
+          language: QUOTE_LEADERBOARD_LANGUAGES[0],
+        });
       }
       return result;
     },

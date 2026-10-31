@@ -613,6 +613,62 @@ describe("Loaderboard Controller", () => {
 
       expect(getOrganizationsMock).not.toHaveBeenCalled();
     });
+
+    describe("quotes", () => {
+      const getQuoteOrganizationsMock = vi.spyOn(
+        QuoteLeaderboardDal,
+        "getOrganizations",
+      );
+
+      beforeEach(() => {
+        getQuoteOrganizationsMock.mockClear().mockResolvedValue([]);
+      });
+
+      it("should get for the overall quote leaderboard", async () => {
+        //WHEN
+        const { body } = await mockApp
+          .get("/leaderboards/organizations")
+          .query({ language: "handbook-usm", mode: "quote", mode2: "all" })
+          .expect(200);
+
+        //THEN
+        expect(body.data).toEqual([]);
+        expect(getQuoteOrganizationsMock).toHaveBeenCalledWith(
+          "handbook-usm",
+          undefined,
+        );
+        expect(getOrganizationsMock).not.toHaveBeenCalled();
+      });
+
+      it("should get for a single quote", async () => {
+        //WHEN
+        await mockApp
+          .get("/leaderboards/organizations")
+          .query({ language: "ariasctl", mode: "quote", mode2: "12" })
+          .expect(200);
+
+        //THEN
+        expect(getQuoteOrganizationsMock).toHaveBeenCalledWith("ariasctl", 12);
+      });
+
+      it("fails for a language without quote leaderboard", async () => {
+        await mockApp
+          .get("/leaderboards/organizations")
+          .query({ language: "english", mode: "quote", mode2: "all" })
+          .expect(404);
+
+        expect(getQuoteOrganizationsMock).not.toHaveBeenCalled();
+      });
+
+      it("fails for an invalid quote id", async () => {
+        await mockApp
+          .get("/leaderboards/organizations")
+          .query({ language: "ariasctl", mode: "quote", mode2: "0" })
+          .expect(404);
+
+        expect(getQuoteOrganizationsMock).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe("get quote leaderboard", () => {

@@ -6,7 +6,7 @@ import {
   getTypingStatsQueryOptions,
 } from "./public";
 import { getLeaderboardQueryOptions } from "./leaderboards";
-import { ALL_TIME_LEADERBOARD_LANGUAGES } from "@monkeytype/schemas/leaderboards";
+import { QUOTE_LEADERBOARD_LANGUAGES } from "@monkeytype/schemas/leaderboards";
 
 export function prefetchAboutPage(): void {
   void queryClient.prefetchQuery(getContributorsQueryOptions());
@@ -18,10 +18,10 @@ export function prefetchAboutPage(): void {
 export function prefetchLeaderboardPage(): void {
   void queryClient.prefetchQuery(
     getLeaderboardQueryOptions({
-      type: "allTime",
-      mode: "time",
-      mode2: "15",
-      language: ALL_TIME_LEADERBOARD_LANGUAGES[0],
+      type: "quotes",
+      mode: "quote",
+      mode2: "all",
+      language: QUOTE_LEADERBOARD_LANGUAGES[0],
       friendsOnly: false,
       page: 0,
       previous: false,

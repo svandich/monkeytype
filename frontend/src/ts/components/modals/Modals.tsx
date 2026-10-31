@@ -9,7 +9,6 @@ import { CustomWordAmountModal } from "./CustomWordAmountModal";
 import { EditResultTagsModal } from "./EditResultTagsModal";
 import { LastSignedOutResultModal } from "./LastSignedOutResultModal";
 import { MobileTestConfigModal } from "./MobileTestConfigModal";
-import { PbTablesModal } from "./PbTablesModal";
 import { PractiseWordsModal } from "./PractiseWordsModal";
 import { AddPresetModal } from "./preset/AddPresetModal";
 import { EditPresetModal } from "./preset/EditPresetModal";
@@ -38,7 +37,6 @@ export function Modals(): JSXElement {
       <QuoteSearchModal />
       <CustomTestDurationModal />
       <CustomWordAmountModal />
-      <PbTablesModal />
       <PractiseWordsModal />
       <ShareTestSettings />
       <MobileTestConfigModal />
